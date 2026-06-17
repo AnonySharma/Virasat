@@ -1,6 +1,6 @@
-# 🌳 Family Tree
+# Virasat — Your family's living legacy
 
-A beautiful, mobile-friendly family tree you can host on GitHub Pages — preserve names, photos, dates and stories of every family member, view them as a tree or on a horizontal timeline, and export the data anytime.
+*Virasat* (विरासत — "heritage") is a calm, mobile-friendly workspace for preserving names, photos, dates, and stories of every family member. View them as a tree, on a horizontal timeline, or as individual biographical profiles. Built to feel like an heirloom, not a database.
 
 **No backend.** Everything lives in your browser. Photos are stored locally as binary blobs (IndexedDB), not as bloated base64 in `localStorage`. Export to JSON to back up or move between devices.
 

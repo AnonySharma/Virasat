@@ -252,16 +252,17 @@
 
   function parseDate(s) {
     if (!s) return null;
-    // Accept "YYYY", "YYYY-MM", "YYYY-MM-DD"
-    const m = String(s).match(/^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?$/);
-    if (!m) {
-      const d = new Date(s);
-      return isNaN(d) ? null : d;
-    }
+    // Strictly accept only "YYYY", "YYYY-MM", or "YYYY-MM-DD". Anything else
+    // is treated as invalid so callers can surface a clean error.
+    const m = String(s).trim().match(/^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?$/);
+    if (!m) return null;
     const y = +m[1];
     const mo = m[2] ? +m[2] - 1 : 0;
     const da = m[3] ? +m[3] : 1;
-    return new Date(y, mo, da);
+    if (mo < 0 || mo > 11 || da < 1 || da > 31) return null;
+    const d = new Date(y, mo, da);
+    if (isNaN(d)) return null;
+    return d;
   }
 
   function getYear(s) {
@@ -270,8 +271,8 @@
     return m ? +m[1] : null;
   }
 
-  function isAlive(person) { return !person.deathDate; }
-  function isDeceased(person) { return !!person.deathDate; }
+  function isAlive(person) { return !(person.deathDate && String(person.deathDate).trim()); }
+  function isDeceased(person) { return !!(person.deathDate && String(person.deathDate).trim()); }
 
   function calcAge(person, atDate) {
     const birth = parseDate(person.birthDate);
@@ -285,10 +286,15 @@
   }
 
   function formatDateRange(person) {
-    const b = person.birthDate || "?";
-    const d = person.deathDate || (person.birthDate ? "present" : "?");
-    if (b === "?" && d === "present") return "—";
-    return `${b} – ${d}`;
+    // Show only the years — full dates belong on the profile, not in chips.
+    const by = getYear(person.birthDate);
+    const dy = getYear(person.deathDate);
+    if (by == null && dy == null && !person.deathDate) return "—";
+    const left  = by != null ? String(by) : "?";
+    const right = dy != null ? String(dy)
+                : person.deathDate ? "?"
+                : "present";
+    return `${left} – ${right}`;
   }
 
   // ===== Image helpers =====

@@ -49,11 +49,13 @@
   width: 100%;
   background: var(--bg-elev);
   border: 1px solid var(--line);
-  border-radius: var(--r-sm);
-  padding: 10px 14px;
+  border-radius: var(--r-md);
+  padding: 11px 14px;
   color: var(--text);
   font-size: 14px;
-  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  font-family: var(--font-sans);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+  box-shadow: var(--shadow-xs);
 }
 .input::placeholder, .textarea::placeholder { color: var(--text-4); }
 .input:hover, .select:hover, .textarea:hover { border-color: var(--line-2); }
@@ -62,7 +64,48 @@
   border-color: var(--accent);
   box-shadow: 0 0 0 4px var(--olive-soft);
 }
-.textarea { min-height: 88px; resize: vertical; line-height: 1.6; }
+.textarea { min-height: 92px; resize: vertical; line-height: 1.6; }
+
+/* Single-select gets a custom chevron — matches heritage feel and clears the
+   browser's default arrow which clashed with rounded corners. */
+.select:not([multiple]) {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237A7D86' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+/* Multi-select: olive selection rows, generous padding, matches the rest. */
+.select[multiple] {
+  padding: 6px;
+  min-height: 96px;
+  background-image: none;
+}
+.select[multiple] option {
+  padding: 8px 12px;
+  border-radius: var(--r-xs);
+  font-size: 13.5px;
+  color: var(--text);
+  margin: 1px 0;
+  cursor: pointer;
+}
+.select[multiple] option:checked {
+  background: var(--olive-soft) linear-gradient(0deg, var(--olive-soft), var(--olive-soft));
+  color: var(--olive-deep);
+  font-weight: 500;
+}
+
+/* Ensure type="date" / "time" don't break the design language even if used */
+input[type="date"], input[type="time"], input[type="datetime-local"] {
+  font-family: var(--font-sans);
+  appearance: none;
+  -webkit-appearance: none;
+}
 
 /* — Avatar — large, photographic, gold-rimmed for ancestors — */
 .avatar {

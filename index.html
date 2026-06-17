@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#6B8765" />
-  <meta name="description" content="A clean, calm workspace for building and exploring your family tree." />
-  <title>Family Tree</title>
+  <meta name="description" content="Virasat — your family's living legacy. A calm, heritage-inspired workspace for preserving names, photos, and stories." />
+  <title>Virasat — Your family's living legacy</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -29,9 +29,10 @@
     </button>
     <h1 class="app-title">
       <span class="app-title__icon" aria-hidden="true">
-        <img src="assets/tree.svg" alt="" width="18" height="18" />
+        <img src="assets/tree.svg" alt="" width="22" height="22" />
       </span>
-      <span class="app-title__text" data-i18n="app.title">Family Tree</span>
+      <span class="app-title__text" data-i18n="app.title">Virasat</span>
+      <span class="app-title__sub" data-i18n="app.tagline">Your family's living legacy</span>
     </h1>
 
     <nav class="app-nav" aria-label="Views">
@@ -51,24 +52,24 @@
 
     <label class="header-search">
       <i class="header-search__icon fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-      <input id="header-search-input" type="search" placeholder="Search people..." aria-label="Search people" />
+      <input id="header-search-input" type="search" placeholder="Search people..." data-i18n-placeholder="people.searchPlaceholder" aria-label="Search people" />
     </label>
 
     <div class="app-header__actions">
       <div class="lang-switch" role="group" aria-label="Language">
-        <button class="lang-switch__btn is-active" data-lang="en" type="button" title="English">EN</button>
-        <button class="lang-switch__btn" data-lang="hi" type="button" title="हिन्दी">HI</button>
+        <button class="lang-switch__btn is-active" data-lang="en" type="button" aria-pressed="true" aria-label="English">EN</button>
+        <button class="lang-switch__btn" data-lang="hi" type="button" aria-pressed="false" aria-label="हिन्दी">HI</button>
       </div>
       <button class="btn" id="collect-btn" type="button" title="Collect via Google Form">
         <i class="fa-solid fa-clipboard" aria-hidden="true"></i>
         <span class="btn__label-md" data-i18n="actions.collect">Collect</span>
       </button>
       <button class="btn" id="import-btn" type="button" title="Import">
-        <i class="fa-solid fa-arrow-up-from-bracket" aria-hidden="true"></i>
+        <i class="fa-solid fa-file-import" aria-hidden="true"></i>
         <span class="btn__label-md" data-i18n="actions.import">Import</span>
       </button>
       <button class="btn btn--primary" id="export-btn" type="button" title="Export">
-        <i class="fa-solid fa-arrow-down-to-bracket" aria-hidden="true"></i>
+        <i class="fa-solid fa-file-export" aria-hidden="true"></i>
         <span class="btn__label-md" data-i18n="actions.export">Export</span>
       </button>
     </div>

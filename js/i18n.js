@@ -15,7 +15,7 @@
 
   const dict = {
     en: {
-      app: { title: "Family Tree" },
+      app: { title: "Virasat", tagline: "Your family's living legacy" },
       nav: { people: "People", tree: "Tree", timeline: "Timeline" },
       actions: {
         add: "Add person", addFirst: "Add first person",
@@ -45,6 +45,7 @@
         gender: "Gender", genderM: "Male", genderF: "Female", genderO: "Other", genderNone: "—",
         notes: "Notes", parents: "Parents", spouses: "Spouses",
         datePlaceholder: "YYYY-MM-DD or YYYY",
+        dateInvalid: "Please enter a date as YYYY, YYYY-MM, or YYYY-MM-DD.",
         photoHint: "JPG, PNG. Auto-resized to 512px.",
         nameRequired: "Please enter a name.",
         saved: "Saved", removed: "Removed",
@@ -56,11 +57,15 @@
         education: "Education", educationHint: "One per line."
       },
       tree: {
-        title: "Family tree",
+        title: "Our family tree",
         subtitle: "Pinch or scroll to zoom · Drag to pan",
+        memberOne: "1 member", memberMany: "{n} members",
+        generationOne: "1 generation", generationMany: "{n} generations",
+        addPerson: "Add person",
+        panHint: "Drag to pan · Scroll to zoom",
         legendLiving: "Living", legendDeceased: "Deceased", legendCouple: "Couple",
-        emptyTitle: "No tree yet",
-        emptyText: "Add people in the People view to see your tree."
+        emptyTitle: "Plant your family tree",
+        emptyText: "Add people from the rail to see them here."
       },
       timeline: {
         title: "Timeline",
@@ -161,7 +166,7 @@
       }
     },
     hi: {
-      app: { title: "पारिवारिक वृक्ष" },
+      app: { title: "विरासत", tagline: "आपके परिवार की जीवंत विरासत" },
       nav: { people: "सदस्य", tree: "वृक्ष", timeline: "समयरेखा" },
       actions: {
         add: "सदस्य जोड़ें", addFirst: "पहला सदस्य जोड़ें",
@@ -191,6 +196,7 @@
         gender: "लिंग", genderM: "पुरुष", genderF: "महिला", genderO: "अन्य", genderNone: "—",
         notes: "टिप्पणियाँ", parents: "माता-पिता", spouses: "जीवनसाथी",
         datePlaceholder: "YYYY-MM-DD या YYYY",
+        dateInvalid: "कृपया तिथि YYYY, YYYY-MM, या YYYY-MM-DD में दर्ज करें।",
         photoHint: "JPG, PNG. स्वचालित रूप से 512px तक छोटा कर दिया जाएगा।",
         nameRequired: "कृपया नाम दर्ज करें।",
         saved: "सहेजा गया", removed: "हटा दिया गया",
@@ -202,11 +208,15 @@
         education: "शिक्षा", educationHint: "प्रत्येक पंक्ति में एक।"
       },
       tree: {
-        title: "पारिवारिक वृक्ष",
+        title: "हमारा पारिवारिक वृक्ष",
         subtitle: "ज़ूम के लिए चिकोटी काटें या स्क्रॉल करें · खींचने के लिए ड्रैग करें",
+        memberOne: "1 सदस्य", memberMany: "{n} सदस्य",
+        generationOne: "1 पीढ़ी", generationMany: "{n} पीढ़ियाँ",
+        addPerson: "सदस्य जोड़ें",
+        panHint: "खींचने के लिए ड्रैग करें · ज़ूम के लिए स्क्रॉल करें",
         legendLiving: "जीवित", legendDeceased: "स्वर्गीय", legendCouple: "दंपत्ति",
-        emptyTitle: "अभी तक कोई वृक्ष नहीं",
-        emptyText: "वृक्ष देखने के लिए 'सदस्य' दृश्य में लोगों को जोड़ें।"
+        emptyTitle: "अपना पारिवारिक वृक्ष लगाएँ",
+        emptyText: "यहाँ देखने के लिए साइडबार से सदस्य जोड़ें।"
       },
       timeline: {
         title: "समयरेखा",

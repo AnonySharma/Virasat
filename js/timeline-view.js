@@ -119,13 +119,17 @@
   }
 
   function computeRange(people) {
-    const startYears = [];
+    // Use whichever year we have — birth, or death as a fallback so people
+    // whose only recorded year is the year of death still appear.
+    const years = [];
     people.forEach((p) => {
-      const sy = FamilyStore.getYear(p.birthDate);
-      if (sy != null) startYears.push(sy);
+      const by = FamilyStore.getYear(p.birthDate);
+      const dy = FamilyStore.getYear(p.deathDate);
+      if (by != null) years.push(by);
+      else if (dy != null) years.push(dy);
     });
-    if (startYears.length === 0) return null;
-    const rawMin = Math.min.apply(null, startYears);
+    if (years.length === 0) return null;
+    const rawMin = Math.min.apply(null, years);
     const minYear = Math.floor(rawMin / 10) * 10;
     const currentYear = new Date().getFullYear();
     const maxYear = Math.ceil((currentYear + 5) / 10) * 10;
@@ -136,11 +140,16 @@
     const currentYear = new Date().getFullYear();
     const rows = [];
     people.forEach((p) => {
-      const startYear = FamilyStore.getYear(p.birthDate);
-      if (startYear == null) return;
+      const birthYear = FamilyStore.getYear(p.birthDate);
       const deathYear = FamilyStore.getYear(p.deathDate);
-      const endYear = deathYear != null ? deathYear : currentYear;
-      rows.push({ person: p, startYear, endYear });
+      // Skip only when we know nothing.
+      if (birthYear == null && deathYear == null) return;
+      // If we only have a death year, render a short bar at that year.
+      const startYear = birthYear != null ? birthYear : deathYear;
+      const endYear = birthYear != null
+        ? (deathYear != null ? deathYear : currentYear)
+        : deathYear;
+      rows.push({ person: p, startYear, endYear, birthKnown: birthYear != null });
     });
     rows.sort((a, b) => {
       if (a.startYear !== b.startYear) return a.startYear - b.startYear;

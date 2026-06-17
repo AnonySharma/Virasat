@@ -69,14 +69,14 @@
     const subEl = UI.el("span", { class: "view-head__sub" }, "");
     const header = UI.el("div", { class: "view-head" }, [
       UI.el("div", { class: "view-head__title-wrap" }, [
-        UI.el("h2", { class: "view-head__title" }, "Our family tree"),
+        UI.el("h2", { class: "view-head__title", "data-i18n": "tree.title" }, I18n.t("tree.title")),
         subEl
       ]),
       UI.el("div", { class: "view-head__actions" }, [
         UI.el("button", {
           class: "btn", type: "button",
           onclick: () => window.PeopleView && PeopleView.openForm && PeopleView.openForm(null)
-        }, [UI.el("i", { class: "fa-solid fa-user-plus" }), UI.el("span", null, "Add person")])
+        }, [UI.el("i", { class: "fa-solid fa-user-plus" }), UI.el("span", { "data-i18n": "tree.addPerson" }, I18n.t("tree.addPerson"))])
       ])
     ]);
     rootEl.__subEl = subEl;
@@ -106,7 +106,7 @@
 
     const panHint = UI.el("div", { class: "tree-pan-hint" }, [
       UI.el("i", { class: "fa-solid fa-arrows-up-down-left-right" }),
-      UI.el("span", null, "Drag to pan · Scroll to zoom")
+      UI.el("span", { "data-i18n": "tree.panHint" }, I18n.t("tree.panHint"))
     ]);
 
     stageEl.appendChild(svgEl);
@@ -134,7 +134,9 @@
     // Update subtitle counts
     if (rootEl && rootEl.__subEl) {
       const gens = (function () { const g = FamilyStore.buildGenerations(); let m = 0; g.forEach((v) => { if (v > m) m = v; }); return people.length ? m + 1 : 0; })();
-      rootEl.__subEl.textContent = people.length + " " + (people.length === 1 ? "member" : "members") + " · " + gens + " " + (gens === 1 ? "generation" : "generations");
+      const memberStr = people.length === 1 ? I18n.t("tree.memberOne") : I18n.t("tree.memberMany", { n: people.length });
+      const genStr = gens === 1 ? I18n.t("tree.generationOne") : I18n.t("tree.generationMany", { n: gens });
+      rootEl.__subEl.textContent = memberStr + " · " + genStr;
     }
 
     if (people.length === 0) {
@@ -148,8 +150,8 @@
       }, [
         UI.el("div", { class: "empty", style: { pointerEvents: "auto", background: "var(--bg-elev)" } }, [
           UI.el("div", { class: "empty__icon" }, "🌳"),
-          UI.el("div", { class: "empty__title" }, "No tree yet"),
-          UI.el("div", { class: "empty__text" }, "Add people in the People view to see your tree.")
+          UI.el("div", { class: "empty__title" }, I18n.t("tree.emptyTitle")),
+          UI.el("div", { class: "empty__text" }, I18n.t("tree.emptyText"))
         ])
       ]);
       stageEl.appendChild(empty);
@@ -322,65 +324,102 @@
       });
     });
 
-    // Parent -> child edges (L-shaped via rail)
-    positions.forEach((pos, id) => {
+    // Parent -> child edges
+    //
+    // Group children by their parent-set (sorted parent ids). For each group:
+    //   - draw ONE vertical drop from the parents' anchor point
+    //   - draw ONE shared horizontal rail at the midpoint between the
+    //     parents' bottom and the children's top
+    //   - draw ONE vertical riser per child from the rail to the child top
+    //   - round all corners with small quadratic-curve fillets
+    //
+    // This avoids the "stack of overlapping L-paths" that produced the messy
+    // tangle when each child got its own copy of the rail.
+    const groups = new Map(); // key = sorted parent ids → { parents, children }
+    positions.forEach((pos) => {
       const person = pos.person;
       const placedParents = person.parents
         .map((pid) => positions.get(pid))
         .filter(Boolean);
       if (placedParents.length === 0) return;
+      const key = placedParents.map((pp) => pp.person.id).sort().join("|");
+      if (!groups.has(key)) groups.set(key, { parents: placedParents, children: [] });
+      groups.get(key).children.push(pos);
+    });
 
-      let parentMidX, parentBottomY;
-      if (placedParents.length === 2) {
-        const p1 = placedParents[0];
-        const p2 = placedParents[1];
-        if (p1.rowIdx === p2.rowIdx) {
-          // Couple in the same row: drop the connector from the midpoint
-          // between the two cards, anchored at the BOTTOM of the cards (below
-          // the dates) so it never visually crosses through the photos.
-          parentMidX = ((p1.x < p2.x ? p1.x + NODE_W : p2.x + NODE_W) +
-                        (p1.x < p2.x ? p2.x : p1.x)) / 2;
-          parentBottomY = Math.max(p1.y, p2.y) + NODE_H;
-        } else {
-          parentMidX = (p1.x + p2.x) / 2 + NODE_W / 2;
-          parentBottomY = Math.max(p1.y, p2.y) + NODE_H;
-        }
+    const R = 10; // corner fillet radius
+
+    function fillet(x1, y1, x2, y2, x3, y3, r) {
+      // Round the corner at (x2, y2) given the line from (x1,y1) and onward to
+      // (x3,y3). Returns the path commands "L … Q …" that approximate the
+      // rounded corner, where the move-to (M) is assumed to already be set
+      // by the caller.
+      const v1 = sub(x1, y1, x2, y2);
+      const v2 = sub(x3, y3, x2, y2);
+      const len1 = Math.hypot(v1.x, v1.y);
+      const len2 = Math.hypot(v2.x, v2.y);
+      const k = Math.min(r, len1 / 2, len2 / 2);
+      const a = { x: x2 + (v1.x / len1) * k, y: y2 + (v1.y / len1) * k };
+      const b = { x: x2 + (v2.x / len2) * k, y: y2 + (v2.y / len2) * k };
+      return `L ${a.x} ${a.y} Q ${x2} ${y2}, ${b.x} ${b.y}`;
+    }
+    function sub(ax, ay, bx, by) { return { x: ax - bx, y: ay - by }; }
+
+    groups.forEach(({ parents: pp, children: cc }) => {
+      let anchorX, anchorY;
+      if (pp.length === 2 && pp[0].rowIdx === pp[1].rowIdx) {
+        const left  = pp[0].x < pp[1].x ? pp[0] : pp[1];
+        const right = pp[0].x < pp[1].x ? pp[1] : pp[0];
+        anchorX = (left.x + NODE_W + right.x) / 2;
+        anchorY = Math.max(pp[0].y, pp[1].y) + NODE_H;
+      } else if (pp.length === 2) {
+        anchorX = (pp[0].x + pp[1].x) / 2 + NODE_W / 2;
+        anchorY = Math.max(pp[0].y, pp[1].y) + NODE_H;
       } else {
-        const p1 = placedParents[0];
-        parentMidX = p1.x + NODE_W / 2;
-        parentBottomY = p1.y + NODE_H;
+        anchorX = pp[0].x + NODE_W / 2;
+        anchorY = pp[0].y + NODE_H;
       }
 
-      const childTopX = pos.x + NODE_W / 2;
-      const childTopY = pos.y;
-
-      // Tree-shaped connector: straight down from the parent, a horizontal
-      // rail at the midpoint, straight down to the child. Corners get a
-      // small quadratic-curve fillet so the path reads as organic, not
-      // engineered, but the trunk-and-branch silhouette is preserved.
-      const railY = (parentBottomY + childTopY) / 2;
-      const dir = childTopX >= parentMidX ? 1 : -1;
-      const R = 10; // corner radius
-      const dx = Math.abs(childTopX - parentMidX);
-      const r = Math.min(R, Math.max(2, dx / 2));
-
-      let d;
-      if (dx <= 1) {
-        // Straight drop, no rail needed
-        d = `M ${parentMidX} ${parentBottomY} L ${childTopX} ${childTopY}`;
-      } else {
-        d =
-          `M ${parentMidX} ${parentBottomY} ` +
-          `L ${parentMidX} ${railY - r} ` +
-          `Q ${parentMidX} ${railY}, ${parentMidX + dir * r} ${railY} ` +
-          `L ${childTopX - dir * r} ${railY} ` +
-          `Q ${childTopX} ${railY}, ${childTopX} ${railY + r} ` +
-          `L ${childTopX} ${childTopY}`;
-      }
-      edgesG.appendChild(svgEl_("path", {
-        class: "t-edge",
-        d
+      // Sort children left-to-right
+      const ordered = cc.slice().sort((a, b) => a.x - b.x);
+      const childTops = ordered.map((c) => ({
+        x: c.x + NODE_W / 2,
+        y: c.y
       }));
+      const railY = (anchorY + childTops[0].y) / 2;
+
+      // Trunk: from parent anchor down to the rail
+      const trunk = `M ${anchorX} ${anchorY} L ${anchorX} ${railY}`;
+      edgesG.appendChild(svgEl_("path", { class: "t-edge", d: trunk }));
+
+      // Single shared horizontal rail connecting all children, including a
+      // rounded T at the trunk junction
+      const minX = Math.min(anchorX, ...childTops.map((c) => c.x));
+      const maxX = Math.max(anchorX, ...childTops.map((c) => c.x));
+      const rail = `M ${minX} ${railY} L ${maxX} ${railY}`;
+      edgesG.appendChild(svgEl_("path", { class: "t-edge", d: rail }));
+
+      // Risers — one per child, each with a small rounded corner where the
+      // riser meets the rail
+      childTops.forEach((c) => {
+        const dx = Math.abs(c.x - anchorX);
+        const r = Math.min(R, Math.max(2, dx / 2));
+        const sign = c.x === anchorX ? 0 : (c.x > anchorX ? 1 : -1);
+        if (sign === 0) {
+          // straight from rail to child
+          edgesG.appendChild(svgEl_("path", {
+            class: "t-edge",
+            d: `M ${c.x} ${railY} L ${c.x} ${c.y}`
+          }));
+        } else {
+          // small quadratic-curve fillet from rail into the riser
+          const enter = c.x - sign * r;
+          edgesG.appendChild(svgEl_("path", {
+            class: "t-edge",
+            d: `M ${enter} ${railY} Q ${c.x} ${railY}, ${c.x} ${railY + r} L ${c.x} ${c.y}`
+          }));
+        }
+      });
     });
   }
 

@@ -59,15 +59,20 @@
       const v = views[activeView];
       if (v && v.mount && typeof v.mount.render === "function") v.mount.render();
     });
+    function syncLangButtons() {
+      document.querySelectorAll(".lang-switch__btn").forEach((b) => {
+        const active = b.dataset.lang === I18n.getLang();
+        b.classList.toggle("is-active", active);
+        b.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    }
     document.querySelectorAll(".lang-switch__btn").forEach((btn) => {
-      btn.classList.toggle("is-active", btn.dataset.lang === I18n.getLang());
       btn.addEventListener("click", () => {
         I18n.setLang(btn.dataset.lang);
-        document.querySelectorAll(".lang-switch__btn").forEach((b) => {
-          b.classList.toggle("is-active", b.dataset.lang === I18n.getLang());
-        });
+        syncLangButtons();
       });
     });
+    syncLangButtons();
   }
 
   // — Rail tools —

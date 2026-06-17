@@ -387,10 +387,10 @@
       class: "select",
       onchange: (e) => { draft.gender = e.target.value; }
     }, [
-      el("option", { value: "" }, "—"),
-      el("option", { value: "m" }, "Male"),
-      el("option", { value: "f" }, "Female"),
-      el("option", { value: "o" }, "Other")
+      el("option", { value: "" }, I18n.t("form.genderNone")),
+      el("option", { value: "m" }, I18n.t("form.genderM")),
+      el("option", { value: "f" }, I18n.t("form.genderF")),
+      el("option", { value: "o" }, I18n.t("form.genderO"))
     ]);
     genderSelect.value = draft.gender || "";
 
@@ -539,13 +539,13 @@
         return;
       }
       if (draft.birthDate && !FamilyStore.parseDate(draft.birthDate)) {
-        toast(I18n.t("form.datePlaceholder"), "danger");
+        toast(I18n.t("form.dateInvalid"), "danger");
         if (birthDatePicker) birthDatePicker.focus();
         else birthDateInput.focus && birthDateInput.focus();
         return;
       }
       if (draft.deathDate && !FamilyStore.parseDate(draft.deathDate)) {
-        toast(I18n.t("form.datePlaceholder"), "danger");
+        toast(I18n.t("form.dateInvalid"), "danger");
         if (deathDatePicker) deathDatePicker.focus();
         else deathDateInput.focus && deathDateInput.focus();
         return;
