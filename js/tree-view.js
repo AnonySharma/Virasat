@@ -157,6 +157,31 @@
     drawEdges(positions);
     drawNodes(positions);
 
+    // Signature: draw the edges as ink, then bloom the nodes — but only
+    // the first time per session, so subsequent re-renders feel responsive.
+    const FIRST_DRAW_KEY = "familyTree.tree.firstDrawShown";
+    let shouldAnimate = false;
+    try { shouldAnimate = !sessionStorage.getItem(FIRST_DRAW_KEY); } catch (_) {}
+    if (shouldAnimate && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      try { sessionStorage.setItem(FIRST_DRAW_KEY, "1"); } catch (_) {}
+      // Index every edge so they cascade
+      const edges = edgesG.querySelectorAll(".t-edge");
+      edges.forEach((edge, i) => {
+        edge.style.setProperty("--t-edge-i", String(i));
+        // Use the path's actual length for stroke-dasharray
+        try {
+          const len = edge.getTotalLength ? edge.getTotalLength() : 1000;
+          edge.style.setProperty("--t-edge-len", String(Math.max(50, len)));
+        } catch (_) {}
+      });
+      // Index every node by birth year so the eldest blooms first
+      const nodes = Array.from(nodesG.querySelectorAll(".t-node"));
+      nodes.forEach((node, i) => node.style.setProperty("--t-node-i", String(i)));
+      svgEl.classList.add("is-drawing");
+      const totalDelay = 700 + nodes.length * 50 + 480;
+      setTimeout(() => svgEl.classList.remove("is-drawing"), totalDelay + 100);
+    }
+
     const bbox = computeBBox(positions);
     lastBBox = bbox;
 
@@ -315,11 +340,13 @@
     positions.forEach((pos, id) => {
       const p = pos.person;
       const g = svgEl_("g", {
+        class: "t-node",
         transform: `translate(${pos.x},${pos.y})`,
+        "data-person-id": p.id,
         style: { cursor: "pointer" },
-        onclick: () => {
-          if (window.ProfileView && ProfileView.open) ProfileView.open(p.id);
-          else openProfileModal(p);
+        onclick: (ev) => {
+          ev.stopPropagation();
+          showNodeMenu(p, pos, ev);
         }
       });
 
@@ -416,6 +443,108 @@
     if (!s) return "";
     if (s.length <= n) return s;
     return s.slice(0, n - 1).trimEnd() + "…";
+  }
+
+  // Contextual menu shown when a tree node is clicked.
+  let openMenu = null;
+  function dismissMenu() {
+    if (openMenu && openMenu.parentNode) openMenu.parentNode.removeChild(openMenu);
+    openMenu = null;
+    document.removeEventListener("click", onDocClick, true);
+    document.removeEventListener("keydown", onDocKey, true);
+  }
+  function onDocClick(e) {
+    if (openMenu && !openMenu.contains(e.target)) dismissMenu();
+  }
+  function onDocKey(e) {
+    if (e.key === "Escape") dismissMenu();
+  }
+
+  function showNodeMenu(person, pos, ev) {
+    dismissMenu();
+    if (!stageEl || !svgEl) return;
+
+    // Convert SVG-space (pos.x + NODE_W/2, pos.y + NODE_H) to stage-relative px
+    const pt = svgEl.createSVGPoint();
+    pt.x = pos.x + 75;       // node center horizontally
+    pt.y = pos.y + 110;      // bottom of node
+    const ctm = svgEl.getScreenCTM();
+    if (!ctm) return;
+    const screen = pt.matrixTransform(ctm);
+    const stageBox = stageEl.getBoundingClientRect();
+    const left = screen.x - stageBox.left;
+    const top  = screen.y - stageBox.top + 8;
+
+    const displayName = FamilyStore.getField(person, "name") || person.name;
+    const lifespan = FamilyStore.formatDateRange(person);
+
+    const menu = UI.el("div", { class: "tree-node-menu", role: "menu", style: { left: left + "px", top: top + "px", transform: "translateX(-50%)" } }, [
+      UI.el("div", { class: "tree-node-menu__head" }, [
+        UI.el("div", { class: "tree-node-menu__name" }, displayName),
+        UI.el("div", { class: "tree-node-menu__sub" }, lifespan)
+      ]),
+      menuItem("Open profile", "→", "primary", () => {
+        dismissMenu();
+        if (window.ProfileView) ProfileView.open(person.id);
+      }),
+      menuItem("Edit", "✎", null, () => {
+        dismissMenu();
+        if (window.PeopleView && PeopleView.openForm) PeopleView.openForm(person.id);
+      }),
+      UI.el("div", { style: { height: "1px", background: "var(--paper-line)", margin: "4px 6px" } }),
+      menuItem("Add child", "+", null, () => {
+        dismissMenu();
+        addRelative(person, "child");
+      }),
+      menuItem("Add spouse", "♥", null, () => {
+        dismissMenu();
+        addRelative(person, "spouse");
+      }),
+      menuItem("Add parent", "↑", null, () => {
+        dismissMenu();
+        addRelative(person, "parent");
+      })
+    ]);
+
+    stageEl.appendChild(menu);
+    openMenu = menu;
+    setTimeout(() => {
+      document.addEventListener("click", onDocClick, true);
+      document.addEventListener("keydown", onDocKey, true);
+    }, 0);
+  }
+
+  function menuItem(label, icon, variant, onclick) {
+    return UI.el("button", {
+      class: "tree-node-menu__item" + (variant ? " tree-node-menu__item--" + variant : ""),
+      type: "button",
+      role: "menuitem",
+      onclick
+    }, [
+      UI.el("span", { class: "tree-node-menu__icon", "aria-hidden": "true" }, icon),
+      UI.el("span", null, label)
+    ]);
+  }
+
+  /**
+   * Open the People form pre-filled with the right relation to `anchor`:
+   *   - "child"  → newPerson.parents includes anchor (and anchor's spouse if there's exactly one)
+   *   - "spouse" → newPerson.spouses includes anchor
+   *   - "parent" → anchor.parents now includes newPerson (handled after save)
+   */
+  function addRelative(anchor, kind) {
+    if (!window.PeopleView || !PeopleView.openForm) return;
+    const seed = {};
+    if (kind === "child") {
+      const parents = [anchor.id];
+      if (anchor.spouses && anchor.spouses.length === 1) parents.push(anchor.spouses[0]);
+      seed.parents = parents;
+    } else if (kind === "spouse") {
+      seed.spouses = [anchor.id];
+    } else if (kind === "parent") {
+      seed.__addAsParentOf = anchor.id;
+    }
+    PeopleView.openForm(null, seed);
   }
 
   function formatYears(p) {
@@ -558,9 +687,8 @@
   }
 
   function onPointerDown(e) {
-    // Don't start a pan when the click was on a node group (let click bubble to open modal)
-    // Pan only when target is the svg itself or background layers — rect/path/etc on a node still
-    // initiates a pan, but we use a small drag threshold to differentiate.
+    // Dismiss any open contextual menu when starting a pan or pinch.
+    if (openMenu) dismissMenu();
     svgEl.setPointerCapture(e.pointerId);
     activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, moved: false });
 

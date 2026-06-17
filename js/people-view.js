@@ -144,7 +144,15 @@
       el("div", { class: "person-card__top" }, [
         avatar(person, "lg"),
         el("div", null, [
-          el("div", { class: "person-card__name" }, displayName),
+          el("div", { class: "person-card__name" }, [
+            displayName,
+            // Show the alternate-script name as a small subtitle if both exist
+            (I18n.getLang() === "hi" && person.name && person.name !== displayName)
+              ? el("span", { class: "person-card__name-hi" }, person.name)
+              : (I18n.getLang() !== "hi" && person.name_hi && person.name_hi !== displayName)
+                ? el("span", { class: "person-card__name-hi", lang: "hi" }, person.name_hi)
+                : null
+          ]),
           el("div", { class: "person-card__dates" }, FamilyStore.formatDateRange(person))
         ])
       ]),
@@ -198,13 +206,14 @@
 
   // ===== Add/Edit form =====
 
-  function openForm(id) {
+  function openForm(id, seed) {
     const isEdit = !!id;
     const existing = isEdit ? FamilyStore.getPerson(id) : null;
     if (isEdit && !existing) {
       toast("Person not found", "danger");
       return;
     }
+    seed = seed || {};
 
     // Working copy of the person (only fields used by the form).
     const draft = {
@@ -231,8 +240,9 @@
       achievements_hi: existing && existing.achievements_hi ? existing.achievements_hi.slice() : [],
       education: existing && existing.education ? existing.education.slice() : [],
       education_hi: existing && existing.education_hi ? existing.education_hi.slice() : [],
-      parents: existing ? existing.parents.slice() : [],
-      spouses: existing ? existing.spouses.slice() : []
+      parents: existing ? existing.parents.slice() : (seed.parents ? seed.parents.slice() : []),
+      spouses: existing ? existing.spouses.slice() : (seed.spouses ? seed.spouses.slice() : []),
+      __addAsParentOf: seed.__addAsParentOf || null
     };
 
     // ----- Photo uploader -----
@@ -481,7 +491,15 @@
     const saveBtn = el("button", { class: "btn btn--primary", type: "button" }, I18n.t("actions.save"));
 
     const dlg = openModal({
-      title: isEdit ? I18n.t("form.editTitle") : I18n.t("form.addTitle"),
+      title: isEdit
+        ? I18n.t("form.editTitle")
+        : (seed && seed.parents && seed.parents.length
+            ? "Add child"
+            : seed && seed.spouses && seed.spouses.length
+              ? "Add spouse"
+              : seed && seed.__addAsParentOf
+                ? "Add parent"
+                : I18n.t("form.addTitle")),
       body,
       footer: [cancelBtn, saveBtn]
     });
@@ -534,8 +552,19 @@
       };
 
       try {
-        if (isEdit) FamilyStore.updatePerson(draft.id, payload);
-        else FamilyStore.addPerson(payload);
+        let saved;
+        if (isEdit) saved = FamilyStore.updatePerson(draft.id, payload);
+        else saved = FamilyStore.addPerson(payload);
+        // If we were asked to attach this new person as a parent of someone,
+        // do that now that we have an id.
+        if (!isEdit && draft.__addAsParentOf && saved) {
+          const child = FamilyStore.getPerson(draft.__addAsParentOf);
+          if (child) {
+            const parents = (child.parents || []).slice();
+            if (!parents.includes(saved.id)) parents.push(saved.id);
+            FamilyStore.updatePerson(child.id, { parents });
+          }
+        }
         dlg.close();
         toast(I18n.t("form.saved"), "success");
       } catch (err) {

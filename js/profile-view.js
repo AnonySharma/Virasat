@@ -86,7 +86,15 @@
       UI.el("div", { class: "profile__hero" }, [
         UI.avatar(p, "lg"),
         UI.el("div", { class: "profile__hero-info" }, [
-          UI.el("h1", { class: "profile__name" }, displayName),
+          UI.el("h1", { class: "profile__name" }, [
+            displayName,
+            // Alternate-script secondary name
+            (I18n.getLang() === "hi" && p.name && p.name !== displayName)
+              ? UI.el("span", { class: "profile__name-hi" }, p.name)
+              : (I18n.getLang() !== "hi" && p.name_hi && p.name_hi !== displayName)
+                ? UI.el("span", { class: "profile__name-hi", lang: "hi" }, p.name_hi)
+                : null
+          ]),
           displayOccupation ? UI.el("div", { class: "profile__occupation" }, displayOccupation) : null,
           UI.el("div", { class: "profile__lifeline" }, lifelineChips(p))
         ])

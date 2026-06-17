@@ -4,34 +4,75 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
   font-family: var(--font-sans);
   background: var(--bg);
-  color: var(--ink);
+  color: var(--text);
   font-size: 15px;
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100dvh;
   overflow-x: hidden;
+  font-feature-settings: "ss01", "cv11";
 }
+
+/* Ambient texture: very subtle starfield in dark mode, paper grain in light mode.
+   Kept low-opacity so it never competes with content. */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(226, 178, 62, .04) 0, transparent 40%),
+    radial-gradient(circle at 88% 82%, rgba(181, 71, 31, .04) 0, transparent 40%);
+}
+@media (prefers-color-scheme: light) {
+  body::before {
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(226, 178, 62, .12) 0, transparent 40%),
+      radial-gradient(circle at 88% 82%, rgba(181, 71, 31, .08) 0, transparent 40%);
+  }
+}
+
 img { max-width: 100%; display: block; }
 button { font: inherit; color: inherit; cursor: pointer; }
 input, select, textarea, button { font: inherit; }
 
-h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
-h2 { font-size: 22px; }
+h1, h2, h3, h4 { margin: 0; font-weight: 500; letter-spacing: -0.015em; }
+h2 { font-size: 22px; font-family: var(--font-display); }
 h3 { font-size: 17px; }
 
 a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
+a:hover { text-decoration: underline; text-decoration-color: rgba(226, 178, 62, .4); text-underline-offset: 3px; }
 
-/* App layout */
+::selection { background: var(--accent); color: var(--accent-ink); }
+
+/* Devanagari pairing — when content is Hindi, use Noto Serif Devanagari which
+   pairs visually with Fraunces and renders matras correctly. */
+:lang(hi), [lang="hi"] { font-family: "Noto Serif Devanagari", var(--font-display); }
+
+/* — App header — */
 .app-header {
   position: sticky; top: 0; z-index: var(--z-header);
-  background: color-mix(in srgb, var(--bg-elev) 92%, transparent);
-  backdrop-filter: saturate(140%) blur(14px);
-  -webkit-backdrop-filter: saturate(140%) blur(14px);
-  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg-elev) 88%, transparent);
+  backdrop-filter: saturate(140%) blur(18px);
+  -webkit-backdrop-filter: saturate(140%) blur(18px);
+  border-bottom: var(--hairline) solid var(--line);
   height: var(--header-h);
+  /* signature: a thin gold filament under the header */
 }
+.app-header::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(226, 178, 62, 0) 8%,
+    rgba(226, 178, 62, .55) 50%,
+    rgba(226, 178, 62, 0) 92%,
+    transparent 100%);
+  pointer-events: none;
+}
+
 .app-header__inner {
   max-width: var(--content-max);
   margin: 0 auto;
@@ -40,69 +81,102 @@ a:hover { text-decoration: underline; }
   display: flex;
   align-items: center;
   gap: var(--s-4);
+  position: relative;
 }
+
+/* Wordmark with a small ornamental glyph instead of an emoji tree */
 .app-title {
-  display: inline-flex; align-items: center; gap: var(--s-2);
+  display: inline-flex; align-items: center; gap: 10px;
   font-family: var(--font-display);
-  font-size: 24px; font-weight: 600; letter-spacing: -0.01em;
-  color: var(--ink);
+  font-size: 22px; font-weight: 500;
+  font-variation-settings: "opsz" 144, "SOFT" 60;
+  letter-spacing: -0.015em;
+  color: var(--text);
   white-space: nowrap;
 }
-.app-title__icon { font-size: 22px; }
+.app-title__icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 14px; font-weight: 700;
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 144;
+  box-shadow: var(--glow-gold);
+}
 
-.app-nav { display: flex; gap: var(--s-1); margin-left: var(--s-5); }
+.app-nav { display: flex; gap: 2px; margin-left: var(--s-5); padding: 4px; background: var(--surface-2); border-radius: var(--r-pill); }
 .nav-btn {
   background: transparent; border: 0;
-  padding: 8px 14px; border-radius: var(--r-pill);
-  color: var(--ink-2);
+  padding: 7px 14px; border-radius: var(--r-pill);
+  color: var(--text-3);
   display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px;
   font-weight: 500;
+  letter-spacing: .005em;
   transition: background var(--t-fast), color var(--t-fast);
 }
-.nav-btn:hover { background: var(--surface-2); color: var(--ink); }
-.nav-btn.is-active { background: var(--ink); color: var(--bg-elev); }
-.nav-btn__icon { font-size: 14px; }
+.nav-btn:hover { color: var(--text); }
+.nav-btn.is-active {
+  background: var(--bg-elev);
+  color: var(--text);
+  box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 2px 8px rgba(0,0,0,.25);
+}
+@media (prefers-color-scheme: light) {
+  .nav-btn.is-active { background: var(--bg); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+}
+.nav-btn__icon { font-size: 13px; opacity: .7; }
+.nav-btn.is-active .nav-btn__icon { opacity: 1; }
 
-.app-header__actions { margin-left: auto; display: inline-flex; gap: var(--s-2); }
+.app-header__actions { margin-left: auto; display: inline-flex; gap: 8px; align-items: center; }
 
 .app-main {
+  position: relative;
+  z-index: 1;
   max-width: var(--content-max);
   margin: 0 auto;
-  padding: var(--s-5);
+  padding: var(--s-6) var(--s-5);
   padding-bottom: calc(var(--s-7) + env(safe-area-inset-bottom));
   min-height: calc(100dvh - var(--header-h));
 }
-.view { display: none; }
+.view { display: none; animation: view-fade var(--t-med) ease-out both; }
 .view.is-active { display: block; }
+@keyframes view-fade {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-/* Mobile header — switch to bottom nav */
+/* — Mobile: bottom tab bar — */
 @media (max-width: 720px) {
   .app-header { height: var(--header-h-mobile); }
   .app-header__inner { padding: 0 var(--s-4); gap: var(--s-3); }
-  .app-title { font-size: 19px; }
-  .app-title__icon { font-size: 18px; }
+  .app-title { font-size: 18px; }
+  .app-title__icon { width: 24px; height: 24px; font-size: 12px; }
+
   .app-nav {
-    position: fixed; left: 0; right: 0; bottom: 0;
+    position: fixed; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom));
     margin: 0;
-    height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));
-    padding: 6px 8px env(safe-area-inset-bottom);
+    height: var(--bottom-nav-h);
+    padding: 6px;
     background: color-mix(in srgb, var(--bg-elev) 92%, transparent);
-    backdrop-filter: saturate(140%) blur(14px);
-    -webkit-backdrop-filter: saturate(140%) blur(14px);
-    border-top: 1px solid var(--line);
+    backdrop-filter: saturate(140%) blur(20px);
+    -webkit-backdrop-filter: saturate(140%) blur(20px);
+    border: var(--hairline) solid var(--line);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
     justify-content: space-around;
     z-index: var(--z-header);
   }
   .nav-btn {
     flex: 1; flex-direction: column; gap: 2px;
     padding: 6px 4px; border-radius: var(--r-md);
-    font-size: 11px;
+    font-size: 10px;
   }
   .nav-btn__icon { font-size: 18px; }
-  .app-main { padding: var(--s-4); padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + var(--s-4)); }
+  .app-main { padding: var(--s-4); padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + var(--s-5)); }
   .btn__label-md { display: none; }
 }
 
 @media (min-width: 721px) {
-  .nav-btn__label { font-size: 14px; }
+  .nav-btn__label { font-size: 13px; }
 }

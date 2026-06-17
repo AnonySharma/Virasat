@@ -1,39 +1,79 @@
+/*
+ * Design tokens — "Vellum"
+ *
+ * The brief is a multi-generational family tree that should feel like an
+ * heirloom, not a SaaS dashboard. So:
+ *
+ *  - Default mode is DARK — ink-navy with ivory paper as the foreground.
+ *    Cards are ivory rectangles floating on midnight, like family photos
+ *    laid on a velvet cloth. (Light mode flips this for those who prefer.)
+ *  - Single bold accent: marigold gold. Used in one place at a time.
+ *  - Secondary accent: rust, only for "deceased" markers and couple lines.
+ *  - Sage as the "alive" indicator — quiet, not toy-bright.
+ *
+ * This is intentionally NOT the AI-default cream-paper-with-terracotta
+ * palette; it sits closer to an illuminated manuscript at night.
+ */
 :root {
-  /* Color — warm, paper-like with deep accent */
-  --bg: #f6f3ed;
-  --bg-elev: #ffffff;
-  --bg-sunken: #ece7dc;
-  --surface: #ffffff;
-  --surface-2: #faf7f1;
+  /* — surfaces — */
+  --ink:        #0F1320;   /* deep navy, the page itself */
+  --ink-2:      #171B2C;   /* elevated surfaces (header, modal backdrop) */
+  --ink-3:      #1F2438;
+  --ink-line:   #2A2F47;
 
-  --ink: #1a1d29;
-  --ink-2: #404656;
-  --ink-3: #6b7280;
-  --ink-4: #9aa0ad;
+  /* — paper — */
+  --paper:      #F4EFE3;   /* warm ivory — never pure white */
+  --paper-2:    #ECE4D2;
+  --paper-3:    #DDD3BD;
+  --paper-line: #C7BEA6;
 
-  --line: #e3ddcf;
-  --line-2: #d2cab7;
+  /* — accents (used sparingly) — */
+  --gold:       #E2B23E;   /* marigold — the signature accent */
+  --gold-soft:  #6E5519;   /* dim gold for backgrounds in dark mode */
+  --rust:       #B5471F;   /* deceased + couple line */
+  --sage:       #8AA678;   /* alive */
 
-  --accent: #8b5a3c;        /* warm bark */
-  --accent-ink: #5a3920;
-  --accent-soft: #f0e4d6;
-  --accent-leaf: #4a7c59;   /* foliage green */
-  --accent-leaf-soft: #d8e6dc;
-  --accent-gold: #c9a14a;
+  /* — semantic (dark default) — */
+  --bg:           var(--ink);
+  --bg-elev:      var(--ink-2);
+  --bg-sunken:    #0A0D17;
+  --surface:      var(--ink-2);
+  --surface-2:    var(--ink-3);
 
-  --danger: #b54a3a;
-  --danger-soft: #f5dcd6;
+  --text:         var(--paper);
+  --text-2:       #C9C2B0;     /* dimmer ivory */
+  --text-3:       #8C8979;
+  --text-4:       #5C5A52;
 
-  --shadow-sm: 0 1px 2px rgba(26, 29, 41, 0.05), 0 1px 3px rgba(26, 29, 41, 0.06);
-  --shadow-md: 0 4px 12px rgba(26, 29, 41, 0.08), 0 2px 4px rgba(26, 29, 41, 0.05);
-  --shadow-lg: 0 18px 40px rgba(26, 29, 41, 0.16), 0 4px 12px rgba(26, 29, 41, 0.08);
+  --line:         var(--ink-line);
+  --line-2:       #353A55;
 
-  /* Type */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Cormorant Garamond", "Iowan Old Style", Georgia, "Times New Roman", serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --accent:       var(--gold);
+  --accent-ink:   #2A1E05;
+  --accent-soft:  rgba(226, 178, 62, 0.16);
+  --accent-leaf:  var(--sage);
+  --accent-leaf-soft: rgba(138, 166, 120, 0.16);
+  --accent-rust:  var(--rust);
+  --accent-rust-soft: rgba(181, 71, 31, 0.18);
 
-  /* Spacing scale */
+  --danger:       #E0644B;
+  --danger-soft:  rgba(224, 100, 75, 0.18);
+
+  /* — shadows: cards on dark = subtle inner glow + drop — */
+  --shadow-sm: 0 1px 0 rgba(255,255,255,.04) inset, 0 2px 6px rgba(0,0,0,.35);
+  --shadow-md: 0 1px 0 rgba(255,255,255,.05) inset, 0 8px 24px rgba(0,0,0,.45);
+  --shadow-lg: 0 1px 0 rgba(255,255,255,.06) inset, 0 22px 50px rgba(0,0,0,.55);
+  --glow-gold: 0 0 0 1px rgba(226, 178, 62, .35), 0 0 24px rgba(226, 178, 62, .18);
+
+  /* — type —
+     Fraunces: warm contemporary serif with optical-size variation.
+     Inter: workhorse sans for labels and metadata.
+     Loaded from Google Fonts in index.html. */
+  --font-display: "Fraunces", "Iowan Old Style", "Cormorant Garamond", Georgia, serif;
+  --font-sans:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* — spacing — */
   --s-1: 4px;
   --s-2: 8px;
   --s-3: 12px;
@@ -43,57 +83,57 @@
   --s-7: 48px;
   --s-8: 64px;
 
-  /* Radius */
-  --r-sm: 6px;
-  --r-md: 10px;
-  --r-lg: 16px;
-  --r-xl: 22px;
+  /* — radius (smaller, more printed-feeling) — */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
   --r-pill: 999px;
 
-  /* Layers */
+  /* — layers — */
   --z-header: 50;
   --z-modal: 100;
   --z-toast: 200;
 
-  /* Motion */
-  --t-fast: 120ms cubic-bezier(.2,.8,.2,1);
-  --t-med: 220ms cubic-bezier(.2,.8,.2,1);
+  /* — motion (slow, intentional) — */
+  --t-fast: 140ms cubic-bezier(.2,.8,.2,1);
+  --t-med:  280ms cubic-bezier(.2,.8,.2,1);
+  --t-slow: 600ms cubic-bezier(.2,.8,.2,1);
 
-  /* Layout */
-  --header-h: 64px;
-  --header-h-mobile: 56px;
+  /* — layout — */
+  --header-h: 68px;
+  --header-h-mobile: 60px;
   --bottom-nav-h: 64px;
-  --content-max: 1200px;
+  --content-max: 1180px;
+
+  /* — signature: a 0.5px hairline that scales on hidpi — */
+  --hairline: 1px;
 }
 
-@media (prefers-color-scheme: dark) {
+/* Light mode: paper-on-paper, ink as text */
+@media (prefers-color-scheme: light) {
   :root {
-    --bg: #15161c;
-    --bg-elev: #1d1f28;
-    --bg-sunken: #0f1015;
-    --surface: #1d1f28;
-    --surface-2: #232631;
+    --bg:           var(--paper);
+    --bg-elev:      #FBF6EB;
+    --bg-sunken:    #E9E1CC;
+    --surface:      #FBF6EB;
+    --surface-2:    var(--paper-2);
 
-    --ink: #f1ece2;
-    --ink-2: #c8c2b4;
-    --ink-3: #8e8a7e;
-    --ink-4: #5e5b54;
+    --text:         var(--ink);
+    --text-2:       #2E3349;
+    --text-3:       #6F6B5C;
+    --text-4:       #9E9989;
 
-    --line: #2a2d38;
-    --line-2: #3a3e4d;
+    --line:         var(--paper-line);
+    --line-2:       #B7AC93;
 
-    --accent: #c98a64;
-    --accent-ink: #f4d9c5;
-    --accent-soft: #2e2218;
-    --accent-leaf: #8fbf9a;
-    --accent-leaf-soft: #1d2a22;
-    --accent-gold: #e3c073;
+    --accent-soft:  rgba(226, 178, 62, 0.20);
+    --accent-leaf-soft: rgba(122, 147, 103, 0.18);
+    --accent-rust-soft: rgba(181, 71, 31, 0.16);
 
-    --danger: #e57867;
-    --danger-soft: #3a201c;
-
-    --shadow-sm: 0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.3);
-    --shadow-md: 0 6px 16px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.3);
-    --shadow-lg: 0 24px 48px rgba(0,0,0,.55), 0 6px 16px rgba(0,0,0,.4);
+    --shadow-sm: 0 1px 2px rgba(15, 19, 32, .06);
+    --shadow-md: 0 8px 22px rgba(15, 19, 32, .08), 0 2px 6px rgba(15, 19, 32, .05);
+    --shadow-lg: 0 24px 56px rgba(15, 19, 32, .14), 0 6px 16px rgba(15, 19, 32, .08);
+    --glow-gold: 0 0 0 1px rgba(226, 178, 62, .55), 0 0 18px rgba(226, 178, 62, .25);
   }
 }
