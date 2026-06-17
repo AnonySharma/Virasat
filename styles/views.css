@@ -349,6 +349,8 @@
 }
 
 /* ========== Inspector — biographical, photo-first ========== */
+[hidden] { display: none !important; }
+
 .inspector-empty {
   flex: 1;
   display: flex; flex-direction: column; align-items: center; justify-content: center;

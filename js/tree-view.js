@@ -357,15 +357,29 @@
       const childTopX = pos.x + NODE_W / 2;
       const childTopY = pos.y;
 
-      // Smooth cubic Bezier from parent bottom to child top.
-      // Two control points pulled toward a halfway "rail" so the line eases
-      // out vertically and back in vertically — calligraphic, not corporate.
+      // Tree-shaped connector: straight down from the parent, a horizontal
+      // rail at the midpoint, straight down to the child. Corners get a
+      // small quadratic-curve fillet so the path reads as organic, not
+      // engineered, but the trunk-and-branch silhouette is preserved.
       const railY = (parentBottomY + childTopY) / 2;
-      const c1x = parentMidX;
-      const c1y = railY;
-      const c2x = childTopX;
-      const c2y = railY;
-      const d = `M ${parentMidX} ${parentBottomY} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${childTopX} ${childTopY}`;
+      const dir = childTopX >= parentMidX ? 1 : -1;
+      const R = 10; // corner radius
+      const dx = Math.abs(childTopX - parentMidX);
+      const r = Math.min(R, Math.max(2, dx / 2));
+
+      let d;
+      if (dx <= 1) {
+        // Straight drop, no rail needed
+        d = `M ${parentMidX} ${parentBottomY} L ${childTopX} ${childTopY}`;
+      } else {
+        d =
+          `M ${parentMidX} ${parentBottomY} ` +
+          `L ${parentMidX} ${railY - r} ` +
+          `Q ${parentMidX} ${railY}, ${parentMidX + dir * r} ${railY} ` +
+          `L ${childTopX - dir * r} ${railY} ` +
+          `Q ${childTopX} ${railY}, ${childTopX} ${railY + r} ` +
+          `L ${childTopX} ${childTopY}`;
+      }
       edgesG.appendChild(svgEl_("path", {
         class: "t-edge",
         d
