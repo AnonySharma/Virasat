@@ -1,0 +1,99 @@
+:root {
+  /* Color — warm, paper-like with deep accent */
+  --bg: #f6f3ed;
+  --bg-elev: #ffffff;
+  --bg-sunken: #ece7dc;
+  --surface: #ffffff;
+  --surface-2: #faf7f1;
+
+  --ink: #1a1d29;
+  --ink-2: #404656;
+  --ink-3: #6b7280;
+  --ink-4: #9aa0ad;
+
+  --line: #e3ddcf;
+  --line-2: #d2cab7;
+
+  --accent: #8b5a3c;        /* warm bark */
+  --accent-ink: #5a3920;
+  --accent-soft: #f0e4d6;
+  --accent-leaf: #4a7c59;   /* foliage green */
+  --accent-leaf-soft: #d8e6dc;
+  --accent-gold: #c9a14a;
+
+  --danger: #b54a3a;
+  --danger-soft: #f5dcd6;
+
+  --shadow-sm: 0 1px 2px rgba(26, 29, 41, 0.05), 0 1px 3px rgba(26, 29, 41, 0.06);
+  --shadow-md: 0 4px 12px rgba(26, 29, 41, 0.08), 0 2px 4px rgba(26, 29, 41, 0.05);
+  --shadow-lg: 0 18px 40px rgba(26, 29, 41, 0.16), 0 4px 12px rgba(26, 29, 41, 0.08);
+
+  /* Type */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Cormorant Garamond", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Spacing scale */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+
+  /* Radius */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --r-pill: 999px;
+
+  /* Layers */
+  --z-header: 50;
+  --z-modal: 100;
+  --z-toast: 200;
+
+  /* Motion */
+  --t-fast: 120ms cubic-bezier(.2,.8,.2,1);
+  --t-med: 220ms cubic-bezier(.2,.8,.2,1);
+
+  /* Layout */
+  --header-h: 64px;
+  --header-h-mobile: 56px;
+  --bottom-nav-h: 64px;
+  --content-max: 1200px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15161c;
+    --bg-elev: #1d1f28;
+    --bg-sunken: #0f1015;
+    --surface: #1d1f28;
+    --surface-2: #232631;
+
+    --ink: #f1ece2;
+    --ink-2: #c8c2b4;
+    --ink-3: #8e8a7e;
+    --ink-4: #5e5b54;
+
+    --line: #2a2d38;
+    --line-2: #3a3e4d;
+
+    --accent: #c98a64;
+    --accent-ink: #f4d9c5;
+    --accent-soft: #2e2218;
+    --accent-leaf: #8fbf9a;
+    --accent-leaf-soft: #1d2a22;
+    --accent-gold: #e3c073;
+
+    --danger: #e57867;
+    --danger-soft: #3a201c;
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.3);
+    --shadow-md: 0 6px 16px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.3);
+    --shadow-lg: 0 24px 48px rgba(0,0,0,.55), 0 6px 16px rgba(0,0,0,.4);
+  }
+}

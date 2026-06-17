@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1d29" />
+  <meta name="description" content="A beautiful interactive family tree — preserve names, photos, dates and stories of every family member." />
+  <title>Family Tree</title>
+  <link rel="stylesheet" href="styles/tokens.css" />
+  <link rel="stylesheet" href="styles/base.css" />
+  <link rel="stylesheet" href="styles/components.css" />
+  <link rel="stylesheet" href="styles/views.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8C%B3%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header__inner">
+      <h1 class="app-title">
+        <span class="app-title__icon" aria-hidden="true">🌳</span>
+        <span class="app-title__text" data-i18n="app.title">Family Tree</span>
+      </h1>
+      <nav class="app-nav" aria-label="Views">
+        <button class="nav-btn is-active" data-view="people" type="button">
+          <span class="nav-btn__icon" aria-hidden="true">👥</span>
+          <span class="nav-btn__label" data-i18n="nav.people">People</span>
+        </button>
+        <button class="nav-btn" data-view="tree" type="button">
+          <span class="nav-btn__icon" aria-hidden="true">🌳</span>
+          <span class="nav-btn__label" data-i18n="nav.tree">Tree</span>
+        </button>
+        <button class="nav-btn" data-view="timeline" type="button">
+          <span class="nav-btn__icon" aria-hidden="true">⏳</span>
+          <span class="nav-btn__label" data-i18n="nav.timeline">Timeline</span>
+        </button>
+      </nav>
+      <div class="app-header__actions">
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button class="lang-switch__btn is-active" data-lang="en" type="button" title="English">EN</button>
+          <button class="lang-switch__btn" data-lang="hi" type="button" title="हिन्दी">HI</button>
+        </div>
+        <button class="btn btn--ghost" id="collect-btn" type="button" data-i18n-title="actions.collect" title="Collect via form">
+          <span aria-hidden="true">📋</span>
+          <span class="btn__label-md" data-i18n="actions.collect">Collect</span>
+        </button>
+        <button class="btn btn--ghost" id="import-btn" type="button" data-i18n-title="actions.import" title="Import JSON">
+          <span aria-hidden="true">⬆</span>
+          <span class="btn__label-md" data-i18n="actions.import">Import</span>
+        </button>
+        <button class="btn btn--primary" id="export-btn" type="button" data-i18n-title="actions.export" title="Export data">
+          <span aria-hidden="true">⬇</span>
+          <span class="btn__label-md" data-i18n="actions.export">Export</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="view view--people is-active" id="view-people" aria-label="People"></section>
+    <section class="view view--tree" id="view-tree" aria-label="Family tree"></section>
+    <section class="view view--timeline" id="view-timeline" aria-label="Timeline"></section>
+  </main>
+
+  <div class="modal-root" id="modal-root" aria-hidden="true"></div>
+
+  <input type="file" id="import-file-input" accept="application/json,text/csv,.csv,.json" hidden />
+
+  <div class="toast-root" id="toast-root" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/data-store.js"></script>
+  <script src="js/photo-store.js"></script>
+  <script src="js/ui-utils.js"></script>
+  <script src="js/people-view.js"></script>
+  <script src="js/tree-view.js"></script>
+  <script src="js/timeline-view.js"></script>
+  <script src="js/profile-view.js"></script>
+  <script src="js/export-import.js"></script>
+  <script src="js/collect-form.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
