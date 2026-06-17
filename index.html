@@ -24,6 +24,9 @@
 
   <!-- Header (sage band) -->
   <header class="app-header">
+    <button class="btn btn--ghost btn--icon hamburger-btn" id="hamburger-btn" type="button" aria-label="Open menu">
+      <i class="fa-solid fa-bars" aria-hidden="true"></i>
+    </button>
     <h1 class="app-title">
       <span class="app-title__icon" aria-hidden="true">
         <img src="assets/tree.svg" alt="" width="18" height="18" />
@@ -77,49 +80,43 @@
     <!-- Left rail: filters / tools / stats / legacy CTA -->
     <aside class="app-rail" id="rail">
       <section class="rail-block">
-        <h3 class="rail-heading">Overview</h3>
+        <h3 class="rail-heading" data-i18n="rail.overview">Overview</h3>
         <ul class="rail-list" id="rail-views">
-          <li><button class="rail-item is-active" data-view="tree" type="button"><i class="fa-solid fa-sitemap"></i><span>Tree</span></button></li>
-          <li><button class="rail-item" data-view="people" type="button"><i class="fa-solid fa-user-group"></i><span>People</span></button></li>
-          <li><button class="rail-item" data-view="timeline" type="button"><i class="fa-solid fa-stream"></i><span>Timeline</span></button></li>
+          <li><button class="rail-item is-active" data-view="tree" type="button"><i class="fa-solid fa-sitemap"></i><span data-i18n="nav.tree">Tree</span></button></li>
+          <li><button class="rail-item" data-view="people" type="button"><i class="fa-solid fa-user-group"></i><span data-i18n="nav.people">People</span></button></li>
+          <li><button class="rail-item" data-view="timeline" type="button"><i class="fa-solid fa-stream"></i><span data-i18n="nav.timeline">Timeline</span></button></li>
         </ul>
       </section>
 
       <section class="rail-block">
-        <h3 class="rail-heading">Filter</h3>
+        <h3 class="rail-heading" data-i18n="rail.filter">Filter</h3>
         <ul class="rail-list" id="rail-filters">
-          <li><button class="rail-item" data-filter="all" type="button"><i class="fa-solid fa-circle-dot"></i><span>All</span><span class="rail-count" id="cnt-all">0</span></button></li>
-          <li><button class="rail-item" data-filter="alive" type="button"><i class="fa-solid fa-leaf" style="color: var(--sage)"></i><span>Living</span><span class="rail-count" id="cnt-alive">0</span></button></li>
-          <li><button class="rail-item" data-filter="deceased" type="button"><i class="fa-regular fa-circle"></i><span>Deceased</span><span class="rail-count" id="cnt-deceased">0</span></button></li>
+          <li><button class="rail-item" data-filter="all" type="button"><i class="fa-solid fa-circle-dot"></i><span data-i18n="rail.all">All</span><span class="rail-count" id="cnt-all">0</span></button></li>
+          <li><button class="rail-item" data-filter="alive" type="button"><i class="fa-solid fa-leaf" style="color: var(--sage)"></i><span data-i18n="rail.living">Living</span><span class="rail-count" id="cnt-alive">0</span></button></li>
+          <li><button class="rail-item" data-filter="deceased" type="button"><i class="fa-regular fa-circle"></i><span data-i18n="rail.deceased">Deceased</span><span class="rail-count" id="cnt-deceased">0</span></button></li>
         </ul>
       </section>
 
       <section class="rail-block">
-        <h3 class="rail-heading">Tools</h3>
+        <h3 class="rail-heading" data-i18n="rail.tools">Tools</h3>
         <ul class="rail-list">
-          <li><button class="rail-item" id="tool-add" type="button"><i class="fa-solid fa-user-plus"></i><span>Add Person</span></button></li>
-          <li><button class="rail-item" id="tool-add-couple" type="button"><i class="fa-solid fa-people-arrows"></i><span>Add Couple</span></button></li>
-          <li><button class="rail-item" id="tool-edit" type="button"><i class="fa-regular fa-pen-to-square"></i><span>Edit Tree</span></button></li>
-          <li><button class="rail-item" id="tool-settings" type="button"><i class="fa-solid fa-gear"></i><span>Tree Settings</span></button></li>
+          <li><button class="rail-item" id="tool-add" type="button"><i class="fa-solid fa-user-plus"></i><span data-i18n="rail.addPerson">Add Person</span></button></li>
+          <li><button class="rail-item" id="tool-edit" type="button"><i class="fa-regular fa-pen-to-square"></i><span data-i18n="rail.editTree">Manage people</span></button></li>
         </ul>
       </section>
 
       <section class="rail-block">
-        <h3 class="rail-heading">Tree Statistics</h3>
+        <h3 class="rail-heading" data-i18n="rail.stats">Tree statistics</h3>
         <dl class="rail-stats">
-          <div class="rail-stat"><dt>Members</dt><dd id="stat-members">0</dd></div>
-          <div class="rail-stat"><dt>Generations</dt><dd id="stat-generations">0</dd></div>
-          <div class="rail-stat"><dt>Surnames</dt><dd id="stat-surnames">0</dd></div>
+          <div class="rail-stat"><dt data-i18n="rail.members">Members</dt><dd id="stat-members">0</dd></div>
+          <div class="rail-stat"><dt data-i18n="rail.generations">Generations</dt><dd id="stat-generations">0</dd></div>
         </dl>
-        <div class="rail-mini-cta">
-          <i class="fa-solid fa-chart-pie"></i><span>View Analytics</span>
-        </div>
       </section>
 
       <section class="rail-cta">
-        <div class="rail-cta__title">Preserve your legacy</div>
-        <p class="rail-cta__body">Names, photos, and stories — saved on your device.</p>
-        <button class="btn btn--primary btn--block" id="cta-export" type="button">Get started</button>
+        <div class="rail-cta__title" data-i18n="rail.legacyTitle">Preserve your legacy</div>
+        <p class="rail-cta__body" data-i18n="rail.legacyBody">Names, photos, and stories — saved on your device.</p>
+        <button class="btn btn--primary btn--block" id="cta-export" type="button" data-i18n="rail.legacyCta">Get started</button>
       </section>
     </aside>
 
@@ -132,10 +129,13 @@
 
     <!-- Right inspector -->
     <aside class="app-inspector" id="inspector">
+      <button class="inspector-close" id="inspector-close" type="button" aria-label="Close details">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
       <div class="inspector-empty" id="inspector-empty">
-        <i class="fa-solid fa-hand-pointer"></i>
-        <div class="inspector-empty__title">Select a person</div>
-        <div class="inspector-empty__text">Click anyone in the tree, list, or timeline to see their details here.</div>
+        <div class="inspector-empty__icon"><i class="fa-solid fa-hand-pointer"></i></div>
+        <div class="inspector-empty__title" data-i18n="inspector.emptyTitle">Select a person</div>
+        <div class="inspector-empty__text" data-i18n="inspector.emptyText">Click anyone in the tree, list, or timeline to see their details here.</div>
       </div>
       <div class="inspector-content" id="inspector-content" hidden></div>
     </aside>

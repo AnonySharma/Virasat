@@ -74,12 +74,7 @@
   document.getElementById("tool-add")?.addEventListener("click", () => {
     if (window.PeopleView && PeopleView.openForm) PeopleView.openForm(null);
   });
-  document.getElementById("tool-add-couple")?.addEventListener("click", () => {
-    if (window.PeopleView && PeopleView.openForm) PeopleView.openForm(null);
-    UI.toast("Tip: add the first partner, then use Add spouse from the inspector.", "success");
-  });
   document.getElementById("tool-edit")?.addEventListener("click", () => activate("people"));
-  document.getElementById("tool-settings")?.addEventListener("click", () => UI.toast("Settings coming soon", "success"));
   document.getElementById("cta-export")?.addEventListener("click", () => window.ExportImport && ExportImport.openExport());
 
   // — Header actions —
@@ -113,10 +108,26 @@
     overlay?.classList.remove("is-on");
   }
   overlay?.addEventListener("click", closeMobilePanels);
+
+  // Hamburger toggles the rail on small screens
+  document.getElementById("hamburger-btn")?.addEventListener("click", () => {
+    const rail = document.getElementById("rail");
+    if (!rail) return;
+    const opening = !rail.classList.contains("is-open");
+    rail.classList.toggle("is-open", opening);
+    overlay?.classList.toggle("is-on", opening);
+  });
+
+  // Inspector close button (mobile)
+  document.getElementById("inspector-close")?.addEventListener("click", () => {
+    if (window.Inspector) Inspector.clear();
+    document.getElementById("inspector")?.classList.remove("is-open");
+    overlay?.classList.remove("is-on");
+  });
   // Open inspector when a person is selected (mobile)
   if (window.Inspector) {
     Inspector.onSelect((id) => {
-      if (id && window.matchMedia("(max-width: 1024px)").matches) {
+      if (id && window.matchMedia("(max-width: 1100px)").matches) {
         document.getElementById("inspector")?.classList.add("is-open");
         overlay?.classList.add("is-on");
       }
@@ -133,7 +144,6 @@
     setText("cnt-deceased", dec.length);
     setText("stat-members", ppl.length);
     setText("stat-generations", computeGenerations(ppl));
-    setText("stat-surnames", uniqueSurnames(ppl));
   }
   function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = String(v); }
   function computeGenerations(ppl) {
@@ -141,14 +151,6 @@
     const gens = FamilyStore.buildGenerations();
     let max = 0; gens.forEach((v) => { if (v > max) max = v; });
     return max + 1;
-  }
-  function uniqueSurnames(ppl) {
-    const set = new Set();
-    ppl.forEach((p) => {
-      const parts = (p.name || "").trim().split(/\s+/);
-      if (parts.length > 1) set.add(parts[parts.length - 1].toLowerCase());
-    });
-    return set.size;
   }
   refreshRail();
 

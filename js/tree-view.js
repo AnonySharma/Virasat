@@ -93,18 +93,14 @@
     svgEl.appendChild(edgesG);
     svgEl.appendChild(nodesG);
 
-    const zoomReadout = UI.el("div", { class: "tree-zoom-readout" }, [
-      UI.el("button", { type: "button", "aria-label": "Zoom out", onclick: () => zoomBy(1.25) }, [UI.el("i", { class: "fa-solid fa-minus" })]),
-      UI.el("span", { class: "tree-zoom-readout__pct", id: "tree-zoom-pct" }, "100%"),
-      UI.el("button", { type: "button", "aria-label": "Zoom in", onclick: () => zoomBy(0.8) }, [UI.el("i", { class: "fa-solid fa-plus" })])
-    ]);
-
     const controls = UI.el("div", { class: "tree-controls" }, [
-      UI.el("button", { class: "btn", type: "button", "aria-label": "Zoom in", title: "Zoom in",
-        onclick: () => zoomBy(0.8) }, [UI.el("i", { class: "fa-solid fa-plus" })]),
       UI.el("button", { class: "btn", type: "button", "aria-label": "Zoom out", title: "Zoom out",
         onclick: () => zoomBy(1.25) }, [UI.el("i", { class: "fa-solid fa-minus" })]),
-      UI.el("button", { class: "btn", type: "button", "aria-label": "Reset view", title: "Reset view",
+      UI.el("span", { class: "tree-controls__pct", id: "tree-zoom-pct" }, "100%"),
+      UI.el("button", { class: "btn", type: "button", "aria-label": "Zoom in", title: "Zoom in",
+        onclick: () => zoomBy(0.8) }, [UI.el("i", { class: "fa-solid fa-plus" })]),
+      UI.el("span", { class: "tree-controls__divider" }),
+      UI.el("button", { class: "btn", type: "button", "aria-label": "Fit view", title: "Fit view",
         onclick: () => resetView() }, [UI.el("i", { class: "fa-solid fa-expand" })])
     ]);
 
@@ -114,7 +110,6 @@
     ]);
 
     stageEl.appendChild(svgEl);
-    stageEl.appendChild(zoomReadout);
     stageEl.appendChild(controls);
     stageEl.appendChild(panHint);
 
@@ -540,26 +535,36 @@
         UI.el("div", { class: "tree-node-menu__name" }, displayName),
         UI.el("div", { class: "tree-node-menu__sub" }, lifespan)
       ]),
-      menuItem("Open details", "→", "primary", () => {
-        dismissMenu();
-        if (window.Inspector) Inspector.show(person.id);
-      }),
-      menuItem("Edit", "✎", null, () => {
+      menuItem(I18n.t("inspector.actEdit"), "fa-solid fa-user-pen", null, () => {
         dismissMenu();
         if (window.PeopleView && PeopleView.openForm) PeopleView.openForm(person.id);
       }),
-      UI.el("div", { style: { height: "1px", background: "var(--paper-line)", margin: "4px 6px" } }),
-      menuItem("Add child", "+", null, () => {
+      menuItem(I18n.t("inspector.addChild"), "fa-solid fa-baby", null, () => {
         dismissMenu();
         addRelative(person, "child");
       }),
-      menuItem("Add spouse", "♥", null, () => {
+      menuItem(I18n.t("inspector.addSpouse"), "fa-solid fa-heart", null, () => {
         dismissMenu();
         addRelative(person, "spouse");
       }),
-      menuItem("Add parent", "↑", null, () => {
+      menuItem(I18n.t("inspector.addParent"), "fa-solid fa-user-plus", null, () => {
         dismissMenu();
         addRelative(person, "parent");
+      }),
+      UI.el("div", { style: { height: "1px", background: "var(--line)", margin: "4px 6px" } }),
+      menuItem(I18n.t("inspector.actDelete"), "fa-regular fa-trash-can", "danger", async () => {
+        dismissMenu();
+        const ok = await UI.confirm({
+          title: I18n.t("inspector.deleteTitle", { name: displayName }),
+          message: I18n.t("inspector.deleteMsg"),
+          confirmLabel: I18n.t("actions.remove"),
+          danger: true
+        });
+        if (ok) {
+          FamilyStore.deletePerson(person.id);
+          if (window.Inspector) Inspector.clear();
+          UI.toast(I18n.t("form.removed"), "success");
+        }
       })
     ]);
 
@@ -571,14 +576,16 @@
     }, 0);
   }
 
-  function menuItem(label, icon, variant, onclick) {
+  function menuItem(label, iconClass, variant, onclick) {
     return UI.el("button", {
       class: "tree-node-menu__item" + (variant ? " tree-node-menu__item--" + variant : ""),
       type: "button",
       role: "menuitem",
       onclick
     }, [
-      UI.el("span", { class: "tree-node-menu__icon", "aria-hidden": "true" }, icon),
+      iconClass
+        ? UI.el("i", { class: "tree-node-menu__icon " + iconClass, "aria-hidden": "true" })
+        : UI.el("span", { class: "tree-node-menu__icon", "aria-hidden": "true" }),
       UI.el("span", null, label)
     ]);
   }
@@ -611,32 +618,6 @@
     if (by == null) return "? – " + dy;
     if (dy == null) return FamilyStore.isDeceased(p) ? `${by} – ?` : `${by} – present`;
     return `${by} – ${dy}`;
-  }
-
-  // ===== Modal profile =====
-  function openProfileModal(person) {
-    const body = UI.el("div", { class: "form-stack" }, [
-      UI.el("div", { style: { display: "flex", alignItems: "center", gap: "12px" } }, [
-        UI.avatar(person, "lg"),
-        UI.el("div", {}, [
-          UI.el("div", { style: { fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: "600" } }, person.name),
-          UI.el("div", { style: { color: "var(--ink-3)", fontSize: "13px", marginTop: "2px" } }, FamilyStore.formatDateRange(person))
-        ])
-      ]),
-      person.birthPlace ? UI.el("div", {}, [
-        UI.el("span", { style: { color: "var(--ink-3)", fontSize: "12px" } }, "Born in "),
-        UI.el("span", {}, person.birthPlace)
-      ]) : null,
-      person.deathPlace ? UI.el("div", {}, [
-        UI.el("span", { style: { color: "var(--ink-3)", fontSize: "12px" } }, "Died in "),
-        UI.el("span", {}, person.deathPlace)
-      ]) : null,
-      person.notes ? UI.el("div", {
-        style: { whiteSpace: "pre-wrap", color: "var(--ink-2)", fontSize: "14px" }
-      }, person.notes) : null
-    ]);
-
-    UI.openModal({ title: "Profile", body });
   }
 
   // ===== Pan / zoom =====

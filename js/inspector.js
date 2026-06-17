@@ -18,7 +18,6 @@
   let contentEl = null;
   let panelEl = null;
   let selectedId = null;
-  let activeTab = "details";
   const listeners = new Set();
 
   function mount() {
@@ -59,6 +58,13 @@
     const p = FamilyStore.getPerson(selectedId);
     if (!p) { clear(); return; }
 
+    // Skip the rebuild if a child input is focused — protects the notes
+    // textarea from losing focus when its own debounced save fires.
+    const active = document.activeElement;
+    if (active && contentEl.contains(active) && (active.tagName === "TEXTAREA" || active.tagName === "INPUT")) {
+      return;
+    }
+
     const F = (k) => FamilyStore.getField(p, k) || p[k];
     const displayName = F("name") || p.name;
     const displayOcc = F("occupation") || "";
@@ -94,29 +100,28 @@
       UI.el("div", { class: "inspector-hero__chips" }, lifelineChips(p))
     ]));
 
-    // Action row
+    // Action row — only real, persistent actions
     contentEl.appendChild(UI.el("div", { class: "inspector-actions" }, [
-      iconAction("comment", "fa-regular fa-comment", "Add note", () => focusNotes()),
-      iconAction("share",   "fa-solid fa-share-nodes", "Share as image", async () => {
+      iconAction("note",  "fa-regular fa-pen-to-square", I18n.t("inspector.actAddNote"), () => focusNotes()),
+      iconAction("share", "fa-solid fa-share-nodes",     I18n.t("inspector.actShare"), async () => {
         if (!window.ImageExport) return;
         try {
           const { blob, filename } = await ImageExport.exportProfileCard(p.id);
           await ImageExport.share(blob, filename, displayName);
-          UI.toast("Profile image saved", "success");
+          UI.toast(I18n.t("inspector.imageSaved"), "success");
         } catch (e) { UI.toast(e.message || "Failed", "danger"); }
       }),
-      iconAction("favorite","fa-regular fa-heart", "Favorite", () => UI.toast("Favorited", "success")),
-      iconAction("edit",    "fa-regular fa-pen-to-square", "Edit", () =>
+      iconAction("edit",  "fa-solid fa-user-pen",        I18n.t("inspector.actEdit"), () =>
         window.PeopleView && PeopleView.openForm && PeopleView.openForm(p.id)
       ),
-      iconAction("delete",  "fa-regular fa-trash-can", "Delete", async () => {
+      iconAction("delete","fa-regular fa-trash-can",     I18n.t("inspector.actDelete"), async () => {
         const ok = await UI.confirm({
-          title: "Remove " + displayName + "?",
-          message: "They'll be unlinked from any parent or spouse relations. This can't be undone.",
-          confirmLabel: "Remove",
+          title: I18n.t("inspector.deleteTitle", { name: displayName }),
+          message: I18n.t("inspector.deleteMsg"),
+          confirmLabel: I18n.t("actions.remove"),
           danger: true
         });
-        if (ok) { FamilyStore.deletePerson(p.id); clear(); UI.toast("Removed", "success"); }
+        if (ok) { FamilyStore.deletePerson(p.id); clear(); UI.toast(I18n.t("form.removed"), "success"); }
       })
     ]));
 
@@ -124,49 +129,44 @@
     const sectionStates = loadSectionStates();
     const sections = [];
 
-    // About
-    sections.push(makeSection("about", "About", "fa-regular fa-bookmark", true,
+    sections.push(makeSection("about", I18n.t("inspector.secAbout"), "fa-regular fa-bookmark", true,
       displayDesc
         ? UI.el("p", { class: "inspector-prose" }, displayDesc)
-        : muted("No biography written yet."), sectionStates));
+        : muted(I18n.t("inspector.emptyAbout")), sectionStates));
 
-    // Personal information
-    sections.push(makeSection("personal", "Personal information", "fa-regular fa-id-card", true,
+    sections.push(makeSection("personal", I18n.t("inspector.secPersonal"), "fa-regular fa-id-card", true,
       buildPersonalInfo(p, F, { displayBirthPlace, displayDeathPlace }), sectionStates));
 
-    // Achievements
-    sections.push(makeSection("achievements", "Life achievements", "fa-solid fa-trophy", false,
+    sections.push(makeSection("achievements", I18n.t("inspector.secAchievements"), "fa-solid fa-trophy", false,
       (displayAchievements && displayAchievements.length)
         ? UI.el("ul", { class: "inspector-list" }, displayAchievements.map((a) => UI.el("li", null, a)))
-        : muted("None recorded yet."), sectionStates));
+        : muted(I18n.t("inspector.emptyList")), sectionStates));
 
-    // Education
-    sections.push(makeSection("education", "Education", "fa-solid fa-graduation-cap", false,
+    sections.push(makeSection("education", I18n.t("inspector.secEducation"), "fa-solid fa-graduation-cap", false,
       (displayEducation && displayEducation.length)
         ? UI.el("ul", { class: "inspector-list inspector-list--edu" }, displayEducation.map((e) => UI.el("li", null, e)))
-        : muted("None recorded yet."), sectionStates));
+        : muted(I18n.t("inspector.emptyList")), sectionStates));
 
-    // Family
-    sections.push(makeSection("family", "Family", "fa-solid fa-people-roof", true,
+    sections.push(makeSection("family", I18n.t("inspector.secFamily"), "fa-solid fa-people-roof", true,
       buildFamilyBlock(p, parents, spouses, children, siblings), sectionStates));
 
-    // Photo
-    sections.push(makeSection("photo", "Photo", "fa-regular fa-image", false,
+    sections.push(makeSection("photo", I18n.t("inspector.secPhoto"), "fa-regular fa-image", false,
       buildPhotoBlock(p), sectionStates));
 
-    // Notes
-    sections.push(makeSection("notes", "Notes & memories", "fa-regular fa-pen-to-square", false,
-      buildNotesBlock(p, displayNotes), sectionStates));
+    sections.push(makeSection("notes", I18n.t("inspector.secNotes"), "fa-regular fa-pen-to-square", false,
+      buildNotesBlock(p), sectionStates));
 
     sections.forEach((s) => contentEl.appendChild(s));
 
     // Meta footer
-    if (p.createdAt || p.updatedAt) {
-      const fmt = (s) => s ? new Date(s).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "";
-      contentEl.appendChild(UI.el("div", { class: "inspector-meta" }, [
-        UI.el("span", null, "Created · " + fmt(p.createdAt)),
-        UI.el("span", null, "Updated · " + fmt(p.updatedAt))
-      ]));
+    const fmt = (s) => s ? new Date(s).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : null;
+    const created = fmt(p.createdAt);
+    const updated = fmt(p.updatedAt);
+    if (created || updated) {
+      const meta = UI.el("div", { class: "inspector-meta" });
+      if (created) meta.appendChild(UI.el("span", null, I18n.t("inspector.created") + " · " + created));
+      if (updated) meta.appendChild(UI.el("span", null, I18n.t("inspector.updated") + " · " + updated));
+      contentEl.appendChild(meta);
     }
   }
 
@@ -212,13 +212,15 @@
 
   function buildPersonalInfo(p, F, ctx) {
     const rows = [];
-    if (p.birthDate) rows.push(["Born", formatDateLong(p.birthDate) + (ctx.displayBirthPlace ? " · " + ctx.displayBirthPlace : "")]);
-    else rows.push(["Born", muted("—")]);
-    if (p.deathDate) rows.push(["Died", formatDateLong(p.deathDate) + (ctx.displayDeathPlace ? " · " + ctx.displayDeathPlace : "")]);
-    if (p.gender) rows.push(["Gender", { m: "Male", f: "Female", o: "Other" }[p.gender] || p.gender]);
-    if (F("occupation")) rows.push(["Occupation", F("occupation")]);
+    const t = (k, v) => I18n.t("inspector." + k, v);
+    if (p.birthDate) rows.push([t("born"), formatDateLong(p.birthDate) + (ctx.displayBirthPlace ? " · " + ctx.displayBirthPlace : "")]);
+    else if (ctx.displayBirthPlace) rows.push([t("born"), ctx.displayBirthPlace]);
+    if (p.deathDate) rows.push([t("died"), formatDateLong(p.deathDate) + (ctx.displayDeathPlace ? " · " + ctx.displayDeathPlace : "")]);
+    else if (ctx.displayDeathPlace) rows.push([t("died"), ctx.displayDeathPlace]);
+    if (p.gender) rows.push([t("gender"), { m: I18n.t("form.genderM"), f: I18n.t("form.genderF"), o: I18n.t("form.genderO") }[p.gender] || p.gender]);
+    if (F("occupation")) rows.push([t("occupation"), F("occupation")]);
     const age = FamilyStore.calcAge(p);
-    if (age != null) rows.push([p.deathDate ? "Lifespan" : "Age", p.deathDate ? (age + " years") : (age + " years old")]);
+    if (age != null) rows.push([p.deathDate ? t("lifespan") : t("age"), age + (p.deathDate ? " yrs" : "")]);
     return UI.el("dl", { class: "inspector-rows" },
       rows.map(([k, v]) => UI.el("div", { class: "inspector-row" }, [
         UI.el("dt", null, k),
@@ -243,10 +245,10 @@
   function buildFamilyBlock(p, parents, spouses, children, siblings) {
     const wrap = UI.el("div", null);
     const groups = [
-      ["Parents", parents],
-      ["Spouse(s)", spouses],
-      ["Children", children],
-      ["Siblings", siblings]
+      [I18n.t("profile.parents"), parents],
+      [I18n.t("profile.spouses"), spouses],
+      [I18n.t("profile.children"), children],
+      [I18n.t("profile.siblings"), siblings]
     ];
     let any = false;
     groups.forEach(([label, list]) => {
@@ -267,7 +269,7 @@
         }))
       ]));
     });
-    if (!any) wrap.appendChild(muted("No family connections recorded yet."));
+    if (!any) wrap.appendChild(muted(I18n.t("inspector.emptyFamily")));
 
     wrap.appendChild(UI.el("div", { class: "inspector-add-row" }, [
       UI.el("button", {
@@ -275,15 +277,15 @@
         onclick: () => window.PeopleView && PeopleView.openForm && PeopleView.openForm(null, {
           parents: [p.id, ...(p.spouses && p.spouses.length === 1 ? [p.spouses[0]] : [])]
         })
-      }, [UI.el("i", { class: "fa-solid fa-baby" }), UI.el("span", null, "Add child")]),
+      }, [UI.el("i", { class: "fa-solid fa-baby" }), UI.el("span", null, I18n.t("inspector.addChild"))]),
       UI.el("button", {
         class: "btn btn--sm", type: "button",
         onclick: () => window.PeopleView && PeopleView.openForm && PeopleView.openForm(null, { spouses: [p.id] })
-      }, [UI.el("i", { class: "fa-solid fa-heart" }), UI.el("span", null, "Add spouse")]),
+      }, [UI.el("i", { class: "fa-solid fa-heart" }), UI.el("span", null, I18n.t("inspector.addSpouse"))]),
       UI.el("button", {
         class: "btn btn--sm", type: "button",
         onclick: () => window.PeopleView && PeopleView.openForm && PeopleView.openForm(null, { __addAsParentOf: p.id })
-      }, [UI.el("i", { class: "fa-solid fa-user-plus" }), UI.el("span", null, "Add parent")])
+      }, [UI.el("i", { class: "fa-solid fa-user-plus" }), UI.el("span", null, I18n.t("inspector.addParent"))])
     ]));
     return wrap;
   }
@@ -311,21 +313,28 @@
           color: "var(--text-3)", fontSize: "13px", textAlign: "center", padding: "24px",
           fontFamily: "var(--font-display)"
         }
-      }, "No photograph yet"));
+      }, I18n.t("inspector.emptyPhoto")));
     }
     photoWrap.appendChild(big);
     photoWrap.appendChild(UI.el("button", {
       class: "btn btn--sm", type: "button",
       onclick: () => window.PeopleView && PeopleView.openForm && PeopleView.openForm(p.id)
-    }, [UI.el("i", { class: "fa-regular fa-pen-to-square" }), UI.el("span", null, "Edit photo")]));
+    }, [UI.el("i", { class: "fa-regular fa-pen-to-square" }), UI.el("span", null, I18n.t("inspector.editPhoto"))]));
     return photoWrap;
   }
 
   function buildNotesBlock(p, currentNotes) {
+    const displayName = FamilyStore.getField(p, "name") || p.name;
+    // The inspector reads "displayNotes" via getField which falls back to EN
+    // when the HI variant is empty. To prevent corrupting notes_hi when the
+    // user types over the EN fallback in HI mode, the textarea must show the
+    // *current language's* raw value (not the fallback).
+    const lang = I18n.getLang();
+    const rawValue = lang === "hi" ? (p.notes_hi || "") : (p.notes || "");
     const ta = UI.el("textarea", {
       class: "inspector-notes-input",
-      placeholder: "Stories, memories, things to remember about " + (FamilyStore.getField(p, "name") || p.name) + "…"
-    }, currentNotes || "");
+      placeholder: I18n.t("inspector.notesPlaceholder", { name: displayName })
+    }, rawValue);
     let timer = null;
     ta.addEventListener("input", () => {
       clearTimeout(timer);
@@ -339,7 +348,10 @@
   }
 
   function focusNotes() {
-    activeTab = "notes";
+    // Force-open the Notes section if it's collapsed, then focus the textarea.
+    const states = loadSectionStates();
+    states.notes = true;
+    persistSectionStates(states);
     render();
     setTimeout(() => {
       const ta = contentEl.querySelector(".inspector-notes-input");
@@ -351,8 +363,8 @@
     const out = [];
     const alive = FamilyStore.isAlive(p);
     const age = FamilyStore.calcAge(p);
-    if (alive) out.push(UI.el("span", { class: "chip chip--alive" }, age != null ? "Age " + age : "Living"));
-    else out.push(UI.el("span", { class: "chip chip--deceased" }, age != null ? "Lived " + age + " yrs" : "Deceased"));
+    if (alive) out.push(UI.el("span", { class: "chip chip--alive" }, age != null ? I18n.t("people.ageLiving", { n: age }) : I18n.t("people.living")));
+    else out.push(UI.el("span", { class: "chip chip--deceased" }, age != null ? I18n.t("people.ageLived", { n: age }) : I18n.t("people.deceased")));
     if (p.birthDate) out.push(UI.el("span", { class: "chip" }, FamilyStore.formatDateRange(p)));
     return out;
   }
