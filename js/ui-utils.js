@@ -92,14 +92,16 @@
 
   function confirm({ title, message, confirmLabel = "Confirm", danger = false }) {
     return new Promise((resolve) => {
+      let settled = false;
+      const settle = (v) => { if (!settled) { settled = true; resolve(v); } };
       const dlg = openModal({
         title: title || "Are you sure?",
         body: el("p", { style: { color: "var(--ink-2)", margin: 0 } }, message || ""),
         footer: [
-          el("button", { class: "btn btn--ghost", type: "button", onclick: () => { dlg.close(); resolve(false); } }, "Cancel"),
-          el("button", { class: "btn " + (danger ? "btn--danger" : "btn--primary"), type: "button", onclick: () => { dlg.close(); resolve(true); } }, confirmLabel)
+          el("button", { class: "btn btn--ghost", type: "button", onclick: () => { settle(false); dlg.close(); } }, "Cancel"),
+          el("button", { class: "btn " + (danger ? "btn--danger" : "btn--primary"), type: "button", onclick: () => { settle(true); dlg.close(); } }, confirmLabel)
         ],
-        onClose: () => resolve(false)
+        onClose: () => settle(false)
       });
     });
   }
