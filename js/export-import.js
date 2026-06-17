@@ -27,65 +27,73 @@
     return (kb / 1024).toFixed(2) + " MB";
   }
 
-  // Sync version (used for live size preview; photos are not embedded — uses
-  // a small placeholder estimate to avoid hitting IndexedDB on every keystroke).
+  // Sync version (used for live size preview; photos are NOT embedded — we
+  // use a placeholder string so the size estimate is still meaningful).
   function buildRedactedStateSync(opts) {
     const src = FamilyStore.getState();
-    const people = (src.people || []).map((p) => redactPerson(p, opts, /*embedPhotos*/ false));
+    const people = (src.people || []).map((p) => redactPersonSync(p, opts));
     return { version: src.version, meta: src.meta, people };
   }
 
   // Async — embeds actual photo blobs as base64 when includePhotos is true.
   async function buildRedactedStateAsync(opts) {
     const src = FamilyStore.getState();
-    const people = await Promise.all((src.people || []).map((p) => redactPerson(p, opts, true)));
+    const people = await Promise.all((src.people || []).map((p) => redactPersonAsync(p, opts)));
     return { version: src.version, meta: src.meta, people };
   }
 
-  async function redactPerson(p, opts, embedPhotos) {
-    if (opts.format === MINIMAL) {
-      const out = {};
-      MINIMAL_FIELDS.forEach((k) => {
-        if (k === "parents" || k === "spouses") {
-          out[k] = Array.isArray(p[k]) ? p[k].slice() : [];
-        } else {
-          out[k] = p[k];
-        }
-      });
-      // Always include name_hi in minimal so multi-lingual users keep the Hindi alias.
-      if (p.name_hi) out.name_hi = p.name_hi;
-      return out;
-    }
-    const out = JSON.parse(JSON.stringify(p));
+  function applyMinimal(p) {
+    const out = {};
+    MINIMAL_FIELDS.forEach((k) => {
+      if (k === "parents" || k === "spouses") out[k] = Array.isArray(p[k]) ? p[k].slice() : [];
+      else out[k] = p[k];
+    });
+    if (p.name_hi) out.name_hi = p.name_hi;
+    return out;
+  }
 
-    // Photo: resolve to base64 if requested.
-    if (opts.includePhotos) {
-      delete out.photoId; delete out.photoUrl;
-      if (embedPhotos && window.PhotoStore && (p.photoId || p.photoUrl)) {
-        const blob = p.photoId ? await PhotoStore.get(p.photoId) : null;
-        if (blob) {
-          out.photo = await blobToDataUrl(blob);
-        } else if (p.photoUrl) {
-          // Repo-hosted photo: keep the relative URL so importer can keep using it.
-          out.photoUrl = p.photoUrl;
-          delete out.photo;
-        }
-      } else if (!embedPhotos) {
-        // Sync preview: keep the existing photo data URL if any (legacy)
-        if (!out.photo && (p.photoId || p.photoUrl)) out.photo = "[binary]";
-      }
-    } else {
-      delete out.photo; delete out.photoId; delete out.photoUrl;
-    }
-
+  function applyFieldToggles(out, opts) {
     if (!opts.includeDates) {
-      delete out.birthDate;
-      delete out.deathDate;
+      delete out.birthDate; delete out.deathDate;
     }
     if (!opts.includeLocations) {
-      delete out.birthPlace;     delete out.birthPlace_hi;
-      delete out.deathPlace;     delete out.deathPlace_hi;
+      delete out.birthPlace; delete out.birthPlace_hi;
+      delete out.deathPlace; delete out.deathPlace_hi;
     }
+    if (!opts.includePhotos) {
+      delete out.photo; delete out.photoId; delete out.photoUrl;
+    }
+  }
+
+  function redactPersonSync(p, opts) {
+    if (opts.format === MINIMAL) return applyMinimal(p);
+    const out = JSON.parse(JSON.stringify(p));
+    if (opts.includePhotos) {
+      // For preview, swap binary refs with a small placeholder so the size
+      // estimate accounts for the structural cost without reading IDB.
+      delete out.photoId; delete out.photoUrl;
+      if (!out.photo && (p.photoId || p.photoUrl)) out.photo = "[binary photo, ~30KB]";
+    }
+    applyFieldToggles(out, opts);
+    return out;
+  }
+
+  async function redactPersonAsync(p, opts) {
+    if (opts.format === MINIMAL) return applyMinimal(p);
+    const out = JSON.parse(JSON.stringify(p));
+    if (opts.includePhotos) {
+      delete out.photoId; delete out.photoUrl;
+      if (window.PhotoStore && p.photoId) {
+        try {
+          const blob = await PhotoStore.get(p.photoId);
+          if (blob) out.photo = await blobToDataUrl(blob);
+        } catch (_) {}
+      } else if (p.photoUrl) {
+        out.photoUrl = p.photoUrl;
+        delete out.photo;
+      }
+    }
+    applyFieldToggles(out, opts);
     return out;
   }
 
