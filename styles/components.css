@@ -467,6 +467,125 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   font-size: 13px; font-style: italic;
 }
 
+/* — Heritage select (custom dropdown) — */
+.hsel {
+  position: relative;
+  display: flex; align-items: center; gap: 8px;
+  width: 100%;
+  height: 42px;
+  padding: 0 14px 0 16px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  box-shadow: var(--shadow-xs);
+  outline: none;
+}
+.hsel:hover { border-color: var(--line-2); }
+.hsel:focus-visible,
+.hsel.is-open { border-color: var(--accent); box-shadow: 0 0 0 4px var(--olive-soft); }
+.hsel__value {
+  flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hsel__value--placeholder { color: var(--text-4); }
+.hsel__chev {
+  font-size: 11px; color: var(--text-3);
+  transition: transform var(--t-fast);
+  flex-shrink: 0;
+}
+.hsel.is-open .hsel__chev { transform: rotate(180deg); }
+
+.hsel__menu {
+  position: absolute; left: 0; top: calc(100% + 6px);
+  z-index: 60;
+  margin: 0; padding: 6px;
+  list-style: none;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 100%;
+  max-height: 280px;
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 1px;
+  animation: hsel-pop 180ms cubic-bezier(.2,.9,.2,1.05);
+}
+@keyframes hsel-pop {
+  from { opacity: 0; transform: translateY(-4px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.hsel__opt {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px 8px 10px;
+  border-radius: var(--r-xs);
+  font-size: 13.5px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.hsel__opt:hover, .hsel__opt.is-hover {
+  background: var(--olive-soft);
+  color: var(--olive-deep);
+}
+.hsel__opt.is-selected {
+  font-weight: 500;
+  color: var(--olive-deep);
+}
+.hsel__tick {
+  width: 14px; font-size: 11px;
+  color: var(--olive);
+  opacity: 0;
+  flex-shrink: 0;
+}
+.hsel__opt.is-selected .hsel__tick { opacity: 1; }
+
+/* Disabled / dimmed */
+.hsel--dim { opacity: .55; pointer-events: none; }
+
+/* Heritage relation picker row (avatar + dropdown + remove) */
+.hrel-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 8px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.hrel-row__pic { flex-shrink: 0; }
+.hrel-row__sel { flex: 1; min-width: 0; }
+.hrel-row__sel .hsel { background: transparent; border-color: transparent; box-shadow: none; padding-left: 4px; height: 36px; }
+.hrel-row__sel .hsel:hover { background: var(--surface-2); }
+.hrel-row__sel .hsel.is-open { background: var(--bg-elev); border-color: var(--accent); }
+.hrel-row__remove {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 0; background: transparent; color: var(--text-3);
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.hrel-row__remove:hover { background: var(--danger-soft); color: var(--danger); }
+
+.hrel-add {
+  display: inline-flex; align-items: center; gap: 6px;
+  align-self: flex-start;
+  padding: 6px 12px 6px 10px;
+  border-radius: var(--r-pill);
+  border: 1px dashed var(--line-2);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12.5px; font-weight: 500;
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+}
+.hrel-add:hover { background: var(--olive-soft); border-color: var(--olive); color: var(--olive-deep); }
+
 /* — Heritage date picker — */
 .hdp {
   position: relative;
