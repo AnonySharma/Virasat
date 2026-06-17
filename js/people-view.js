@@ -15,15 +15,11 @@
   let subtitleEl = null;
   let searchInput = null;
   let searchTerm = "";
+  let filterMode = "all";   // "all" | "alive" | "deceased"
 
   function mount(rootEl) {
     root = rootEl;
     clear(root);
-
-    const title = el("div", null, [
-      el("h2", { class: "section-head__title", "data-i18n": "people.title" }, I18n.t("people.title")),
-      (subtitleEl = el("div", { class: "section-head__sub" }, ""))
-    ]);
 
     searchInput = el("input", {
       type: "search",
@@ -33,7 +29,7 @@
       oninput: (e) => { searchTerm = e.target.value || ""; render(); }
     });
     const search = el("div", { class: "searchbar" }, [
-      el("span", { class: "searchbar__icon", "aria-hidden": "true" }, "🔍"),
+      el("i", { class: "fa-solid fa-magnifying-glass searchbar__icon", "aria-hidden": "true" }),
       searchInput
     ]);
 
@@ -41,23 +37,29 @@
       class: "btn btn--primary",
       type: "button",
       onclick: () => openForm(null)
-    }, [el("span", { "aria-hidden": "true" }, "＋"), el("span", { "data-i18n": "actions.add" }, I18n.t("actions.add"))]);
-
-    const head = el("div", { class: "section-head" }, [
-      title,
-      el("div", { style: { display: "flex", gap: "var(--s-3)", alignItems: "center", flexWrap: "wrap" } }, [
-        search,
-        addBtn
-      ])
+    }, [
+      el("i", { class: "fa-solid fa-user-plus", "aria-hidden": "true" }),
+      el("span", { "data-i18n": "actions.add" }, I18n.t("actions.add"))
     ]);
 
-    gridHost = el("div", null);
+    const head = el("div", { class: "view-head" }, [
+      el("div", { class: "view-head__title-wrap" }, [
+        el("h2", { class: "view-head__title", "data-i18n": "people.title" }, I18n.t("people.title")),
+        (subtitleEl = el("span", { class: "view-head__sub" }, ""))
+      ]),
+      el("div", { class: "view-head__actions" }, [search, addBtn])
+    ]);
+
+    gridHost = el("div", { class: "people-grid" });
 
     root.appendChild(head);
     root.appendChild(gridHost);
 
     render();
   }
+
+  function setSearch(s) { searchTerm = s || ""; if (searchInput) searchInput.value = searchTerm; render(); }
+  function setFilter(f) { filterMode = f || "all"; render(); }
 
   function render() {
     if (!root || !gridHost) return;
@@ -67,19 +69,25 @@
     clear(gridHost);
 
     if (all.length === 0) {
+      gridHost.style.display = "block";
       gridHost.appendChild(emptyStateInitial());
       return;
     }
 
-    const filtered = filterPeople(all, searchTerm);
+    let pool = all;
+    if (filterMode === "alive") pool = pool.filter((p) => FamilyStore.isAlive(p));
+    if (filterMode === "deceased") pool = pool.filter((p) => FamilyStore.isDeceased(p));
+
+    const filtered = filterPeople(pool, searchTerm);
     if (filtered.length === 0) {
+      gridHost.style.display = "block";
       gridHost.appendChild(emptyStateNoMatches());
       return;
     }
 
+    gridHost.style.display = "";
     const sorted = sortPeople(filtered);
-    const grid = el("div", { class: "people-grid" }, sorted.map(personCard));
-    gridHost.appendChild(grid);
+    sorted.forEach((p) => gridHost.appendChild(personCard(p)));
   }
 
   function filterPeople(people, term) {
@@ -179,7 +187,8 @@
   }
 
   function openProfile(id) {
-    if (window.ProfileView && ProfileView.open) ProfileView.open(id);
+    if (window.Inspector && Inspector.show) Inspector.show(id);
+    else if (window.ProfileView && ProfileView.open) ProfileView.open(id);
     else openForm(id);
   }
 
@@ -595,5 +604,5 @@
 
   if (window.I18n && I18n.onChange) I18n.onChange(() => { if (root) render(); });
 
-  global.PeopleView = { mount, render, openForm };
+  global.PeopleView = { mount, render, openForm, setSearch, setFilter };
 })(window);

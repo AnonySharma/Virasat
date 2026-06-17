@@ -27,8 +27,24 @@
 
   function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
 
+  // Stable pastel class based on the person's name — same person always gets
+  // the same colour so the visual identity is consistent across views.
+  const PASTEL_CLASSES = ["peach","sage","lavender","sky","rose","butter","clay","mist"];
+  function pastelFor(person) {
+    if (!person) return "mist";
+    const s = String(person.name || person.id || "?");
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+    return PASTEL_CLASSES[Math.abs(h) % PASTEL_CLASSES.length];
+  }
+
   function avatar(person, size = "md") {
-    const cls = "avatar" + (size === "lg" ? " avatar--lg" : size === "sm" ? " avatar--sm" : size === "xs" ? " avatar--xs" : "")
+    const sizeCls = size === "xl" ? " avatar--xl"
+      : size === "lg" ? " avatar--lg"
+      : size === "sm" ? " avatar--sm"
+      : size === "xs" ? " avatar--xs" : " avatar--md";
+    const tone = " avatar--" + pastelFor(person);
+    const cls = "avatar" + sizeCls + tone
       + (person && person.deathDate ? " avatar--deceased" : "");
     const wrap = el("span", { class: cls, "aria-hidden": "true" });
     const url = window.PhotoStore ? PhotoStore.getUrlSync(person) : (person && person.photo);
@@ -123,5 +139,5 @@
     setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
   }
 
-  global.UI = { el, clear, avatar, toast, openModal, confirm, field, downloadFile };
+  global.UI = { el, clear, avatar, toast, openModal, confirm, field, downloadFile, pastelFor };
 })(window);

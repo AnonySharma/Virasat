@@ -2,52 +2,63 @@
   "use strict";
 
   const views = {
-    people: { el: document.getElementById("view-people"), mount: window.PeopleView, mounted: false },
-    tree: { el: document.getElementById("view-tree"), mount: window.TreeView, mounted: false },
-    timeline: { el: document.getElementById("view-timeline"), mount: window.TimelineView, mounted: false }
+    tree:     { el: document.getElementById("view-tree"),     mount: window.TreeView },
+    people:   { el: document.getElementById("view-people"),   mount: window.PeopleView },
+    timeline: { el: document.getElementById("view-timeline"), mount: window.TimelineView }
   };
-
-  let activeView = "people";
+  let activeView = "tree";
 
   function activate(name) {
+    if (!views[name]) return;
     activeView = name;
     Object.entries(views).forEach(([k, v]) => v.el.classList.toggle("is-active", k === name));
-    // Hide profile view if it exists
-    const prof = document.getElementById("view-profile");
-    if (prof) prof.classList.remove("is-active");
-    document.querySelectorAll(".nav-btn").forEach((b) => b.classList.toggle("is-active", b.dataset.view === name));
+    document.querySelectorAll(".nav-btn[data-view]").forEach((b) => b.classList.toggle("is-active", b.dataset.view === name));
+    document.querySelectorAll(".rail-item[data-view]").forEach((b) => b.classList.toggle("is-active", b.dataset.view === name));
     const v = views[name];
     if (v && v.mount && typeof v.mount.render === "function") v.mount.render();
+    // Close mobile rail/inspector when switching
+    closeMobilePanels();
   }
 
-  document.querySelectorAll(".nav-btn").forEach((btn) => {
-    btn.addEventListener("click", () => activate(btn.dataset.view));
-  });
-
-  // Mount each view once at startup
+  // Mount each view once
   Object.entries(views).forEach(([k, v]) => {
     if (v.mount && typeof v.mount.mount === "function") {
-      try { v.mount.mount(v.el); v.mounted = true; }
+      try { v.mount.mount(v.el); }
       catch (e) { console.error("Failed to mount", k, e); }
     }
   });
 
-  // Re-render active view on store changes
+  // Re-render active view on store changes + refresh rail counts/stats
   FamilyStore.subscribe(() => {
+    refreshRail();
     const v = views[activeView];
     if (v && v.mount && typeof v.mount.render === "function") v.mount.render();
   });
 
-  // Apply translations to the static DOM and react to language changes
+  // — Header & rail wiring —
+  document.querySelectorAll(".nav-btn[data-view], .rail-item[data-view]").forEach((btn) => {
+    btn.addEventListener("click", () => activate(btn.dataset.view));
+  });
+
+  // — Header search → filter People view —
+  const headerSearch = document.getElementById("header-search-input");
+  if (headerSearch) {
+    headerSearch.addEventListener("input", (e) => {
+      const q = e.target.value || "";
+      if (window.PeopleView && PeopleView.setSearch) PeopleView.setSearch(q);
+      // Switch to people view if there's a query
+      if (q.trim() && activeView !== "people") activate("people");
+    });
+  }
+
+  // — Lang switcher —
   if (window.I18n) {
     I18n.applyToDOM();
     I18n.onChange(() => {
       I18n.applyToDOM();
-      // Re-render active view (subscribers in each view also do this)
       const v = views[activeView];
       if (v && v.mount && typeof v.mount.render === "function") v.mount.render();
     });
-    // Wire language switcher buttons
     document.querySelectorAll(".lang-switch__btn").forEach((btn) => {
       btn.classList.toggle("is-active", btn.dataset.lang === I18n.getLang());
       btn.addEventListener("click", () => {
@@ -59,15 +70,34 @@
     });
   }
 
-  // Wire export/import/collect buttons
-  const exportBtn = document.getElementById("export-btn");
-  if (exportBtn) exportBtn.addEventListener("click", () => window.ExportImport && ExportImport.openExport());
-  const importBtn = document.getElementById("import-btn");
-  if (importBtn) importBtn.addEventListener("click", () => window.ExportImport && ExportImport.openImport());
-  const collectBtn = document.getElementById("collect-btn");
-  if (collectBtn) collectBtn.addEventListener("click", () => window.CollectForm && CollectForm.open());
+  // — Rail tools —
+  document.getElementById("tool-add")?.addEventListener("click", () => {
+    if (window.PeopleView && PeopleView.openForm) PeopleView.openForm(null);
+  });
+  document.getElementById("tool-add-couple")?.addEventListener("click", () => {
+    if (window.PeopleView && PeopleView.openForm) PeopleView.openForm(null);
+    UI.toast("Tip: add the first partner, then use Add spouse from the inspector.", "success");
+  });
+  document.getElementById("tool-edit")?.addEventListener("click", () => activate("people"));
+  document.getElementById("tool-settings")?.addEventListener("click", () => UI.toast("Settings coming soon", "success"));
+  document.getElementById("cta-export")?.addEventListener("click", () => window.ExportImport && ExportImport.openExport());
 
-  // Once photos finish migration, force a re-render (avatars may need to load IDB urls).
+  // — Header actions —
+  document.getElementById("export-btn")?.addEventListener("click", () => window.ExportImport && ExportImport.openExport());
+  document.getElementById("import-btn")?.addEventListener("click", () => window.ExportImport && ExportImport.openImport());
+  document.getElementById("collect-btn")?.addEventListener("click", () => window.CollectForm && CollectForm.open());
+
+  // — Filter buttons —
+  document.querySelectorAll(".rail-item[data-filter]").forEach((b) => {
+    b.addEventListener("click", () => {
+      document.querySelectorAll(".rail-item[data-filter]").forEach((x) => x.classList.toggle("is-active", x === b));
+      const f = b.dataset.filter;
+      if (window.PeopleView && PeopleView.setFilter) PeopleView.setFilter(f);
+      if (activeView !== "people") activate("people");
+    });
+  });
+
+  // — Once photos finish migration, force a re-render —
   if (window.PhotoStore && PhotoStore.ready) {
     PhotoStore.ready().then(() => {
       const v = views[activeView];
@@ -75,11 +105,57 @@
     }).catch(() => {});
   }
 
-  // First-run: offer sample data
+  // — Mobile rail/inspector toggles via overlay —
+  const overlay = document.getElementById("app-overlay");
+  function closeMobilePanels() {
+    document.getElementById("rail")?.classList.remove("is-open");
+    document.getElementById("inspector")?.classList.remove("is-open");
+    overlay?.classList.remove("is-on");
+  }
+  overlay?.addEventListener("click", closeMobilePanels);
+  // Open inspector when a person is selected (mobile)
+  if (window.Inspector) {
+    Inspector.onSelect((id) => {
+      if (id && window.matchMedia("(max-width: 1024px)").matches) {
+        document.getElementById("inspector")?.classList.add("is-open");
+        overlay?.classList.add("is-on");
+      }
+    });
+  }
+
+  // — Rail counts / stats —
+  function refreshRail() {
+    const ppl = FamilyStore.getPeople();
+    const alive = ppl.filter((p) => FamilyStore.isAlive(p));
+    const dec = ppl.filter((p) => FamilyStore.isDeceased(p));
+    setText("cnt-all", ppl.length);
+    setText("cnt-alive", alive.length);
+    setText("cnt-deceased", dec.length);
+    setText("stat-members", ppl.length);
+    setText("stat-generations", computeGenerations(ppl));
+    setText("stat-surnames", uniqueSurnames(ppl));
+  }
+  function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = String(v); }
+  function computeGenerations(ppl) {
+    if (!ppl.length) return 0;
+    const gens = FamilyStore.buildGenerations();
+    let max = 0; gens.forEach((v) => { if (v > max) max = v; });
+    return max + 1;
+  }
+  function uniqueSurnames(ppl) {
+    const set = new Set();
+    ppl.forEach((p) => {
+      const parts = (p.name || "").trim().split(/\s+/);
+      if (parts.length > 1) set.add(parts[parts.length - 1].toLowerCase());
+    });
+    return set.size;
+  }
+  refreshRail();
+
+  // — First-run sample —
   if (FamilyStore.getPeople().length === 0) {
     setTimeout(() => offerSampleData(), 200);
   }
-
   async function offerSampleData() {
     if (!window.UI) return;
     const ok = await UI.confirm({
@@ -93,10 +169,9 @@
     }
   }
 
-  // Activate initial view (read from hash if present)
+  // — Initial view —
   const initial = (location.hash || "").replace(/^#/, "");
-  if (views[initial]) activate(initial); else activate("people");
-
+  if (views[initial]) activate(initial); else activate("tree");
   window.addEventListener("hashchange", () => {
     const n = (location.hash || "").replace(/^#/, "");
     if (views[n]) activate(n);

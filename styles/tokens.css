@@ -1,139 +1,145 @@
 /*
- * Design tokens — "Vellum"
+ * Design tokens — "Atelier"
  *
- * The brief is a multi-generational family tree that should feel like an
- * heirloom, not a SaaS dashboard. So:
+ * Reference: a clean three-pane workspace — left rail for filters/tools,
+ * canvas in the middle, person inspector on the right. Light surface as
+ * default, sage as the primary accent, soft pastel avatars to make
+ * dozens of family members visually distinct.
  *
- *  - Default mode is DARK — ink-navy with ivory paper as the foreground.
- *    Cards are ivory rectangles floating on midnight, like family photos
- *    laid on a velvet cloth. (Light mode flips this for those who prefer.)
- *  - Single bold accent: marigold gold. Used in one place at a time.
- *  - Secondary accent: rust, only for "deceased" markers and couple lines.
- *  - Sage as the "alive" indicator — quiet, not toy-bright.
- *
- * This is intentionally NOT the AI-default cream-paper-with-terracotta
- * palette; it sits closer to an illuminated manuscript at night.
+ * The vibe is a designer's notebook tool, not a heirloom poster — calm,
+ * spacious, mostly type-driven with one reserved accent.
  */
 :root {
-  /* — surfaces — */
-  --ink:        #0F1320;   /* deep navy, the page itself */
-  --ink-2:      #171B2C;   /* elevated surfaces (header, modal backdrop) */
-  --ink-3:      #1F2438;
-  --ink-line:   #2A2F47;
+  /* — Surfaces (light first) — */
+  --bg:           #F7F4EE;     /* warm bone — the page */
+  --bg-elev:      #FFFFFF;     /* cards, modals */
+  --bg-sunken:    #EFEAE0;     /* canvas underlay */
+  --surface:      #FFFFFF;
+  --surface-2:    #F2EEE5;
+  --surface-3:    #E8E2D3;
 
-  /* — paper — */
-  --paper:      #F4EFE3;   /* warm ivory — never pure white */
-  --paper-2:    #ECE4D2;
-  --paper-3:    #DDD3BD;
-  --paper-line: #C7BEA6;
+  /* — Ink — */
+  --text:         #1F2024;
+  --text-2:       #4A4D55;
+  --text-3:       #7A7D86;
+  --text-4:       #B5B7BD;
 
-  /* — accents (used sparingly) — */
-  --gold:       #E2B23E;   /* marigold — the signature accent */
-  --gold-soft:  #6E5519;   /* dim gold for backgrounds in dark mode */
-  --rust:       #B5471F;   /* deceased + couple line */
-  --sage:       #8AA678;   /* alive */
+  --line:         #E5E0D2;
+  --line-2:       #D4CDB8;
 
-  /* — semantic (dark default) — */
-  --bg:           var(--ink);
-  --bg-elev:      var(--ink-2);
-  --bg-sunken:    #0A0D17;
-  --surface:      var(--ink-2);
-  --surface-2:    var(--ink-3);
+  /* — Accents — */
+  --sage:         #6B8765;
+  --sage-soft:    #DDE4D5;
+  --sage-deep:    #4F6749;
 
-  --text:         var(--paper);
-  --text-2:       #C9C2B0;     /* dimmer ivory */
-  --text-3:       #8C8979;
-  --text-4:       #5C5A52;
+  --gold:         #C99A3F;
+  --gold-soft:    #F4E8CC;
 
-  --line:         var(--ink-line);
-  --line-2:       #353A55;
+  --rust:         #B5644B;
+  --rust-soft:    #F2D9CC;
 
-  --accent:       var(--gold);
-  --accent-ink:   #2A1E05;
-  --accent-soft:  rgba(226, 178, 62, 0.16);
-  --accent-leaf:  var(--sage);
-  --accent-leaf-soft: rgba(138, 166, 120, 0.16);
-  --accent-rust:  var(--rust);
-  --accent-rust-soft: rgba(181, 71, 31, 0.18);
+  /* primary accent = sage */
+  --accent:       var(--sage);
+  --accent-soft:  var(--sage-soft);
+  --accent-ink:   #1B2417;
+  --accent-deep:  var(--sage-deep);
 
-  --danger:       #E0644B;
-  --danger-soft:  rgba(224, 100, 75, 0.18);
+  /* alive / deceased markers */
+  --alive:        var(--sage);
+  --alive-soft:   var(--sage-soft);
+  --deceased:     #8C8A85;
+  --deceased-soft:#E2DFD8;
 
-  /* — shadows: cards on dark = subtle inner glow + drop — */
-  --shadow-sm: 0 1px 0 rgba(255,255,255,.04) inset, 0 2px 6px rgba(0,0,0,.35);
-  --shadow-md: 0 1px 0 rgba(255,255,255,.05) inset, 0 8px 24px rgba(0,0,0,.45);
-  --shadow-lg: 0 1px 0 rgba(255,255,255,.06) inset, 0 22px 50px rgba(0,0,0,.55);
-  --glow-gold: 0 0 0 1px rgba(226, 178, 62, .35), 0 0 24px rgba(226, 178, 62, .18);
+  /* — Soft pastel avatar palette — names hash into one of these.
+     Calibrated low-saturation so 12+ siblings on screen don't fight. */
+  --av-peach:     #F4D4B5;     --av-peach-ink:    #6B3A1A;
+  --av-sage:      #D5DFC3;     --av-sage-ink:     #3F5230;
+  --av-lavender:  #DBD3E8;     --av-lavender-ink: #4B3F66;
+  --av-sky:       #C9DAE3;     --av-sky-ink:      #2D4655;
+  --av-rose:      #EFCAC9;     --av-rose-ink:     #6B2C30;
+  --av-butter:    #EFE2B0;     --av-butter-ink:   #5C4A0F;
+  --av-clay:      #DBBFA2;     --av-clay-ink:     #5A381C;
+  --av-mist:      #D4D8DB;     --av-mist-ink:     #3D434A;
 
-  /* — type —
-     Fraunces: warm contemporary serif with optical-size variation.
-     Inter: workhorse sans for labels and metadata.
-     Loaded from Google Fonts in index.html. */
-  --font-display: "Fraunces", "Iowan Old Style", "Cormorant Garamond", Georgia, serif;
+  /* — Semantic — */
+  --danger:       #C25445;
+  --danger-soft:  #F2D9D2;
+
+  --shadow-xs: 0 1px 2px rgba(31, 32, 36, 0.04);
+  --shadow-sm: 0 1px 3px rgba(31, 32, 36, 0.06), 0 1px 2px rgba(31, 32, 36, 0.04);
+  --shadow-md: 0 4px 12px rgba(31, 32, 36, 0.06), 0 2px 4px rgba(31, 32, 36, 0.04);
+  --shadow-lg: 0 18px 40px rgba(31, 32, 36, 0.10), 0 4px 12px rgba(31, 32, 36, 0.06);
+
+  /* — Type — */
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
   --font-sans:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-mono:    "JetBrains Mono", ui-monospace, Menlo, monospace;
 
-  /* — spacing — */
-  --s-1: 4px;
-  --s-2: 8px;
-  --s-3: 12px;
-  --s-4: 16px;
-  --s-5: 24px;
-  --s-6: 32px;
-  --s-7: 48px;
-  --s-8: 64px;
+  /* — Spacing — */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
+  --s-5: 20px; --s-6: 24px; --s-7: 32px; --s-8: 48px;
 
-  /* — radius (smaller, more printed-feeling) — */
-  --r-sm: 4px;
-  --r-md: 8px;
-  --r-lg: 12px;
-  --r-xl: 16px;
+  /* — Radius — */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
   --r-pill: 999px;
 
-  /* — layers — */
+  /* — Layers — */
+  --z-rail: 30;
   --z-header: 50;
   --z-modal: 100;
   --z-toast: 200;
 
-  /* — motion (slow, intentional) — */
+  /* — Motion — */
   --t-fast: 140ms cubic-bezier(.2,.8,.2,1);
-  --t-med:  280ms cubic-bezier(.2,.8,.2,1);
-  --t-slow: 600ms cubic-bezier(.2,.8,.2,1);
+  --t-med:  240ms cubic-bezier(.2,.8,.2,1);
 
-  /* — layout — */
-  --header-h: 68px;
-  --header-h-mobile: 60px;
-  --bottom-nav-h: 64px;
-  --content-max: 1180px;
-
-  /* — signature: a 0.5px hairline that scales on hidpi — */
-  --hairline: 1px;
+  /* — Layout — */
+  --header-h: 56px;
+  --rail-w: 244px;
+  --rail-w-collapsed: 60px;
+  --inspector-w: 320px;
+  --content-max: 1600px;
 }
 
-/* Light mode: paper-on-paper, ink as text */
-@media (prefers-color-scheme: light) {
+/* — Dark mode (kept simple — it's not the primary mode) — */
+@media (prefers-color-scheme: dark) {
   :root {
-    --bg:           var(--paper);
-    --bg-elev:      #FBF6EB;
-    --bg-sunken:    #E9E1CC;
-    --surface:      #FBF6EB;
-    --surface-2:    var(--paper-2);
+    --bg:           #1A1B1F;
+    --bg-elev:      #232529;
+    --bg-sunken:    #131418;
+    --surface:      #232529;
+    --surface-2:    #2B2D33;
+    --surface-3:    #34373E;
 
-    --text:         var(--ink);
-    --text-2:       #2E3349;
-    --text-3:       #6F6B5C;
-    --text-4:       #9E9989;
+    --text:         #F0EDE5;
+    --text-2:       #C5C2B9;
+    --text-3:       #8B8983;
+    --text-4:       #5A5853;
 
-    --line:         var(--paper-line);
-    --line-2:       #B7AC93;
+    --line:         #34373E;
+    --line-2:       #44484F;
 
-    --accent-soft:  rgba(226, 178, 62, 0.20);
-    --accent-leaf-soft: rgba(122, 147, 103, 0.18);
-    --accent-rust-soft: rgba(181, 71, 31, 0.16);
+    --accent-soft:  rgba(107, 135, 101, 0.20);
+    --sage-soft:    rgba(107, 135, 101, 0.20);
+    --gold-soft:    rgba(201, 154, 63, 0.20);
+    --rust-soft:    rgba(181, 100, 75, 0.20);
 
-    --shadow-sm: 0 1px 2px rgba(15, 19, 32, .06);
-    --shadow-md: 0 8px 22px rgba(15, 19, 32, .08), 0 2px 6px rgba(15, 19, 32, .05);
-    --shadow-lg: 0 24px 56px rgba(15, 19, 32, .14), 0 6px 16px rgba(15, 19, 32, .08);
-    --glow-gold: 0 0 0 1px rgba(226, 178, 62, .55), 0 0 18px rgba(226, 178, 62, .25);
+    --av-peach:     #5C3F2B;     --av-peach-ink:    #F4D4B5;
+    --av-sage:      #3F4E33;     --av-sage-ink:     #D5DFC3;
+    --av-lavender:  #3F384C;     --av-lavender-ink: #DBD3E8;
+    --av-sky:       #2E404C;     --av-sky-ink:      #C9DAE3;
+    --av-rose:      #4E3035;     --av-rose-ink:     #EFCAC9;
+    --av-butter:    #4D421B;     --av-butter-ink:   #EFE2B0;
+    --av-clay:      #4A3623;     --av-clay-ink:     #DBBFA2;
+    --av-mist:      #3A3D43;     --av-mist-ink:     #D4D8DB;
+
+    --shadow-xs: 0 1px 2px rgba(0,0,0,.4);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.5);
+    --shadow-md: 0 4px 12px rgba(0,0,0,.55);
+    --shadow-lg: 0 18px 40px rgba(0,0,0,.6);
   }
 }

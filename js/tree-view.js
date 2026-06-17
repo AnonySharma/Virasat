@@ -66,10 +66,20 @@
     rootEl = root;
     UI.clear(rootEl);
 
-    const header = UI.el("header", { class: "view-header", style: { marginBottom: "12px" } }, [
-      UI.el("h2", { class: "section-head__title" }, I18n.t("tree.title")),
-      UI.el("div", { class: "section-head__sub" }, I18n.t("tree.subtitle"))
+    const subEl = UI.el("span", { class: "view-head__sub" }, "");
+    const header = UI.el("div", { class: "view-head" }, [
+      UI.el("div", { class: "view-head__title-wrap" }, [
+        UI.el("h2", { class: "view-head__title" }, "Our family tree"),
+        subEl
+      ]),
+      UI.el("div", { class: "view-head__actions" }, [
+        UI.el("button", {
+          class: "btn", type: "button",
+          onclick: () => window.PeopleView && PeopleView.openForm && PeopleView.openForm(null)
+        }, [UI.el("i", { class: "fa-solid fa-user-plus" }), UI.el("span", null, "Add person")])
+      ])
     ]);
+    rootEl.__subEl = subEl;
 
     stageEl = UI.el("div", { class: "tree-stage" });
 
@@ -83,38 +93,30 @@
     svgEl.appendChild(edgesG);
     svgEl.appendChild(nodesG);
 
-    const legend = UI.el("div", { class: "tree-legend" }, [
-      UI.el("span", { class: "tree-legend__item" }, [
-        UI.el("span", { class: "tree-legend__swatch", style: { borderColor: "var(--accent-leaf)" } }),
-        I18n.t("tree.legendLiving")
-      ]),
-      UI.el("span", { class: "tree-legend__item" }, [
-        UI.el("span", { class: "tree-legend__swatch", style: { borderColor: "var(--ink-4)" } }),
-        I18n.t("tree.legendDeceased")
-      ]),
-      UI.el("span", { class: "tree-legend__item" }, [
-        UI.el("span", {
-          style: {
-            display: "inline-block", width: "18px", height: "2px",
-            background: "var(--accent)", borderRadius: "2px"
-          }
-        }),
-        I18n.t("tree.legendCouple")
-      ])
+    const zoomReadout = UI.el("div", { class: "tree-zoom-readout" }, [
+      UI.el("button", { type: "button", "aria-label": "Zoom out", onclick: () => zoomBy(1.25) }, [UI.el("i", { class: "fa-solid fa-minus" })]),
+      UI.el("span", { class: "tree-zoom-readout__pct", id: "tree-zoom-pct" }, "100%"),
+      UI.el("button", { type: "button", "aria-label": "Zoom in", onclick: () => zoomBy(0.8) }, [UI.el("i", { class: "fa-solid fa-plus" })])
     ]);
 
     const controls = UI.el("div", { class: "tree-controls" }, [
       UI.el("button", { class: "btn", type: "button", "aria-label": "Zoom in", title: "Zoom in",
-        onclick: () => zoomBy(0.8) }, "+"),
+        onclick: () => zoomBy(0.8) }, [UI.el("i", { class: "fa-solid fa-plus" })]),
       UI.el("button", { class: "btn", type: "button", "aria-label": "Zoom out", title: "Zoom out",
-        onclick: () => zoomBy(1.25) }, "−"),
+        onclick: () => zoomBy(1.25) }, [UI.el("i", { class: "fa-solid fa-minus" })]),
       UI.el("button", { class: "btn", type: "button", "aria-label": "Reset view", title: "Reset view",
-        onclick: () => resetView() }, "⤢")
+        onclick: () => resetView() }, [UI.el("i", { class: "fa-solid fa-expand" })])
+    ]);
+
+    const panHint = UI.el("div", { class: "tree-pan-hint" }, [
+      UI.el("i", { class: "fa-solid fa-arrows-up-down-left-right" }),
+      UI.el("span", null, "Drag to pan · Scroll to zoom")
     ]);
 
     stageEl.appendChild(svgEl);
-    stageEl.appendChild(legend);
+    stageEl.appendChild(zoomReadout);
     stageEl.appendChild(controls);
+    stageEl.appendChild(panHint);
 
     rootEl.appendChild(header);
     rootEl.appendChild(stageEl);
@@ -133,6 +135,12 @@
     const people = FamilyStore.getPeople();
     UI.clear(edgesG);
     UI.clear(nodesG);
+
+    // Update subtitle counts
+    if (rootEl && rootEl.__subEl) {
+      const gens = (function () { const g = FamilyStore.buildGenerations(); let m = 0; g.forEach((v) => { if (v > m) m = v; }); return people.length ? m + 1 : 0; })();
+      rootEl.__subEl.textContent = people.length + " " + (people.length === 1 ? "member" : "members") + " · " + gens + " " + (gens === 1 ? "generation" : "generations");
+    }
 
     if (people.length === 0) {
       const empty = UI.el("div", {
@@ -340,11 +348,16 @@
     positions.forEach((pos, id) => {
       const p = pos.person;
       const g = svgEl_("g", {
-        class: "t-node",
+        class: "t-node" + (window.Inspector && Inspector.getSelected && Inspector.getSelected() === p.id ? " is-selected" : ""),
         transform: `translate(${pos.x},${pos.y})`,
         "data-person-id": p.id,
         style: { cursor: "pointer" },
         onclick: (ev) => {
+          ev.stopPropagation();
+          if (window.Inspector) Inspector.show(p.id);
+        },
+        oncontextmenu: (ev) => {
+          ev.preventDefault();
           ev.stopPropagation();
           showNodeMenu(p, pos, ev);
         }
@@ -483,9 +496,9 @@
         UI.el("div", { class: "tree-node-menu__name" }, displayName),
         UI.el("div", { class: "tree-node-menu__sub" }, lifespan)
       ]),
-      menuItem("Open profile", "→", "primary", () => {
+      menuItem("Open details", "→", "primary", () => {
         dismissMenu();
-        if (window.ProfileView) ProfileView.open(person.id);
+        if (window.Inspector) Inspector.show(person.id);
       }),
       menuItem("Edit", "✎", null, () => {
         dismissMenu();
@@ -585,6 +598,12 @@
   // ===== Pan / zoom =====
   function applyViewBox() {
     svgEl.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+    // Update zoom percent readout (relative to lastBBox)
+    const pctEl = document.getElementById("tree-zoom-pct");
+    if (pctEl && lastBBox && lastBBox.w > 0) {
+      const pct = Math.round((lastBBox.w / viewBox.w) * 100);
+      pctEl.textContent = pct + "%";
+    }
   }
 
   function computeBBox(positions) {

@@ -258,7 +258,8 @@
       (ageNow != null ? " (" + ageNow + ")" : "");
 
     const openPerson = () => {
-      if (window.ProfileView && ProfileView.open) ProfileView.open(person.id);
+      if (window.Inspector && Inspector.show) Inspector.show(person.id);
+      else if (window.ProfileView && ProfileView.open) ProfileView.open(person.id);
       else openPersonModal(person);
     };
 
