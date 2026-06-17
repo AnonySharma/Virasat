@@ -329,21 +329,37 @@
       oninput: (e) => { draft.name_hi = e.target.value; }
     });
 
-    const birthDateInput = el("input", {
-      class: "input",
-      type: "text",
-      value: draft.birthDate,
-      placeholder: "YYYY-MM-DD or YYYY",
-      oninput: (e) => { draft.birthDate = e.target.value; }
-    });
+    // Heritage date pickers — fall back to plain text inputs if the
+    // module hasn't loaded for any reason.
+    const birthDatePicker = window.HeritagePicker
+      ? window.HeritagePicker.create({
+          value: draft.birthDate, placeholder: "YYYY-MM-DD",
+          allowYearOnly: true,
+          onChange: (iso) => { draft.birthDate = iso; }
+        })
+      : null;
+    const birthDateInput = birthDatePicker
+      ? birthDatePicker.el
+      : el("input", {
+          class: "input", type: "text", value: draft.birthDate,
+          placeholder: "YYYY-MM-DD or YYYY",
+          oninput: (e) => { draft.birthDate = e.target.value; }
+        });
 
-    const deathDateInput = el("input", {
-      class: "input",
-      type: "text",
-      value: draft.deathDate,
-      placeholder: "YYYY-MM-DD or YYYY",
-      oninput: (e) => { draft.deathDate = e.target.value; }
-    });
+    const deathDatePicker = window.HeritagePicker
+      ? window.HeritagePicker.create({
+          value: draft.deathDate, placeholder: "Leave blank if living",
+          allowYearOnly: true,
+          onChange: (iso) => { draft.deathDate = iso; }
+        })
+      : null;
+    const deathDateInput = deathDatePicker
+      ? deathDatePicker.el
+      : el("input", {
+          class: "input", type: "text", value: draft.deathDate,
+          placeholder: "YYYY-MM-DD or YYYY",
+          oninput: (e) => { draft.deathDate = e.target.value; }
+        });
 
     const birthPlaceInput = el("input", {
       class: "input", type: "text", value: draft.birthPlace,
@@ -524,12 +540,14 @@
       }
       if (draft.birthDate && !FamilyStore.parseDate(draft.birthDate)) {
         toast(I18n.t("form.datePlaceholder"), "danger");
-        birthDateInput.focus();
+        if (birthDatePicker) birthDatePicker.focus();
+        else birthDateInput.focus && birthDateInput.focus();
         return;
       }
       if (draft.deathDate && !FamilyStore.parseDate(draft.deathDate)) {
         toast(I18n.t("form.datePlaceholder"), "danger");
-        deathDateInput.focus();
+        if (deathDatePicker) deathDatePicker.focus();
+        else deathDateInput.focus && deathDateInput.focus();
         return;
       }
 

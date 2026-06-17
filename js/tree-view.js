@@ -10,14 +10,14 @@
   const SVG_NS = "http://www.w3.org/2000/svg";
   const XLINK_NS = "http://www.w3.org/1999/xlink";
 
-  // Layout constants
-  const NODE_W = 150;
-  const NODE_H = 110;
-  const X_GAP = 30;
-  const Y_GAP = 80;
-  const PHOTO_R = 24;
-  const PHOTO_CY = 30;
-  const PAD = 60;
+  // Layout constants — photo-first heritage cards
+  const NODE_W = 160;
+  const NODE_H = 150;
+  const X_GAP = 50;
+  const Y_GAP = 100;
+  const PHOTO_R = 42;       // larger circular portrait
+  const PHOTO_CY = 50;      // photo centred near top
+  const PAD = 80;
 
   // Module state
   let rootEl = null;
@@ -280,7 +280,9 @@
   function drawEdges(positions) {
     const drawnCouples = new Set();
 
-    // Couple edges
+    // Couple marker — a small gold knot rendered between the two portraits
+    // at the photo's vertical centre. No line. The visual reads as
+    // "these two are joined" without the chart-y horizontal connector.
     positions.forEach((pos, id) => {
       const person = pos.person;
       person.spouses.forEach((sid) => {
@@ -290,15 +292,38 @@
         const key = id < sid ? id + "|" + sid : sid + "|" + id;
         if (drawnCouples.has(key)) return;
         drawnCouples.add(key);
-        const ax = pos.x + NODE_W / 2;
-        const ay = pos.y + 6;
-        const bx = sp.x + NODE_W / 2;
-        const by = sp.y + 6;
-        edgesG.appendChild(svgEl_("line", {
+
+        const left  = (pos.x < sp.x ? pos : sp);
+        const right = (pos.x < sp.x ? sp : pos);
+        const cx = (left.x + NODE_W + right.x) / 2;
+        const cy = pos.y + PHOTO_CY;
+
+        // Thin filament from each portrait edge to the centre, kept short
+        const edgeLeftX  = left.x + NODE_W;
+        const edgeRightX = right.x;
+
+        const filamentL = svgEl_("path", {
           class: "t-edge t-edge--couple",
-          x1: Math.min(ax, bx), y1: ay,
-          x2: Math.max(ax, bx), y2: by
+          d: `M ${edgeLeftX + 2} ${cy} L ${cx - 9} ${cy}`
+        });
+        const filamentR = svgEl_("path", {
+          class: "t-edge t-edge--couple",
+          d: `M ${cx + 9} ${cy} L ${edgeRightX - 2} ${cy}`
+        });
+        edgesG.appendChild(filamentL);
+        edgesG.appendChild(filamentR);
+
+        // Gold knot in the middle: small interlocking circles
+        const knot = svgEl_("g", { class: "t-couple-knot" });
+        knot.appendChild(svgEl_("circle", {
+          cx: cx - 3, cy, r: 4,
+          fill: "none", stroke: "var(--gold)", "stroke-width": 1.5
         }));
+        knot.appendChild(svgEl_("circle", {
+          cx: cx + 3, cy, r: 4,
+          fill: "none", stroke: "var(--gold)", "stroke-width": 1.5
+        }));
+        edgesG.appendChild(knot);
       });
     });
 
@@ -314,13 +339,12 @@
       if (placedParents.length === 2) {
         const p1 = placedParents[0];
         const p2 = placedParents[1];
-        // If they're adjacent in the same row, anchor at the midpoint of the couple line (top of nodes)
         if (p1.rowIdx === p2.rowIdx) {
-          parentMidX = (p1.x + NODE_W / 2 + p2.x + NODE_W / 2) / 2;
-          // Anchor below the couple-line/nodes — use node bottom
-          parentBottomY = Math.max(p1.y, p2.y) + NODE_H;
+          // Couple — drop the line from the gold knot (between them, at photo level)
+          parentMidX = ((p1.x < p2.x ? p1.x + NODE_W : p2.x + NODE_W) +
+                        (p1.x < p2.x ? p2.x : p1.x)) / 2;
+          parentBottomY = Math.max(p1.y, p2.y) + PHOTO_CY + 6;
         } else {
-          // Different rows — average centers
           parentMidX = (p1.x + p2.x) / 2 + NODE_W / 2;
           parentBottomY = Math.max(p1.y, p2.y) + NODE_H;
         }
@@ -333,9 +357,15 @@
       const childTopX = pos.x + NODE_W / 2;
       const childTopY = pos.y;
 
+      // Smooth cubic Bezier from parent bottom to child top.
+      // Two control points pulled toward a halfway "rail" so the line eases
+      // out vertically and back in vertically — calligraphic, not corporate.
       const railY = (parentBottomY + childTopY) / 2;
-
-      const d = `M ${parentMidX} ${parentBottomY} L ${parentMidX} ${railY} L ${childTopX} ${railY} L ${childTopX} ${childTopY}`;
+      const c1x = parentMidX;
+      const c1y = railY;
+      const c2x = childTopX;
+      const c2y = railY;
+      const d = `M ${parentMidX} ${parentBottomY} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${childTopX} ${childTopY}`;
       edgesG.appendChild(svgEl_("path", {
         class: "t-edge",
         d
@@ -363,17 +393,15 @@
         }
       });
 
-      // Background
-      g.appendChild(svgEl_("rect", {
-        class: "t-node-bg",
-        x: 0, y: 0,
-        width: NODE_W, height: NODE_H,
-        rx: 14, ry: 14
-      }));
-
-      // Photo or initials
+      // (No card rect — the photo IS the card. We add a soft white halo as a
+      // drop-shadow approximation via a slightly larger backing circle.)
       const cx = NODE_W / 2;
       const cy = PHOTO_CY;
+      g.appendChild(svgEl_("circle", {
+        class: "t-node-photo-bg",
+        cx, cy, r: PHOTO_R + 3
+      }));
+
       const photoUrl = window.PhotoStore ? PhotoStore.getUrlSync(p) : p.photo;
       const displayName = FamilyStore.getField(p, "name") || p.name;
       if (photoUrl) {
@@ -434,18 +462,18 @@
         cx, cy, r: PHOTO_R
       }));
 
-      // Name (truncate)
+      // Name (truncate) — placed below the larger portrait
       g.appendChild(svgEl_("text", {
         class: "t-node-name",
         "text-anchor": "middle",
-        x: NODE_W / 2, y: 70
+        x: NODE_W / 2, y: PHOTO_CY + PHOTO_R + 22
       }, truncate(displayName, 18)));
 
-      // Dates
+      // Dates — softer subtitle
       g.appendChild(svgEl_("text", {
         class: "t-node-dates",
         "text-anchor": "middle",
-        x: NODE_W / 2, y: 88
+        x: NODE_W / 2, y: PHOTO_CY + PHOTO_R + 40
       }, formatYears(p)));
 
       nodesG.appendChild(g);

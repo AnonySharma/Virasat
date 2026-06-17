@@ -120,33 +120,45 @@
       })
     ]));
 
-    // Tabs
-    const tabs = [
-      ["details", "Details"],
-      ["media", "Media"],
-      ["family", "Family"],
-      ["notes", "Notes"]
-    ];
-    contentEl.appendChild(UI.el("div", { class: "inspector-tabs" },
-      tabs.map(([id, label]) => UI.el("button", {
-        class: "inspector-tab" + (activeTab === id ? " is-active" : ""),
-        type: "button",
-        onclick: () => { activeTab = id; render(); }
-      }, label))
-    ));
+    // Collapsible biographical sections (heritage feel: read like chapters)
+    const sectionStates = loadSectionStates();
+    const sections = [];
 
-    // Tab body
-    if (activeTab === "details") {
-      contentEl.appendChild(buildDetailsTab(p, F, {
-        displayBirthPlace, displayDeathPlace, displayDesc, displayAchievements, displayEducation
-      }));
-    } else if (activeTab === "media") {
-      contentEl.appendChild(buildMediaTab(p));
-    } else if (activeTab === "family") {
-      contentEl.appendChild(buildFamilyTab(p, parents, spouses, children, siblings));
-    } else {
-      contentEl.appendChild(buildNotesTab(p, displayNotes));
-    }
+    // About
+    sections.push(makeSection("about", "About", "fa-regular fa-bookmark", true,
+      displayDesc
+        ? UI.el("p", { class: "inspector-prose" }, displayDesc)
+        : muted("No biography written yet."), sectionStates));
+
+    // Personal information
+    sections.push(makeSection("personal", "Personal information", "fa-regular fa-id-card", true,
+      buildPersonalInfo(p, F, { displayBirthPlace, displayDeathPlace }), sectionStates));
+
+    // Achievements
+    sections.push(makeSection("achievements", "Life achievements", "fa-solid fa-trophy", false,
+      (displayAchievements && displayAchievements.length)
+        ? UI.el("ul", { class: "inspector-list" }, displayAchievements.map((a) => UI.el("li", null, a)))
+        : muted("None recorded yet."), sectionStates));
+
+    // Education
+    sections.push(makeSection("education", "Education", "fa-solid fa-graduation-cap", false,
+      (displayEducation && displayEducation.length)
+        ? UI.el("ul", { class: "inspector-list inspector-list--edu" }, displayEducation.map((e) => UI.el("li", null, e)))
+        : muted("None recorded yet."), sectionStates));
+
+    // Family
+    sections.push(makeSection("family", "Family", "fa-solid fa-people-roof", true,
+      buildFamilyBlock(p, parents, spouses, children, siblings), sectionStates));
+
+    // Photo
+    sections.push(makeSection("photo", "Photo", "fa-regular fa-image", false,
+      buildPhotoBlock(p), sectionStates));
+
+    // Notes
+    sections.push(makeSection("notes", "Notes & memories", "fa-regular fa-pen-to-square", false,
+      buildNotesBlock(p, displayNotes), sectionStates));
+
+    sections.forEach((s) => contentEl.appendChild(s));
 
     // Meta footer
     if (p.createdAt || p.updatedAt) {
@@ -158,89 +170,81 @@
     }
   }
 
-  // — Tab builders —
-  function buildDetailsTab(p, F, ctx) {
-    const wrap = UI.el("div", null);
+  // — Section helpers —
+  const SECTION_STATE_KEY = "familyTree.inspector.sections";
+  function loadSectionStates() {
+    try {
+      const raw = localStorage.getItem(SECTION_STATE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (_) { return {}; }
+  }
+  function persistSectionStates(states) {
+    try { localStorage.setItem(SECTION_STATE_KEY, JSON.stringify(states)); } catch (_) {}
+  }
+
+  function makeSection(id, title, icon, defaultOpen, body, states) {
+    const isOpen = (id in states) ? !!states[id] : !!defaultOpen;
+    const sec = UI.el("section", { class: "inspector-section" + (isOpen ? " is-open" : "") });
+    const head = UI.el("div", { class: "inspector-section__head", role: "button", tabindex: "0",
+      onclick: toggle,
+      onkeydown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }
+    }, [
+      UI.el("h3", { class: "inspector-section__title" }, [
+        UI.el("i", { class: icon, "aria-hidden": "true" }),
+        UI.el("span", null, title)
+      ]),
+      UI.el("i", { class: "fa-solid fa-chevron-down inspector-section__chevron", "aria-hidden": "true" })
+    ]);
+    const bodyWrap = UI.el("div", { class: "inspector-section__body" }, [body]);
+    sec.appendChild(head);
+    sec.appendChild(bodyWrap);
+
+    function toggle() {
+      sec.classList.toggle("is-open");
+      const states = loadSectionStates();
+      states[id] = sec.classList.contains("is-open");
+      persistSectionStates(states);
+    }
+    return sec;
+  }
+
+  function muted(text) { return UI.el("p", { class: "profile__muted" }, text); }
+
+  function buildPersonalInfo(p, F, ctx) {
     const rows = [];
-    rows.push(["Full name", F("name") || p.name || "—"]);
+    if (p.birthDate) rows.push(["Born", formatDateLong(p.birthDate) + (ctx.displayBirthPlace ? " · " + ctx.displayBirthPlace : "")]);
+    else rows.push(["Born", muted("—")]);
+    if (p.deathDate) rows.push(["Died", formatDateLong(p.deathDate) + (ctx.displayDeathPlace ? " · " + ctx.displayDeathPlace : "")]);
     if (p.gender) rows.push(["Gender", { m: "Male", f: "Female", o: "Other" }[p.gender] || p.gender]);
-    if (p.birthDate) rows.push(["Birth date", p.birthDate]);
-    if (ctx.displayBirthPlace) rows.push(["Birth place", ctx.displayBirthPlace]);
-    if (p.deathDate) rows.push(["Death date", p.deathDate]);
-    if (ctx.displayDeathPlace) rows.push(["Death place", ctx.displayDeathPlace]);
     if (F("occupation")) rows.push(["Occupation", F("occupation")]);
-
-    wrap.appendChild(UI.el("section", { class: "inspector-section" }, [
-      UI.el("h3", { class: "inspector-section__title" }, "Personal information"),
-      UI.el("dl", { class: "inspector-rows" },
-        rows.map(([k, v]) => UI.el("div", { class: "inspector-row" }, [
-          UI.el("dt", null, k),
-          UI.el("dd", null, v)
-        ]))
-      )
-    ]));
-
-    if (ctx.displayDesc) {
-      wrap.appendChild(UI.el("section", { class: "inspector-section" }, [
-        UI.el("h3", { class: "inspector-section__title" }, "About"),
-        UI.el("p", { style: { margin: 0, color: "var(--text)", fontSize: "13px", lineHeight: "1.6", whiteSpace: "pre-wrap" } }, ctx.displayDesc)
-      ]));
-    }
-
-    if (ctx.displayAchievements && ctx.displayAchievements.length) {
-      wrap.appendChild(UI.el("section", { class: "inspector-section" }, [
-        UI.el("h3", { class: "inspector-section__title" }, "Achievements"),
-        UI.el("ul", { class: "profile__list" },
-          ctx.displayAchievements.map((a) => UI.el("li", null, a))
-        )
-      ]));
-    }
-
-    if (ctx.displayEducation && ctx.displayEducation.length) {
-      wrap.appendChild(UI.el("section", { class: "inspector-section" }, [
-        UI.el("h3", { class: "inspector-section__title" }, "Education"),
-        UI.el("ul", { class: "profile__list profile__list--edu" },
-          ctx.displayEducation.map((e) => UI.el("li", null, e))
-        )
-      ]));
-    }
-
-    return wrap;
+    const age = FamilyStore.calcAge(p);
+    if (age != null) rows.push([p.deathDate ? "Lifespan" : "Age", p.deathDate ? (age + " years") : (age + " years old")]);
+    return UI.el("dl", { class: "inspector-rows" },
+      rows.map(([k, v]) => UI.el("div", { class: "inspector-row" }, [
+        UI.el("dt", null, k),
+        UI.el("dd", null, v)
+      ]))
+    );
   }
 
-  function buildMediaTab(p) {
-    const wrap = UI.el("section", { class: "inspector-section" }, [
-      UI.el("h3", { class: "inspector-section__title" }, "Photo")
-    ]);
-    const photoWrap = UI.el("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" } });
-    const big = UI.el("div", { style: { width: "100%", aspectRatio: "1/1", maxWidth: "240px", borderRadius: "var(--r-md)", overflow: "hidden", border: "1px solid var(--line)", background: "var(--surface-2)" } });
-    const url = window.PhotoStore ? PhotoStore.getUrlSync(p) : (p.photo || null);
-    if (url) {
-      big.appendChild(UI.el("img", { src: url, alt: "", style: { width: "100%", height: "100%", objectFit: "cover" } }));
-    } else if (window.PhotoStore && (p.photoId || p.photoUrl)) {
-      const img = UI.el("img", { src: "", alt: "", style: { width: "100%", height: "100%", objectFit: "cover" } });
-      big.appendChild(img);
-      PhotoStore.getUrl(p).then((u) => { if (u) img.src = u; });
-    } else {
-      big.appendChild(UI.el("div", { style: { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-3)", fontSize: "13px" } }, "No photo yet"));
-    }
-    photoWrap.appendChild(big);
-    photoWrap.appendChild(UI.el("button", {
-      class: "btn",
-      type: "button",
-      onclick: () => window.PeopleView && PeopleView.openForm && PeopleView.openForm(p.id)
-    }, [UI.el("i", { class: "fa-solid fa-pen-to-square", style: { marginRight: "4px" } }), "Edit photo"]));
-    wrap.appendChild(photoWrap);
-    return wrap;
+  function formatDateLong(s) {
+    if (!s) return "";
+    // YYYY-MM-DD → "DD MMM YYYY"; YYYY → "YYYY".
+    const m = String(s).match(/^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?$/);
+    if (!m) return s;
+    const y = +m[1];
+    if (!m[2]) return String(y);
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const mo = +m[2];
+    if (!m[3]) return months[mo - 1] + " " + y;
+    return (+m[3]) + " " + months[mo - 1] + " " + y;
   }
 
-  function buildFamilyTab(p, parents, spouses, children, siblings) {
-    const wrap = UI.el("section", { class: "inspector-section" }, [
-      UI.el("h3", { class: "inspector-section__title" }, "Family")
-    ]);
+  function buildFamilyBlock(p, parents, spouses, children, siblings) {
+    const wrap = UI.el("div", null);
     const groups = [
       ["Parents", parents],
-      ["Spouse", spouses],
+      ["Spouse(s)", spouses],
       ["Children", children],
       ["Siblings", siblings]
     ];
@@ -263,34 +267,64 @@
         }))
       ]));
     });
+    if (!any) wrap.appendChild(muted("No family connections recorded yet."));
 
-    // Always show "Add" buttons at bottom
-    wrap.appendChild(UI.el("div", { style: { display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "16px" } }, [
+    wrap.appendChild(UI.el("div", { class: "inspector-add-row" }, [
       UI.el("button", {
         class: "btn btn--sm", type: "button",
-        onclick: () => window.PeopleView && PeopleView.openForm && PeopleView.openForm(null, { parents: [p.id, ...(p.spouses && p.spouses.length === 1 ? [p.spouses[0]] : [])] })
-      }, [UI.el("i", { class: "fa-solid fa-baby", style: { marginRight: "4px" } }), "Add child"]),
+        onclick: () => window.PeopleView && PeopleView.openForm && PeopleView.openForm(null, {
+          parents: [p.id, ...(p.spouses && p.spouses.length === 1 ? [p.spouses[0]] : [])]
+        })
+      }, [UI.el("i", { class: "fa-solid fa-baby" }), UI.el("span", null, "Add child")]),
       UI.el("button", {
         class: "btn btn--sm", type: "button",
         onclick: () => window.PeopleView && PeopleView.openForm && PeopleView.openForm(null, { spouses: [p.id] })
-      }, [UI.el("i", { class: "fa-solid fa-heart", style: { marginRight: "4px" } }), "Add spouse"]),
+      }, [UI.el("i", { class: "fa-solid fa-heart" }), UI.el("span", null, "Add spouse")]),
       UI.el("button", {
         class: "btn btn--sm", type: "button",
         onclick: () => window.PeopleView && PeopleView.openForm && PeopleView.openForm(null, { __addAsParentOf: p.id })
-      }, [UI.el("i", { class: "fa-solid fa-user-plus", style: { marginRight: "4px" } }), "Add parent"])
+      }, [UI.el("i", { class: "fa-solid fa-user-plus" }), UI.el("span", null, "Add parent")])
     ]));
-
-    if (!any) {
-      wrap.insertBefore(UI.el("p", { class: "profile__muted" }, "No family connections yet — add a relative below."), wrap.children[1] || null);
-    }
     return wrap;
   }
 
-  function buildNotesTab(p, currentNotes) {
-    const wrap = UI.el("section", { class: "inspector-section" });
+  function buildPhotoBlock(p) {
+    const photoWrap = UI.el("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" } });
+    const big = UI.el("div", {
+      style: {
+        width: "100%", aspectRatio: "1/1", maxWidth: "260px",
+        borderRadius: "var(--r-lg)", overflow: "hidden",
+        border: "1px solid var(--line)", background: "var(--surface-2)"
+      }
+    });
+    const url = window.PhotoStore ? PhotoStore.getUrlSync(p) : (p.photo || null);
+    if (url) {
+      big.appendChild(UI.el("img", { src: url, alt: "", style: { width: "100%", height: "100%", objectFit: "cover" } }));
+    } else if (window.PhotoStore && (p.photoId || p.photoUrl)) {
+      const img = UI.el("img", { src: "", alt: "", style: { width: "100%", height: "100%", objectFit: "cover" } });
+      big.appendChild(img);
+      PhotoStore.getUrl(p).then((u) => { if (u) img.src = u; });
+    } else {
+      big.appendChild(UI.el("div", {
+        style: {
+          width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center",
+          color: "var(--text-3)", fontSize: "13px", textAlign: "center", padding: "24px",
+          fontFamily: "var(--font-display)"
+        }
+      }, "No photograph yet"));
+    }
+    photoWrap.appendChild(big);
+    photoWrap.appendChild(UI.el("button", {
+      class: "btn btn--sm", type: "button",
+      onclick: () => window.PeopleView && PeopleView.openForm && PeopleView.openForm(p.id)
+    }, [UI.el("i", { class: "fa-regular fa-pen-to-square" }), UI.el("span", null, "Edit photo")]));
+    return photoWrap;
+  }
+
+  function buildNotesBlock(p, currentNotes) {
     const ta = UI.el("textarea", {
       class: "inspector-notes-input",
-      placeholder: "Add a note about " + (FamilyStore.getField(p, "name") || p.name) + "…"
+      placeholder: "Stories, memories, things to remember about " + (FamilyStore.getField(p, "name") || p.name) + "…"
     }, currentNotes || "");
     let timer = null;
     ta.addEventListener("input", () => {
@@ -301,9 +335,7 @@
         FamilyStore.updatePerson(p.id, patch);
       }, 600);
     });
-    wrap.appendChild(UI.el("h3", { class: "inspector-section__title" }, "Notes"));
-    wrap.appendChild(ta);
-    return wrap;
+    return ta;
   }
 
   function focusNotes() {

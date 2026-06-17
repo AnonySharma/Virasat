@@ -1,90 +1,109 @@
 /*
- * Design tokens — "Atelier"
+ * Design tokens — "Heritage"
  *
- * Reference: a clean three-pane workspace — left rail for filters/tools,
- * canvas in the middle, person inspector on the right. Light surface as
- * default, sage as the primary accent, soft pastel avatars to make
- * dozens of family members visually distinct.
+ * The product is a luxury family archive. Every choice favours warmth,
+ * editorial typography, and generous whitespace over enterprise tropes.
  *
- * The vibe is a designer's notebook tool, not a heirloom poster — calm,
- * spacious, mostly type-driven with one reserved accent.
+ * Palette is fixed by the brief:
+ *   ivory  #F8F6F2 (background)
+ *   olive  #5E7D63 (primary accent)
+ *   gold   #B89A5A (highlight)
+ *
+ * Type pairs Cormorant Garamond (display) with Inter (body).
  */
+/* Heritage is a light-themed product. Honour user-controlled override via a
+   data-theme attribute on <html> only; do not auto-flip on system preference
+   since it changes the brand identity. */
 :root {
-  /* — Surfaces (light first) — */
-  --bg:           #F7F4EE;     /* warm bone — the page */
-  --bg-elev:      #FFFFFF;     /* cards, modals */
-  --bg-sunken:    #EFEAE0;     /* canvas underlay */
-  --surface:      #FFFFFF;
-  --surface-2:    #F2EEE5;
-  --surface-3:    #E8E2D3;
+  color-scheme: light;
+  /* — Heritage palette — */
+  --ivory:        #F8F6F2;
+  --ivory-2:      #F2EEE5;
+  --ivory-3:      #E9E2D3;
+  --parchment:    #F4EFE3;
+  --bone:         #FFFCF5;
 
-  /* — Ink — */
-  --text:         #1F2024;
-  --text-2:       #4A4D55;
-  --text-3:       #7A7D86;
-  --text-4:       #B5B7BD;
+  --olive:        #5E7D63;
+  --olive-deep:   #3F5944;
+  --olive-soft:   #DAE2D5;
 
-  --line:         #E5E0D2;
-  --line-2:       #D4CDB8;
+  --gold:         #B89A5A;
+  --gold-deep:    #856B33;
+  --gold-soft:    #EFE5CC;
 
-  /* — Accents — */
-  --sage:         #6B8765;
-  --sage-soft:    #DDE4D5;
-  --sage-deep:    #4F6749;
+  --rust:         #A6553A;
+  --rust-soft:    #ECD7CB;
 
-  --gold:         #C99A3F;
-  --gold-soft:    #F4E8CC;
-
-  --rust:         #B5644B;
-  --rust-soft:    #F2D9CC;
-
-  /* primary accent = sage */
-  --accent:       var(--sage);
-  --accent-soft:  var(--sage-soft);
-  --accent-ink:   #1B2417;
-  --accent-deep:  var(--sage-deep);
-
-  /* alive / deceased markers */
-  --alive:        var(--sage);
-  --alive-soft:   var(--sage-soft);
-  --deceased:     #8C8A85;
-  --deceased-soft:#E2DFD8;
-
-  /* — Soft pastel avatar palette — names hash into one of these.
-     Calibrated low-saturation so 12+ siblings on screen don't fight. */
-  --av-peach:     #F4D4B5;     --av-peach-ink:    #6B3A1A;
-  --av-sage:      #D5DFC3;     --av-sage-ink:     #3F5230;
-  --av-lavender:  #DBD3E8;     --av-lavender-ink: #4B3F66;
-  --av-sky:       #C9DAE3;     --av-sky-ink:      #2D4655;
-  --av-rose:      #EFCAC9;     --av-rose-ink:     #6B2C30;
-  --av-butter:    #EFE2B0;     --av-butter-ink:   #5C4A0F;
-  --av-clay:      #DBBFA2;     --av-clay-ink:     #5A381C;
-  --av-mist:      #D4D8DB;     --av-mist-ink:     #3D434A;
+  --ink:          #221F1A;     /* near-black, warm */
+  --ink-2:        #4A463E;
+  --ink-3:        #807A6E;
+  --ink-4:        #B8B2A3;
+  --ink-5:        #D9D2C2;
 
   /* — Semantic — */
-  --danger:       #C25445;
-  --danger-soft:  #F2D9D2;
+  --bg:           var(--ivory);
+  --bg-elev:      var(--bone);
+  --bg-sunken:    var(--ivory-2);
+  --surface:      var(--bone);
+  --surface-2:    var(--ivory-2);
+  --surface-3:    var(--ivory-3);
 
-  --shadow-xs: 0 1px 2px rgba(31, 32, 36, 0.04);
-  --shadow-sm: 0 1px 3px rgba(31, 32, 36, 0.06), 0 1px 2px rgba(31, 32, 36, 0.04);
-  --shadow-md: 0 4px 12px rgba(31, 32, 36, 0.06), 0 2px 4px rgba(31, 32, 36, 0.04);
-  --shadow-lg: 0 18px 40px rgba(31, 32, 36, 0.10), 0 4px 12px rgba(31, 32, 36, 0.06);
+  --text:         var(--ink);
+  --text-2:       var(--ink-2);
+  --text-3:       var(--ink-3);
+  --text-4:       var(--ink-4);
+
+  --line:         var(--ink-5);
+  --line-2:       var(--ink-4);
+
+  --accent:       var(--olive);
+  --accent-soft:  var(--olive-soft);
+  --accent-deep:  var(--olive-deep);
+  --accent-hi:    var(--gold);
+  --accent-hi-soft: var(--gold-soft);
+
+  --alive:        var(--olive);
+  --alive-soft:   var(--olive-soft);
+  --deceased:     #8B7F70;
+  --deceased-soft:#E5DFD2;
+
+  --danger:       #B95844;
+  --danger-soft:  #ECD7CB;
+
+  /* — Soft pastel avatars (warmer, less saturated than before) — */
+  --av-peach:     #F0D4B8;     --av-peach-ink:    #6B3A1A;
+  --av-sage:      #D2DDC4;     --av-sage-ink:     #3F5944;
+  --av-lavender:  #DAD2E5;     --av-lavender-ink: #4F4267;
+  --av-sky:       #C8D9E0;     --av-sky-ink:      #2D4655;
+  --av-rose:      #ECC8C7;     --av-rose-ink:     #6B2C30;
+  --av-butter:    #ECE0AE;     --av-butter-ink:   #6B5616;
+  --av-clay:      #DCBFA4;     --av-clay-ink:     #5A381C;
+  --av-mist:      #D9D4CB;     --av-mist-ink:     #43403A;
+
+  /* — Shadows: soft, layered — */
+  --shadow-xs: 0 1px 2px rgba(34, 31, 26, 0.04);
+  --shadow-sm: 0 2px 6px rgba(34, 31, 26, 0.06), 0 1px 2px rgba(34, 31, 26, 0.04);
+  --shadow-md: 0 8px 24px rgba(34, 31, 26, 0.08), 0 2px 6px rgba(34, 31, 26, 0.04);
+  --shadow-lg: 0 30px 60px rgba(34, 31, 26, 0.12), 0 8px 20px rgba(34, 31, 26, 0.06);
+  --shadow-glow-gold: 0 0 0 1px rgba(184, 154, 90, .35), 0 4px 16px rgba(184, 154, 90, .18);
+  --shadow-glow-olive: 0 0 0 1px rgba(94, 125, 99, .30), 0 4px 16px rgba(94, 125, 99, .15);
 
   /* — Type — */
-  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-display: "Cormorant Garamond", "Fraunces", "Iowan Old Style", Georgia, serif;
   --font-sans:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono:    "JetBrains Mono", ui-monospace, Menlo, monospace;
 
   /* — Spacing — */
   --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
-  --s-5: 20px; --s-6: 24px; --s-7: 32px; --s-8: 48px;
+  --s-5: 20px; --s-6: 24px; --s-7: 32px; --s-8: 48px; --s-9: 64px;
 
-  /* — Radius — */
-  --r-xs: 4px;
-  --r-sm: 6px;
-  --r-md: 10px;
-  --r-lg: 14px;
-  --r-xl: 20px;
+  /* — Radii (heritage = generous) — */
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 20px;
+  --r-xl: 24px;
+  --r-2xl: 28px;
   --r-pill: 999px;
 
   /* — Layers — */
@@ -93,53 +112,51 @@
   --z-modal: 100;
   --z-toast: 200;
 
-  /* — Motion — */
-  --t-fast: 140ms cubic-bezier(.2,.8,.2,1);
-  --t-med:  240ms cubic-bezier(.2,.8,.2,1);
+  /* — Motion: calm, Apple-like — */
+  --t-fast: 160ms cubic-bezier(.2,.8,.2,1);
+  --t-med:  300ms cubic-bezier(.2,.8,.2,1);
+  --t-slow: 600ms cubic-bezier(.2,.8,.2,1);
 
   /* — Layout — */
-  --header-h: 56px;
-  --rail-w: 244px;
-  --rail-w-collapsed: 60px;
-  --inspector-w: 320px;
-  --content-max: 1600px;
+  --header-h: 64px;
+  --rail-w: 248px;
+  --inspector-w: 360px;
+  --content-max: 1680px;
 }
 
-/* — Dark mode (kept simple — it's not the primary mode) — */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg:           #1A1B1F;
-    --bg-elev:      #232529;
-    --bg-sunken:    #131418;
-    --surface:      #232529;
-    --surface-2:    #2B2D33;
-    --surface-3:    #34373E;
+/* Dark mode is opt-in via [data-theme="dark"] only. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ivory:        #1A1815;
+    --ivory-2:      #211F1B;
+    --ivory-3:      #2A2823;
+    --parchment:    #1F1D19;
+    --bone:         #25231F;
 
-    --text:         #F0EDE5;
-    --text-2:       #C5C2B9;
-    --text-3:       #8B8983;
-    --text-4:       #5A5853;
+    --bg:           var(--ivory);
+    --bg-elev:      #1F1D19;
+    --bg-sunken:    #131210;
+    --surface:      #1F1D19;
+    --surface-2:    #2A2823;
+    --surface-3:    #34322B;
 
-    --line:         #34373E;
-    --line-2:       #44484F;
+    --text:         #F0EBDD;
+    --text-2:       #C5BFA9;
+    --text-3:       #8B8472;
+    --text-4:       #5A5544;
 
-    --accent-soft:  rgba(107, 135, 101, 0.20);
-    --sage-soft:    rgba(107, 135, 101, 0.20);
-    --gold-soft:    rgba(201, 154, 63, 0.20);
-    --rust-soft:    rgba(181, 100, 75, 0.20);
+    --line:         #34322B;
+    --line-2:       #45433A;
 
-    --av-peach:     #5C3F2B;     --av-peach-ink:    #F4D4B5;
-    --av-sage:      #3F4E33;     --av-sage-ink:     #D5DFC3;
-    --av-lavender:  #3F384C;     --av-lavender-ink: #DBD3E8;
-    --av-sky:       #2E404C;     --av-sky-ink:      #C9DAE3;
-    --av-rose:      #4E3035;     --av-rose-ink:     #EFCAC9;
-    --av-butter:    #4D421B;     --av-butter-ink:   #EFE2B0;
-    --av-clay:      #4A3623;     --av-clay-ink:     #DBBFA2;
-    --av-mist:      #3A3D43;     --av-mist-ink:     #D4D8DB;
+    --olive-soft:   rgba(94, 125, 99, 0.20);
+    --gold-soft:    rgba(184, 154, 90, 0.18);
 
-    --shadow-xs: 0 1px 2px rgba(0,0,0,.4);
-    --shadow-sm: 0 1px 3px rgba(0,0,0,.5);
-    --shadow-md: 0 4px 12px rgba(0,0,0,.55);
-    --shadow-lg: 0 18px 40px rgba(0,0,0,.6);
-  }
+    --av-peach:     #5C3F2B;     --av-peach-ink:    #F0D4B8;
+    --av-sage:      #3F4E33;     --av-sage-ink:     #D2DDC4;
+    --av-lavender:  #3F384C;     --av-lavender-ink: #DAD2E5;
+    --av-sky:       #2E404C;     --av-sky-ink:      #C8D9E0;
+    --av-rose:      #4E3035;     --av-rose-ink:     #ECC8C7;
+    --av-butter:    #4D421B;     --av-butter-ink:   #ECE0AE;
+    --av-clay:      #4A3623;     --av-clay-ink:     #DCBFA4;
+    --av-mist:      #3A3D43;     --av-mist-ink:     #D9D4CB;
 }
