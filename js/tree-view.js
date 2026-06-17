@@ -340,10 +340,12 @@
         const p1 = placedParents[0];
         const p2 = placedParents[1];
         if (p1.rowIdx === p2.rowIdx) {
-          // Couple — drop the line from the gold knot (between them, at photo level)
+          // Couple in the same row: drop the connector from the midpoint
+          // between the two cards, anchored at the BOTTOM of the cards (below
+          // the dates) so it never visually crosses through the photos.
           parentMidX = ((p1.x < p2.x ? p1.x + NODE_W : p2.x + NODE_W) +
                         (p1.x < p2.x ? p2.x : p1.x)) / 2;
-          parentBottomY = Math.max(p1.y, p2.y) + PHOTO_CY + 6;
+          parentBottomY = Math.max(p1.y, p2.y) + NODE_H;
         } else {
           parentMidX = (p1.x + p2.x) / 2 + NODE_W / 2;
           parentBottomY = Math.max(p1.y, p2.y) + NODE_H;
