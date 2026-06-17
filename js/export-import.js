@@ -83,7 +83,10 @@
     const out = JSON.parse(JSON.stringify(p));
     if (opts.includePhotos) {
       delete out.photoId; delete out.photoUrl;
-      if (window.PhotoStore && p.photoId) {
+      if (opts.skipPhotoInline) {
+        // User chose not to embed binary photos in the JSON. Keep nothing.
+        delete out.photo;
+      } else if (window.PhotoStore && p.photoId) {
         try {
           const blob = await PhotoStore.get(p.photoId);
           if (blob) out.photo = await blobToDataUrl(blob);
@@ -152,39 +155,109 @@
       (e) => { state.includeLocations = !!e.target.checked; refreshPreview(); }
     );
 
-    const formatSelect = UI.el("select", {
-      class: "select",
-      onchange: (e) => { state.format = e.target.value; refreshPreview(); }
+    // JSON sub-options
+    const toggleEmbed = makeToggle(
+      "Embed photos in JSON",
+      "Save photos as base64 inside the JSON file. Bigger file, but self-contained.",
+      true,
+      (e) => { state.embedPhotosInJson = !!e.target.checked; refreshPreview(); }
+    );
+    state.embedPhotosInJson = true;
+
+    const toggleMinimal = makeToggle(
+      "Minimal JSON",
+      "Names + relations only — no dates, places, descriptions, or photos.",
+      false,
+      (e) => {
+        state.format = e.target.checked ? MINIMAL : FULL;
+        // Disable the "embed photos" toggle when minimal is on.
+        const embedInput = toggleEmbed.querySelector("input");
+        if (embedInput) embedInput.disabled = !!e.target.checked;
+        toggleEmbed.style.opacity = e.target.checked ? "0.5" : "1";
+        refreshPreview();
+      }
+    );
+
+    const jsonSection = UI.el("div", {
+      class: "card",
+      style: { background: "rgba(0,0,0,.04)", padding: "var(--s-3)", display: "flex", flexDirection: "column", gap: "8px" }
     }, [
-      UI.el("option", { value: FULL }, I18n.t("exp.formatFull")),
-      UI.el("option", { value: MINIMAL }, I18n.t("exp.formatMin"))
+      UI.el("div", { class: "field__label", style: { marginBottom: "4px" } }, "JSON options"),
+      toggleMinimal,
+      toggleEmbed,
+      UI.el("div", { style: { marginTop: "4px" } }, [sizeChip])
     ]);
 
     const body = UI.el("div", { class: "form-stack" }, [
-      UI.el("p", { style: { color: "var(--ink-2)", marginTop: "0" } }, I18n.t("exp.body")),
+      UI.el("p", { style: { color: "var(--text-3)", marginTop: "0", fontSize: "13px" } }, I18n.t("exp.body")),
+
+      UI.el("div", { class: "field__label" }, "Include in export"),
       togglePhotos,
       toggleDates,
       toggleLocations,
-      UI.field(I18n.t("exp.format"), formatSelect),
-      UI.el("div", { style: { marginTop: "8px" } }, [sizeChip])
+
+      jsonSection
     ]);
 
     const cancelBtn = UI.el("button", { class: "btn btn--ghost", type: "button" }, I18n.t("actions.cancel"));
-    const downloadBtn = UI.el("button", { class: "btn btn--primary", type: "button" }, I18n.t("actions.download"));
+    const pngBtn = UI.el("button", { class: "btn", type: "button" }, [
+      UI.el("span", { "aria-hidden": "true", style: { marginRight: "4px" } }, "✦"),
+      "Save PNG"
+    ]);
+    const jsonBtn = UI.el("button", { class: "btn btn--primary", type: "button" }, [
+      UI.el("span", { "aria-hidden": "true", style: { marginRight: "4px" } }, "{ }"),
+      "Save JSON"
+    ]);
 
     const dlg = UI.openModal({
       title: I18n.t("exp.title"),
       body,
-      footer: [cancelBtn, downloadBtn]
+      footer: [cancelBtn, pngBtn, jsonBtn]
     });
 
     cancelBtn.addEventListener("click", () => dlg.close());
-    downloadBtn.addEventListener("click", async () => {
-      downloadBtn.disabled = true;
-      const orig = downloadBtn.textContent;
-      downloadBtn.textContent = "…";
+
+    pngBtn.addEventListener("click", async () => {
+      pngBtn.disabled = true;
+      jsonBtn.disabled = true;
+      const orig = pngBtn.textContent;
+      pngBtn.innerHTML = "Rendering…";
       try {
-        const redacted = await buildRedactedStateAsync(state);
+        if (!window.ImageExport) throw new Error("Image export not loaded.");
+        const treeView = document.getElementById("view-tree");
+        if (treeView && !treeView.classList.contains("is-active")) {
+          document.querySelectorAll(".nav-btn").forEach((b) => {
+            if (b.dataset.view === "tree") b.click();
+          });
+          await new Promise((r) => setTimeout(r, 400));
+        }
+        const familyName = (FamilyStore.getState().meta || {}).familyName || "Family Tree";
+        const { blob, filename } = await ImageExport.exportTreePng({
+          familyName,
+          includePhotos: state.includePhotos,
+          includeDates: state.includeDates
+        });
+        await ImageExport.share(blob, filename, familyName);
+        UI.toast("Image saved", "success");
+        dlg.close();
+      } catch (e) {
+        UI.toast("Export failed: " + (e && e.message || "unknown"), "danger");
+      } finally {
+        pngBtn.disabled = false;
+        jsonBtn.disabled = false;
+        pngBtn.innerHTML = orig;
+      }
+    });
+
+    jsonBtn.addEventListener("click", async () => {
+      pngBtn.disabled = true;
+      jsonBtn.disabled = true;
+      const orig = jsonBtn.textContent;
+      jsonBtn.innerHTML = "…";
+      try {
+        // Wire embed-photos: when off, JSON skips inlining base64 even if includePhotos is on.
+        const exportOpts = Object.assign({}, state, { skipPhotoInline: !state.embedPhotosInJson });
+        const redacted = await buildRedactedStateAsync(exportOpts);
         const filename = "family-tree-" + todayISO() + ".json";
         UI.downloadFile(filename, JSON.stringify(redacted, null, 2));
         UI.toast(I18n.t("exp.exported", { n: redacted.people.length }), "success");
@@ -192,8 +265,9 @@
       } catch (e) {
         UI.toast("Export failed: " + (e && e.message || "unknown"), "danger");
       } finally {
-        downloadBtn.disabled = false;
-        downloadBtn.textContent = orig;
+        pngBtn.disabled = false;
+        jsonBtn.disabled = false;
+        jsonBtn.innerHTML = orig;
       }
     });
 

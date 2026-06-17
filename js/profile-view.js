@@ -76,6 +76,22 @@
         ]),
         UI.el("div", { class: "profile__topbar-actions" }, [
           UI.el("button", {
+            class: "btn", type: "button",
+            onclick: async () => {
+              if (!window.ImageExport) return;
+              try {
+                const { blob, filename } = await ImageExport.exportProfileCard(p.id);
+                await ImageExport.share(blob, filename, displayName);
+                UI.toast("Profile image saved", "success");
+              } catch (err) {
+                UI.toast("Couldn't generate image: " + (err && err.message || "unknown"), "danger");
+              }
+            }
+          }, [
+            UI.el("span", { "aria-hidden": "true", style: { marginRight: "4px" } }, "↗"),
+            "Share as image"
+          ]),
+          UI.el("button", {
             class: "btn btn--primary", type: "button",
             onclick: () => window.PeopleView && PeopleView.openForm && PeopleView.openForm(p.id)
           }, I18n.t("profile.edit"))
