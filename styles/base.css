@@ -69,10 +69,20 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   background: var(--olive-soft);
   color: var(--olive-deep);
   display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
 }
+/* Tint the SVG using a CSS mask so the foreground colour comes directly from
+   our palette (olive-deep) instead of an opaque-filter approximation. */
 .app-title__icon img {
+  width: 0; height: 0;            /* hide the original raster pipe */
+  display: none;
+}
+.app-title__icon::before {
+  content: "";
   width: 22px; height: 22px;
-  filter: brightness(0) saturate(100%) invert(36%) sepia(15%) saturate(740%) hue-rotate(70deg) brightness(95%) contrast(85%);
+  background: var(--olive-deep);
+  -webkit-mask: url("../assets/tree.svg") center / contain no-repeat;
+          mask: url("../assets/tree.svg") center / contain no-repeat;
 }
 .app-title__sub {
   font-family: var(--font-sans);
