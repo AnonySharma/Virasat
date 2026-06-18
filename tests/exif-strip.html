@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Virasat — EXIF strip verification</title>
+  <style>
+    :root {
+      --olive: #5E7D63; --olive-deep: #3F5944;
+      --gold: #B89A5A; --rust: #A6553A;
+      --ivory: #F8F6F2; --bone: #FFFCF5;
+      --ink: #1F1D19; --ink-2: #4A4639; --ink-3: #7A7363;
+      --line: #E4DECF;
+    }
+    body {
+      margin: 0; padding: 32px;
+      background: var(--ivory); color: var(--ink);
+      font-family: "Inter", system-ui, sans-serif;
+      max-width: 720px; margin-inline: auto;
+      line-height: 1.55;
+    }
+    h1 { font-family: Georgia, serif; font-weight: 500; letter-spacing: -0.01em; margin: 0 0 6px; }
+    h2 { font-family: Georgia, serif; font-weight: 500; margin: 28px 0 8px; font-size: 18px; }
+    p { color: var(--ink-2); }
+    .lede { color: var(--ink-3); font-size: 14px; margin: 0 0 24px; }
+    .card { background: var(--bone); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin: 16px 0; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+    .verdict { padding: 14px 16px; border-radius: 8px; font-weight: 600; }
+    .verdict--pass { background: rgba(94,125,99,0.14); color: var(--olive-deep); border: 1px solid var(--olive); }
+    .verdict--fail { background: rgba(166,85,58,0.12); color: #6B2F1A; border: 1px solid var(--rust); }
+    .verdict--idle { background: var(--bone); color: var(--ink-3); border: 1px dashed var(--line); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    td, th { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--line); }
+    th { color: var(--ink-3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+    code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 12.5px; background: var(--ivory); padding: 1px 5px; border-radius: 3px; }
+    input[type="file"] { font-size: 14px; }
+    .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--ivory); font-size: 11px; color: var(--ink-3); }
+  </style>
+</head>
+<body>
+  <h1>EXIF strip verification</h1>
+  <p class="lede">
+    Drop a JPEG with EXIF / GPS metadata below. The page runs the same
+    pipeline <code>PhotoStore.fileToPhotoId</code> uses inside the live
+    app (decode → canvas → re-encode JPEG at 0.85 quality, max 512&nbsp;px),
+    then inspects the input and output blobs for EXIF / IPTC / XMP
+    markers and the GPS tag signature. Verdict at the bottom.
+  </p>
+  <p class="lede">
+    Family photos routinely carry home addresses in GPS EXIF. Virasat's
+    upload path must strip them. This page lets you verify that on your
+    specific browser before trusting the live flow.
+  </p>
+
+  <div class="card">
+    <input type="file" id="picker" accept="image/jpeg" />
+    <p style="margin: 8px 0 0; font-size: 12.5px; color: var(--ink-3);">
+      Tip: any JPEG taken with a phone usually has GPS EXIF.
+    </p>
+  </div>
+
+  <div id="results" hidden>
+    <div class="row">
+      <section class="card">
+        <h2>Original</h2>
+        <table id="origTable"></table>
+        <p class="pill" id="origSize"></p>
+      </section>
+      <section class="card">
+        <h2>After fileToPhotoId</h2>
+        <table id="outTable"></table>
+        <p class="pill" id="outSize"></p>
+      </section>
+    </div>
+    <div id="verdict" class="verdict verdict--idle">No verdict yet — pick a file.</div>
+  </div>
+
+  <!-- Same loader order as index.html so PhotoStore can boot. -->
+  <script src="../lib/utils/i18n.js"></script>
+  <script src="../lib/utils/data-store.js"></script>
+  <script src="../lib/utils/photo-store.js"></script>
+  <script src="../lib/utils/ui-utils.js"></script>
+
+  <script>
+    const picker = document.getElementById("picker");
+    const results = document.getElementById("results");
+    const origTable = document.getElementById("origTable");
+    const outTable = document.getElementById("outTable");
+    const origSize = document.getElementById("origSize");
+    const outSize = document.getElementById("outSize");
+    const verdict = document.getElementById("verdict");
+
+    function row(label, value) {
+      const tr = document.createElement("tr");
+      const th = document.createElement("th"); th.textContent = label;
+      const td = document.createElement("td"); td.textContent = String(value);
+      tr.appendChild(th); tr.appendChild(td);
+      return tr;
+    }
+    function fmtSize(n) { return n < 1024 ? n + " B" : (n / 1024).toFixed(1) + " KB"; }
+
+    function fillTable(tbl, m) {
+      while (tbl.firstChild) tbl.removeChild(tbl.firstChild);
+      tbl.appendChild(row("EXIF (APP1)", m.hasEXIF ? "PRESENT" : "absent"));
+      tbl.appendChild(row("XMP",        m.hasXMP  ? "PRESENT" : "absent"));
+      tbl.appendChild(row("IPTC (APP13)", m.hasIPTC ? "PRESENT" : "absent"));
+      tbl.appendChild(row("GPS\\0 signature", m.gpsBytesFound + " match" + (m.gpsBytesFound === 1 ? "" : "es")));
+      if (m.error) tbl.appendChild(row("Error", m.error));
+    }
+
+    picker.addEventListener("change", async (ev) => {
+      const file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+      results.hidden = false;
+      verdict.className = "verdict verdict--idle";
+      verdict.textContent = "Running pipeline…";
+
+      try {
+        // 1. Inspect the original file's metadata.
+        const origMeta = await PhotoStore._inspectJpegMetadata(file);
+        fillTable(origTable, origMeta);
+        origSize.textContent = "Size: " + fmtSize(origMeta.totalSize);
+
+        // 2. Run the same pipeline the live app uses, but capture the blob
+        //    instead of going to IDB. We replicate fileToPhotoId minus the
+        //    final put().
+        const dataUrl = await new Promise((resolve, reject) => {
+          const r = new FileReader();
+          r.onerror = () => reject(r.error);
+          r.onload = () => resolve(r.result);
+          r.readAsDataURL(file);
+        });
+        const img = await new Promise((resolve, reject) => {
+          const i = new Image();
+          i.onerror = () => reject(new Error("decode failed"));
+          i.onload = () => resolve(i);
+          i.src = dataUrl;
+        });
+        const maxDim = 512, quality = 0.85;
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, 0, 0, w, h);
+        const outBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+
+        // 3. Inspect the output blob.
+        const outMeta = await PhotoStore._inspectJpegMetadata(outBlob);
+        fillTable(outTable, outMeta);
+        outSize.textContent = "Size: " + fmtSize(outMeta.totalSize);
+
+        // 4. Verdict — output must have NO EXIF / XMP / IPTC, AND zero GPS
+        //    signatures. We accept the original being fine too (no metadata
+        //    to strip), but flag it differently.
+        const outClean = !outMeta.hasEXIF && !outMeta.hasXMP && !outMeta.hasIPTC && outMeta.gpsBytesFound === 0;
+        const origHadAny = origMeta.hasEXIF || origMeta.hasXMP || origMeta.hasIPTC || origMeta.gpsBytesFound > 0;
+
+        if (outClean && origHadAny) {
+          verdict.className = "verdict verdict--pass";
+          verdict.textContent = "✓ PASS — original carried metadata; the canvas pipeline stripped all of it. The live upload path is safe on this browser.";
+        } else if (outClean && !origHadAny) {
+          verdict.className = "verdict verdict--idle";
+          verdict.textContent = "Output is clean, but the original had no metadata to strip. Try a phone-camera JPEG (with GPS) for a more meaningful test.";
+        } else {
+          verdict.className = "verdict verdict--fail";
+          verdict.textContent = "✗ FAIL — output JPEG still carries metadata. This browser's canvas re-encode is leaking. Add piexifjs as a defensive strip step.";
+        }
+      } catch (err) {
+        verdict.className = "verdict verdict--fail";
+        verdict.textContent = "Error: " + (err && err.message || err);
+      }
+    });
+  </script>
+</body>
+</html>

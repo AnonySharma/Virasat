@@ -1010,3 +1010,48 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
     letter-spacing: 0.1em; text-transform: uppercase;
   }
 }
+
+/* === Cross-tab conflict banner ===
+   Fires when another browser tab persists while this tab had a pending
+   debounced edit — the data-store reloads the other tab's state and
+   emits `virasat:cross-tab-conflict`, app.js renders this strip. Non-
+   blocking, dismissible, auto-fades after 30 s. */
+.x-tab-banner {
+  position: fixed;
+  left: 50%; bottom: 24px;
+  transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 12px;
+  max-width: min(540px, calc(100vw - 32px));
+  padding: 10px 12px 10px 16px;
+  background: var(--bg-elev);
+  color: var(--text);
+  border: 1px solid var(--gold);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--r-pill);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-toast, 9999);
+  font-size: 13px;
+  animation: xTabBannerIn .25s ease-out;
+}
+.x-tab-banner__icon { color: var(--gold); font-size: 14px; flex-shrink: 0; }
+.x-tab-banner__msg { flex: 1; min-width: 0; }
+.x-tab-banner__close { width: 32px; height: 32px; padding: 0; }
+@keyframes xTabBannerIn {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+@media (max-width: 640px) {
+  .x-tab-banner {
+    left: 12px; right: 12px; transform: none;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    max-width: none;
+    border-radius: var(--r-md);
+  }
+  @keyframes xTabBannerIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .x-tab-banner { animation: none; }
+}
