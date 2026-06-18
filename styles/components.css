@@ -198,18 +198,6 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .rail-item:hover i { color: var(--text-2); }
 .rail-item.is-active { background: var(--olive-soft); color: var(--olive-deep); }
 .rail-item.is-active i { color: var(--olive-deep); }
-/* Dark mode overrides: olive-deep on near-black is unreadable; use the
-   gold accent for active state and the bright text token for the label
-   so an active rail item doesn't read as disabled. */
-:root[data-theme="dark"] .rail-item.is-active {
-  background: rgba(184, 154, 90, 0.18);
-  color: var(--text);
-}
-:root[data-theme="dark"] .rail-item.is-active i { color: var(--gold); }
-:root[data-theme="dark"] .rail-item.is-active .rail-count {
-  background: rgba(184, 154, 90, 0.32);
-  color: var(--text);
-}
 .rail-count {
   flex: 0 0 auto;
   background: var(--surface-2);

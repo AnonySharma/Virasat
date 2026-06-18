@@ -150,6 +150,13 @@
 
     --olive-soft:   rgba(94, 125, 99, 0.20);
     --gold-soft:    rgba(184, 154, 90, 0.18);
+    /* The "ink on soft" pairs (`color: olive-deep` over `bg: olive-soft`)
+       look disabled on dark surfaces because olive-deep is a near-black
+       in the light tokens. Brighten them so any active-state pill, chip,
+       or hover surface in the app keeps reading as active without
+       per-component overrides. */
+    --olive-deep:   #C5DBC9;
+    --gold-deep:    #E2C684;
 
     --av-peach:     #5C3F2B;     --av-peach-ink:    #F0D4B8;
     --av-sage:      #3F4E33;     --av-sage-ink:     #D2DDC4;
