@@ -55,6 +55,19 @@
 }
 .view-head__actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 
+/* === Phone-size view-head shrink ===
+   38px serif + an inline pencil + an action button row collides at <= 640px.
+   Drop to 26px and tighten padding so everything fits on one row, with the
+   actions wrapping below if needed. */
+@media (max-width: 640px) {
+  .view-head { padding: 16px 16px 12px; gap: 12px; flex-wrap: wrap; }
+  .view-head__title { font-size: 26px; line-height: 1.1; }
+  .view-head__sub { font-size: 12px; }
+  .view-head__rename { width: 28px; height: 28px; opacity: 1; }
+  .view-head__actions { width: 100%; }
+  .view-head__actions .btn { flex: 1; justify-content: center; }
+}
+
 /* ========== Tree view ========== */
 .tree-stage {
   position: relative;
@@ -427,6 +440,12 @@
 .people-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  /* Without align-content:start, a single search result stretches to fill
+     the full container height (grid items default to align-self:stretch).
+     Anchor rows to the top so cards stay their natural size regardless of
+     how many match. */
+  align-content: start;
+  align-items: start;
   gap: var(--s-5);
   padding: 0 32px 32px;
   overflow-y: auto;
@@ -866,6 +885,14 @@
 }
 .story-card:hover { background: var(--bg-elev); border-color: var(--gold); }
 .story-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+/* Brief gold halo when a story is jumped-to from search results, so the user
+   notices which card matched the query. */
+.story-card.is-flash { animation: storyCardFlash 1.6s ease-out; }
+@keyframes storyCardFlash {
+  0%   { box-shadow: 0 0 0 0 rgba(184, 154, 90, 0.55); background: rgba(184, 154, 90, 0.08); }
+  60%  { box-shadow: 0 0 0 6px rgba(184, 154, 90, 0); background: rgba(184, 154, 90, 0.04); }
+  100% { box-shadow: 0 0 0 0 rgba(184, 154, 90, 0); }
+}
 .story-card__title {
   margin: 0;
   font-family: var(--font-display);
@@ -1004,6 +1031,32 @@
   color: var(--text-2);
 }
 
+/* === Phone-size adjustments to tree stage and pan-hint ===
+   The tree stage gets less margin so it can use the narrow viewport,
+   and the pan-hint slides up so it never overlaps the system home bar. */
+@media (max-width: 640px) {
+  .tree-stage { margin: 0 12px 12px; border-radius: var(--r-lg); }
+  .tree-pan-hint {
+    left: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    padding: 5px 12px;
+    font-size: 10.5px;
+  }
+  .tree-controls {
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+  .tree-gen-label { left: 12px; font-size: 14px; }
+  .tree-gen-label::after { width: 18px; }
+}
+
+/* === iOS safe-area for floating elements that sit at the bottom ===
+   viewport-fit=cover lets us paint under the home indicator; without
+   these offsets the tree zoom cluster and toasts land under it. */
+.toast-root {
+  bottom: calc(28px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
 /* === Touch-target minima on coarse pointers (mobile / tablet) ===
    WCAG 2.5.5 wants ≥44×44 hit areas. Heritage select options + icon
    buttons are tighter than that on desktop for visual density; bump
@@ -1011,4 +1064,62 @@
 @media (pointer: coarse) {
   .btn--icon { min-width: 44px; min-height: 44px; }
   .hsel__opt { min-height: 44px; padding-top: 12px; padding-bottom: 12px; }
+}
+
+/* === Story result card (search results in the People view) ===
+   When the user types a query that matches a story title / body / tag,
+   we render this card instead of (or alongside) the person card. Click
+   opens the inspector at that exact story. */
+.story-result-card {
+  padding: 16px 18px 14px;
+  display: flex; flex-direction: column; gap: 10px;
+  cursor: pointer;
+  border-left: 3px solid var(--gold);
+  text-align: left;
+  transition: transform var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast);
+}
+.story-result-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-left-color: var(--gold-deep, var(--gold));
+}
+.story-result-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.story-result-card__head {
+  display: flex; align-items: center; gap: 12px;
+}
+.story-result-card__head .avatar {
+  width: 40px; height: 40px; font-size: 14px;
+  flex-shrink: 0;
+}
+.story-result-card__author { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.story-result-card__title {
+  font-family: var(--font-display);
+  font-size: 18px; font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.story-result-card__by {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-3);
+  font-weight: 500;
+}
+.story-result-card__by i { color: var(--gold); font-size: 11px; }
+.story-result-card__snippet {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-2);
+  line-height: 1.55;
+  /* Three-line clamp keeps every card the same height in the grid. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.story-result-card__tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.search-mark {
+  background: rgba(184, 154, 90, 0.28);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 2px;
+  font-weight: 600;
 }
