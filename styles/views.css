@@ -738,7 +738,10 @@
 }
 .inspector-section.is-open .inspector-section__chevron { transform: rotate(180deg); }
 .inspector-section__body {
-  padding: 0 24px 18px;
+  /* Top padding adds breathing room between the section head and its first
+     child, so the head's hover background doesn't glue itself to the
+     content card below. */
+  padding: 8px 24px 18px;
   display: none;
 }
 .inspector-section.is-open .inspector-section__body { display: block; }
