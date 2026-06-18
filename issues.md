@@ -122,4 +122,130 @@ The whole codebase is 8 k JS lines spread across 22 modules, all attached to `wi
 
 ## Round 2 — re-audit after fixes (2026-06-18, post-`655b493`)
 
-*Pending — four parallel agents are running. Section will be filled in as findings arrive.*
+Four parallel re-audits ran:
+- **Bugs & correctness** — verifies the round-1 fixes actually work + hunts for new bugs.
+- **Data & export round-trip** — marriage records, schema versioning, import/export integrity.
+- **Perf, a11y & mobile** — verifies the persist debounce + focus trap + touch-action; new a11y/mobile gaps.
+- **SW & edge cases** — service worker on subpaths, multi-tab, photo-crop reset, sample data.
+
+**All round-1 fixes verified PASS** by every agent. The issues below are *new*: either uncovered for the first time, or surfaced because a round-1 fix exposed a related code path.
+
+---
+
+### Critical (data loss / silent corruption)
+
+- 🟡 **`lib/views/people-view.js:283–300` — uploading a new photo doesn't reset the crop frames.**
+  After someone re-uploads a photo, `draft.photoCropAvatar` and `draft.photoCropHero` keep the *old* image's focal point + scale, so the new photo lands wrong (often half-clipped).
+  *Fix:* set both crops to `null` inside the `onchange` handler that mints a new `photoId`.
+
+- 🟡 **`lib/utils/data-store.js:36–39` — corrupt localStorage JSON wipes state but orphans IDB photos.**
+  When `JSON.parse(raw)` fails (mid-write crash), the catch block resets to `emptyState()`. Every IDB photo blob the deleted records pointed at is now unreferenced and consumes space forever.
+  *Fix:* on parse failure, call `PhotoStore.clearAll()` before resetting; or surface a "Recover photos" flow that walks IDB and rebuilds stub people.
+
+- 🟡 **`lib/utils/photo-store.js:148–167` — marriage photos never migrate to IndexedDB.**
+  `migrateLegacy` walks `FamilyStore.getPeople()` only. After importing a JSON that inlines marriage photos as base64, those blobs sit in `state.marriages[*].photo` indefinitely, bloating localStorage and never transitioning to IDB.
+  *Fix:* extend `migrateLegacy` to iterate `FamilyStore.getState().marriages`; for each record with `photo && !photoId`, convert to blob, store via `PhotoStore.put`, replace with `photoId`. Persist once at the end.
+
+---
+
+### High (broken feature / WCAG fail)
+
+- 🟡 **`lib/features/image-export.js:585–587` — `cssAttrEscape` is incomplete.**
+  Only escapes `\` and `"`. An imported person id with `]`, `[`, or whitespace breaks the `[data-person-id="..."]` selector used in the single-node lineage fallback.
+  *Fix:* prefer `CSS.escape(id)` and use it inside `[data-person-id="..."]` as `[data-person-id="${CSS.escape(id)}"]`. Drop the custom helper.
+
+- 🟡 **`lib/utils/photo-store.js:113–125` — `txValue` doesn't catch sync throws inside async callbacks.**
+  The outer `try { fn(...) } catch` only catches errors thrown synchronously *inside* `fn`. A throw inside `checkReq.onsuccess` / `putReq.onsuccess` (e.g., from `s.get` on a malformed key) bypasses the catch and the transaction commits silently.
+  *Fix:* wrap each inner callback in `try { ... } catch (e) { fail(e); try { t.abort(); } catch (_) {} }`.
+
+- 🟡 **`lib/features/export-import.js:96–104` — `applyMinimal` allowlist is missing `gender`, `createdAt`, `updatedAt`.**
+  Minimal exports drop `gender` (breaks living/deceased filtering) and timestamps (loses provenance) on re-import.
+  *Fix:* extend `MINIMAL_FIELDS` to `["id","name","name_hi","parents","spouses","gender","createdAt","updatedAt"]`.
+
+- 🟡 **`lib/utils/data-store.js:222–229` — `pagehide` not wired alongside `beforeunload`.**
+  Mobile Safari often skips `beforeunload` when the user switches apps or closes the tab, so the 250 ms persist debounce can swallow the last edit. `visibilitychange=hidden` covers most of this but `pagehide` is the canonical mobile signal.
+  *Fix:* add `window.addEventListener("pagehide", () => { try { flushPersist(); } catch (_) {} });`.
+
+- 🟡 **`lib/utils/data-store.js:313–324` — `replaceAll` may race a pending debounced write.**
+  If the user has an in-flight `persistTimer` and triggers an Import, the *old* timer fires after `replaceAll` and writes the (already-replaced) state. Currently safe-by-accident because `flushPersist` reads the live `state` reference, but fragile.
+  *Fix:* call `flushPersist()` synchronously at the *start* of `replaceAll` (or call `clearTimeout(persistTimer)` then schedule a fresh write at the end).
+
+- 🟡 **No cross-tab sync — `storage` event ignored.**
+  Two tabs editing the same tree silently overwrite each other's last write. There's no `window.addEventListener("storage", ...)` to reload state when another tab persists.
+  *Fix:* listen for the `storage` event on `STORAGE_KEY`; when it fires, re-read the value, replace `state`, notify listeners. Last-write-wins is acceptable; silent loss of one tab's edits is not.
+
+- 🟡 **`lib/utils/photo-store.js:148–166` — photo migration cascade triggers N tree re-renders on first load.**
+  Each `updatePerson` notifies all subscribers synchronously. With 50 legacy photos, the tree re-renders 50 times before the page settles.
+  *Fix:* add a `persist({ silent: true })` mode (or a `mute = true` flag inside the store) used during migration; emit a single notification at the end.
+
+- 🟡 **`lib/components/heritage-select.js` — still missing `aria-activedescendant`.**
+  Open from round 1; round-2 audit confirms screen readers stay silent on arrow navigation.
+  *Fix:* set `li.id = "hsel-" + name + "-opt-" + i` when building options; update `el.setAttribute("aria-activedescendant", state.hover >= 0 ? id : "")` in the hover handler.
+
+- 🟡 **`lib/views/tree-view.js:554–665` — tree nodes not keyboard-focusable.**
+  No `tabindex` on `.t-node`, no `keydown` for Enter/Space. Keyboard-only users can't reach the inspector from the tree.
+  *Fix:* add `tabindex="0"` + `keydown` handler (Enter/Space → `Inspector.show(p.id)`; arrow keys could jump to next/prev sibling).
+
+- 🟡 **`lib/app.js:16–18` — `navigator.storage.persist()` rejection silently swallowed.**
+  When the browser denies the request (common on iOS Safari without a user gesture), the app proceeds as if storage is durable. Photos may evict after 7 days idle.
+  *Fix:* `await` the result; if `false`, log it (or surface a small "your data may be cleared if inactive — export regularly" toast on the next visit).
+
+---
+
+### Medium (degraded UX / future tech-debt)
+
+- 🟡 **`SCHEMA_VERSION` still 1 despite five new fields.**
+  Now includes `marriages` on every export. Future code can't distinguish v1 (no marriages) from current.
+  *Fix:* bump to `2` in `data-store.js`; in `load()`, when the loaded `version === 1` (or absent), default `marriages = {}` and rewrite as v2.
+
+- 🟡 **Marriage keys not normalised on import.**
+  `marriageKey(a,b)` sorts lexicographically, but `replaceAll` accepts `newState.marriages` verbatim. A hand-edited JSON with `b|a` (where `a < b`) silently disappears from `getMarriage(a,b)` lookups.
+  *Fix:* in `replaceAll`, rebuild the marriages map by splitting each key on `|` and re-keying via `marriageKey`.
+
+- 🟡 **`lib/utils/ui-utils.js:116–132` — modal focus trap can interfere with portaled popovers.**
+  Heritage date picker / heritage select dropdowns mount to `document.body` (above the modal for z-index) — they're outside `modal.contains(active)` and the trap snaps focus back to the modal.
+  *Fix:* exempt elements inside `.hdp__pop`, `.hsel__menu`, etc. from the trap (check the active-element's closest ancestor for an opt-out class).
+
+- 🟡 **`lib/features/image-export.js` — no per-export blob memoisation.**
+  Same photo referenced by multiple nodes is fetched + base64-encoded N times.
+  *Fix:* one `Map<href, Promise<dataUrl>>` per `exportTreePng` call; replace `hrefToDataUrl` calls with the cached version inside `inlineSvgImages`.
+
+- 🟡 **`styles/views.css` — story card hover, modal slide-up, toast slide-up not gated by reduced-motion.**
+  Round 1 covered the lineage banner + couple knot; the rest still animate.
+  *Fix:* add a single `@media (prefers-reduced-motion: reduce) { .story-card, .modal, .toast { animation: none !important; transition: none !important; } }` block.
+
+- 🟡 **Touch targets — `.btn--icon` 38 px, `.hsel__opt` ~34 px.**
+  Open from round 1.
+  *Fix:* `@media (pointer: coarse) { .btn--icon { width: 44px; height: 44px; } .hsel__opt { min-height: 44px; } }`.
+
+- 🟡 **Inspector — no in-panel close button on mobile (< 1100 px).**
+  Open from round 1.
+  *Fix:* add `.inspector__close-mobile` button in the inspector hero, visible only via `@media (max-width: 1100px)`.
+
+- 🟡 **Tree zoom controls — icon-only, no visible label.**
+  Open from round 1.
+  *Fix:* add a `.sr-only` span (or use `<span aria-hidden="false">` with the existing aria-label content).
+
+---
+
+### Low (nits)
+
+- 🟡 **`lib/app.js:212–226` — sample-data offer fires after every Reset.**
+  If the user declined once, every subsequent reset offers it again.
+  *Fix:* `sessionStorage.setItem("virasat.sampleOffered","1")` on first show, skip when already set.
+
+- 🟡 **`sw.js:123` — `sw.js` bypass works on subpaths but is fragile.**
+  `pathname.endsWith("/sw.js")` is fine for `/Virasat/sw.js` on GitHub Pages. Tighten to `pathname.split("/").pop() === "sw.js"` for safety.
+
+- 🟡 **PWA uninstall keeps localStorage + IndexedDB.**
+  Browser behaviour, not fixable in code. Document recovery: "Uninstall removes the icon, not the data. Use Tools → Reset everything before uninstalling for a clean wipe."
+
+- ⛔ **In-memory PhotoStore fallback cross-tab sync (audit finding).**
+  Verified false-ish: the in-memory fallback only runs when IndexedDB is unavailable, which is essentially never on shipped browsers. Documenting as a known limitation, not a bug.
+
+- ⛔ **CDN_SHELL opaque-response concerns.**
+  Verified PASS by SW audit: Google Fonts + Font Awesome both serve glyph files with permissive CORS, so `mode: "no-cors"` precaching of the *CSS* works in practice. Acceptable.
+
+---
+
+*Round 2 generated 2026-06-18 from four parallel re-audits. All round-1 fixes confirmed working.*
