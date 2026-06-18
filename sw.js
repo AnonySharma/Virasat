@@ -13,7 +13,7 @@
  * Cache version is part of the cache name, so bumping CACHE_VERSION on
  * a release activates a clean replacement during `activate`.
  */
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const SHELL_CACHE = "virasat-shell-" + CACHE_VERSION;
 const RUNTIME_CACHE = "virasat-runtime-" + CACHE_VERSION;
 const CDN_CACHE = "virasat-cdn-" + CACHE_VERSION;
@@ -47,10 +47,31 @@ const SHELL = [
   "./lib/app.js"
 ];
 
+// Cross-origin third-party CSS the page loads on every visit. Pre-caching
+// these means the very first offline boot has fonts and icons. The actual
+// .woff2 / .ttf files referenced from inside the CSS are picked up by the
+// runtime cache-first handler the first time they're fetched.
+const CDN_SHELL = [
+  "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,30..100&family=Inter:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@400;500;600&display=swap",
+  "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+];
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(SHELL_CACHE).then((cache) => cache.addAll(SHELL))
-      .then(() => self.skipWaiting())
+    Promise.all([
+      caches.open(SHELL_CACHE).then((cache) => cache.addAll(SHELL)),
+      // Cross-origin fetches require `mode: "no-cors"` to be cacheable when
+      // CORS headers are missing (Font Awesome's CDN, sometimes Google
+      // Fonts depending on referer). We tolerate individual failures so a
+      // network blip on first install doesn't abort the whole installation.
+      caches.open(CDN_CACHE).then((cache) =>
+        Promise.all(CDN_SHELL.map((url) =>
+          fetch(url, { mode: "no-cors" })
+            .then((resp) => cache.put(url, resp))
+            .catch(() => {})
+        ))
+      )
+    ]).then(() => self.skipWaiting())
   );
 });
 
@@ -94,6 +115,15 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (url.origin !== self.location.origin) return;
+
+  // Never serve a cached service worker. Browsers fetch `sw.js` to detect
+  // updates; a cached copy here would freeze the version number forever.
+  // The browser already byte-compares it to the registered one, so going
+  // straight to network is safe and correct.
+  if (url.pathname.endsWith("/sw.js") || url.pathname === "/sw.js") {
+    event.respondWith(fetch(req).catch(() => caches.match(req)));
+    return;
+  }
 
   // Same-origin → stale-while-revalidate.
   event.respondWith(
