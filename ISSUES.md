@@ -213,3 +213,131 @@ Four parallel re-audits ran:
 *Round 2 generated 2026-06-18 from four parallel re-audits. All round-1 fixes confirmed working.*
 
 *Round-2 fixes landed in `7bad5ef`: every Critical / High / Medium item above resolved, except the few still-open Lows (sample-data nag after reset, SW bypass-path tightening, PWA-uninstall recovery doc).*
+
+---
+
+## Round 3 — UX / responsive / regressions / feature audit (post-`f4dea50`)
+
+Four parallel agents:
+- **UX / CX / product** — friction, copy tone, missing affordances, sample-data prose nits.
+- **Responsive design** — 375 / 414 / 768 / 1440 / 2560 viewports + iOS notch / safe-area + landscape.
+- **Code regressions** — verifies round-2 fixes still pass; hunts new bugs from the sample-data commit.
+- **Feature completeness** — README claims vs. what the code actually does end-to-end.
+
+All round-2 fixes confirmed PASS. Findings below are *new*.
+
+---
+
+### Critical (data loss / silent corruption / iOS broken)
+
+- 🟡 **No `env(safe-area-inset-bottom)` anywhere.** `index.html:5` declares `viewport-fit=cover` but no CSS uses safe-area insets. On iPhone X+ in PWA standalone mode, the tree zoom cluster (`.tree-controls { bottom: 18px }` in `views.css:107`) and toasts (`.toast-root { bottom: 28px }` in `components.css:375`) sit *under* the home indicator and are tappable only by accident.
+  *Fix:* add `bottom: calc(18px + env(safe-area-inset-bottom, 0px))` to `.tree-controls`, the toast root, and the modal's slide-up footer.
+
+- 🟡 **Mobile tree has no way to add a relative.** Right-click context menu on `.t-node` (`tree-view.js:580`) is the only path to *Add child / Add spouse / Add parent / Edit / Delete*. Mobile devices have no right-click and no long-press handler is wired. The People view's add-form is reachable but doesn't pre-link the relation.
+  *Fix:* add a touch-only "⋮" affordance in the node corner that opens the same menu. Or wire a 350 ms long-press handler to the existing `pointerdown` / `pointercancel` flow.
+
+---
+
+### High (broken feature / WCAG fail / discoverability)
+
+- 🟡 **`assets/icon.svg` is the only `apple-touch-icon`.** iOS doesn't render SVG home-screen icons — installing the PWA on iPhone gives a white/blank icon.
+  *Fix:* generate a 180 × 180 PNG (and a 512 × 512 for Android) and add both to the manifest + `<link rel="apple-touch-icon">`.
+
+- 🟡 **Header search disappears on phones.** `base.css:208` hides `.header-search` at ≤ 768 px. Mobile users have no global search.
+  *Fix:* keep a search **icon** at small widths that opens a slide-down search drawer (or a modal with an autofocused input).
+
+- 🟡 **README claims story search is in the header — it isn't.** `searchStories()` exists in `data-store.js:446` but nothing in `app.js` wires the `#header-search-input` to it. Header search currently only matches person names.
+  *Fix:* in `app.js:43–52`, when the user types, also call `FamilyStore.searchStories(q)` and surface results in the People view (or a dedicated stories drawer).
+
+- 🟡 **README claims PNG export prints the tree title — it doesn't.** `getFamilyTitle()` is referenced in `image-export.js` but never stamped onto the rasterised PNG header band, only into the SVG <text> for screen rendering.
+  *Fix:* in `exportTreePng`, after rasterising, draw the title onto the canvas with the correct font / accent before encoding.
+
+- 🟡 **README claims dark-mode support — none implemented.** `[data-theme="dark"]` is referenced in `tokens.css` but nothing sets the attribute. No UI toggle, no persistence.
+  *Fix:* either add the toggle (header pill) + `localStorage` persistence, or remove the claim from README. Recommend: ship the toggle (the tokens already exist).
+
+- 🟡 **`.crop-editor` reframe button doesn't handle `photoUrl`-only people.** Sample-family persons have `photoUrl: "assets/sample/p33.jpg"` and no `photoId`/`photo`. The reframe handler in `people-view.js` only resolves `draft.photo` or `draft.photoId`, then errors with "No photo to reframe."
+  *Fix:* in the reframe `onclick`, also accept `draft.photoUrl` (pass it directly to the crop editor — `<img>` resolves it fine).
+
+- 🟡 **Cross-tab `storage` listener calls `load()`, which clears IDB on parse failure.** If tab A's persist completes but the value is unparseable in tab B (extremely rare, but possible during quota / disk events), the storage handler calls `load()` → catches → calls `PhotoStore.clearAll()` → tab B loses its photos despite tab A being the source.
+  *Fix:* in the `storage` listener, parse defensively first and only swap state if it succeeds; never call `clearAll()` from the cross-tab path.
+
+- 🟡 **`replaceAll` flushes the *previous* state to localStorage before mutating.** `flushPersist()` runs before `state = { ... }` in `replaceAll`, so the about-to-be-replaced state lands on disk during the import. If the tab dies before the post-import `persist()` lands, the old state is what comes back.
+  *Fix:* drop the pre-flush; instead, `clearTimeout(persistTimer)` (so the stale write doesn't race), mutate state, then call `flushPersist()` synchronously.
+
+- 🟡 **`exportFullProfile` poster ignores `photoCropHero`.** The hero crop is rendered only on the profile-page hero band (`profile-view.js:159`). The shared poster always uses `photoCropAvatar`, even though the layout has room for a wide hero.
+  *Fix:* in `image-export.js`, draw the hero band at the top of the poster using `photoCropHero` (cover-fit + clamp identical to the round-portrait math we already have).
+
+- 🟡 **Tree-node Tab order — every node is a tab stop.** Round-2 added `tabindex="0"` for keyboard a11y. With 50+ people that's 50 Tab presses. Should use a roving tabindex (only one node tabbable; arrows move focus between siblings / parent / child).
+  *Fix:* keep `tabindex="0"` on the first focused node only; add a `keydown` handler that swaps tabindex on arrow-key navigation. Standard tree-grid pattern.
+
+- 🟡 **Reduced-motion not comprehensive.** Round-2 covered `.lineage-banner`, `.t-couple-knot:hover`, `.story-card`, `.modal`, `.toast`. Still un-gated: tree-node hover transform, photo-upload toast slide, lineage-focus opacity transition, banner pulse on append.
+  *Fix:* add a single `@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }` reset, or sweep the remaining specific selectors.
+
+---
+
+### Medium (degraded UX / future tech-debt)
+
+- 🟡 **`.view-head__title` is 38 px serif at all widths.** On 375 px the title + pencil + actions row collides; the title wraps onto two lines and the actions wrap below.
+  *Fix:* `@media (max-width: 640px) { .view-head__title { font-size: 26px; } .view-head { padding: 18px 18px 14px; } }`.
+
+- 🟡 **Tree empty-state has no inline CTA.** "Plant your family tree · Add people from the rail" — the rail is hidden on phones. There's no button.
+  *Fix:* add a single primary "Add your first relative" button right in the empty state. Same call site as the rail's `Add person` action.
+
+- 🟡 **First-time tooltips for hidden affordances.** Right-click on tree, click on the gold knot, drag in the crop editor — none of these are visually hinted.
+  *Fix:* one-shot tooltips gated by `localStorage.getItem("virasat.tip.knot")` etc. Fade in on first hover, dismissible, never repeat.
+
+- 🟡 **Date-input placeholder doesn't update with precision.** When the user picks "About", the input still says "YYYY-MM-DD" — should hint `c. 1942`.
+  *Fix:* watch the precision Heritage select's `onchange` and rewrite the date input's `placeholder` accordingly.
+
+- 🟡 **Timeline name column truncates Hindi names at 120 px.** Devanagari is wider per glyph than Latin; "नरेंद्र मोहन शर्मा" gets clipped after the second word.
+  *Fix:* add a `title` attr (already there) and accept the truncation for desktop, but on `(pointer: coarse)` add a `white-space: normal` line-wrap so two-line names are legible.
+
+- 🟡 **Heritage date-picker popover overflows modals near the right edge.** 320 px popover + `left: 0` on the input → on a 375 px modal it can push past the right edge.
+  *Fix:* before opening, measure the trigger's `getBoundingClientRect` and flip to `right: 0` if `viewportWidth - rect.right < 340`.
+
+- 🟡 **`navigator.storage.persist()` toast may race the toast-root mount.** Promise can settle before DOM is parsed.
+  *Fix:* defer the toast inside `DOMContentLoaded` (or check `document.getElementById("toast-root")` and retry on next tick if absent).
+
+- 🟡 **Inspector "Add child" success doesn't expand the Family section.** If the section was collapsed, the new child is invisible until the user clicks the section header.
+  *Fix:* on successful add of a relation, force the Family section open (override the persisted collapse state for that one transition).
+
+- 🟡 **Section labels in copy can be warmer.** Audit suggested:
+  - "Add person" → **"Add a relative"**
+  - "Plant your family tree · Add people from the rail" → **"Add relatives to grow your tree"**
+  - "No achievements recorded yet." → **"What milestones defined their life?"**
+  - "No education details recorded yet." → **"Where did they study?"**
+  - "No description added yet." → **"Tell their story — a sentence or a chapter."**
+
+---
+
+### Low (nits)
+
+- 🟡 **Sample-data id collisions on re-load.** Stable ids (`p_anil`, etc.) are intentional for screenshots; if the user already has those ids, "Try sample data" overwrites silently. First-run flow is safe; if a "Reload sample" affordance ever exists, gate it behind a confirm.
+
+- 🟡 **`migrateLegacy` re-keys marriage keys that are already sorted.** Sample data uses pre-sorted keys; `replaceAll` re-keys them anyway. No-op cost.
+
+- 🟡 **Three flush listeners on `flushPersist`** (beforeunload + pagehide + visibilitychange). Idempotent, so safe; mildly redundant.
+
+- 🟡 **Crop editor 404-tolerates silently** when `photoUrl` 404s. Drag gestures still apply to a 0×0 broken image; the `{x,y,scale}` saves to a phantom photo. Add an `onerror` to the editor's `<img>` and abort with a toast.
+
+- 🟡 **Generation labels clip on 360 px viewports.** `.tree-gen-label { left: 24px }` — at 360 px with the rail collapsed and the SVG canvas left-aligned, the label sometimes lands off the visible band.
+
+- 🟡 **PWA uninstall recovery story is not documented.** Browser keeps localStorage + IDB after uninstall on most platforms. Add a paragraph to README: *"Uninstall removes the icon but keeps your data. Use Reset everything first if you want a clean wipe."*
+
+---
+
+### Don't bother (verified false / by-design)
+
+- ⛔ **README claim "Reduced-motion users get the same UI without animations" is half-true.** Round 2 covered the loud animations; remaining ones are subtle (hover lifts) and arguably outside scope. Keeping the claim, sweeping in the global `*` rule above closes the gap.
+
+- ⛔ **`photoUrl` field for static assets is undocumented.** Now used by sample data and worth a one-line README mention; flagged as docs work, not a bug.
+
+---
+
+### Future product ideas (moved to ROADMAP.md)
+
+The audits surfaced eleven feature ideas that aren't bugs and don't belong in `ISSUES.md`. They've been added to `ROADMAP.md` under "Round-3 audit ideas". Highlights: anniversary surfacing, "people without dates" maintenance list, contact info per person, pets, PDF family book, voice memos as a primary form CTA, lineage path-finder, dark-mode toggle, multi-photo gallery, memorial poster using the hero crop, and a global stories search drawer.
+
+---
+
+*Round 3 generated 2026-06-18 from four parallel audits. All round-1 + round-2 fixes confirmed working. Round-3 fixes landing next commit.*

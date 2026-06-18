@@ -110,3 +110,22 @@ If any of these resonate, open an issue or just hack on it. The whole app is van
 - ~~Full-profile share poster (hero, lifeline chips, About, Achievements, Education, Family, Stories, Notes).~~
 - ~~Editable tree title (any free-form string) printed across exports.~~
 - ~~Offline-capable PWA via service worker + web app manifest.~~
+
+---
+
+## Round-3 audit ideas (2026-06-18)
+
+These came out of the round-3 product / responsive / feature-completeness pass. Not bugs — feature gaps and worthwhile next steps. See `ISSUES.md` for the bug findings from the same audit.
+
+- **Anniversary surfacing.** A small "Coming up" rail card listing birthdays / death anniversaries in the next 30 days. Cheap to build (we already compute years), high emotional value — families remember less than they expect.
+- **"People without dates" maintenance list.** A rail stat / filter for *Missing birth date · N people* so power users can spot gaps. Same surface could host *Missing photos* and *Missing description*.
+- **Contact info per person.** Phone, email, address. Many trees double as a living family directory. Add a collapsible *Contact* inspector section with per-field privacy flags (hide from exports). Critical for the part of the tree that's still alive.
+- **Pets / companion animals.** A toggle on the Add form, paw icon in the tree, optional. Sounds frivolous; warm differentiator for a family-history app.
+- **PDF family book export.** Multi-page, one person per page, hero photo + bio + achievements + stories. Print-ready, spiral-bound at a local shop. Grandparents want a book, not a poster.
+- **Voice memos as a primary form CTA.** ROADMAP already lists voice notes. Make the affordance load-bearing — *Record a 30-second memory* with a waveform preview, beside the Notes field.
+- **Lineage path-finder.** Tap two people, see the shortest relationship chain. `lineageOf()` already computes lineage sets; a bidirectional BFS finishes the job.
+- **Dark-mode toggle.** `[data-theme="dark"]` is referenced in tokens.css but no UI sets the attribute. README claims dark mode — either ship it or remove the claim. Recommend ship: ~30 lines + a header pill, all the tokens already exist.
+- **Multiple photos per person.** One *primary* avatar + a small gallery (childhood, wedding, late portrait). Crop editor already handles two frames; extending to N+ is a natural step.
+- **Memorial poster** using `photoCropHero`. The hero crop is rendered on the profile page but ignored by the share poster. A dedicated *Memorial print* template (A4 landscape, hero photo at the top, lifespan + key dates underneath) is straightforward now that the crop data exists.
+- **Global stories search drawer.** `searchStories()` exists in the data store but isn't wired to the header search input. Either route the header through it (showing matching people in the People view) or open a dedicated *Search stories* drawer from the rail.
+- **Sample-data button as a permanent rail action.** Currently the sample is offered only on first run. Add a small *Try sample family* button under Tools (with a confirm dialog) so demoers can reset → reload sample without clearing storage.
