@@ -16,8 +16,6 @@ Use the priority tier as the order to work through; within a tier, ordered by im
 
 ### Tier C — Medium (degraded UX / future tech-debt)
 
-- 🟡 **Full SVG re-render on every store mutation.** The persist debounce masks symptoms but a deeper fix (granular subscriptions; only re-layout when `people.length` / relations change) would help with 100+ person trees.
-- 🟡 **People-view search re-renders the entire grid per keystroke.** Debounce + DOM reuse via `Map<id, Node>` would be the fix.
 - 🟡 **Tree-view zoom buttons icon-only with no visible text label.** `aria-label` covers screen readers; sighted low-vision keyboard users get only a glyph. Add a tooltip on focus or a visually-hidden label.
 - 🟡 **Inspector mobile close polish.** The `.inspector-close` exists at `≤ 1100 px` and works; the small × in the top corner could be more obvious.
 - 🟡 **Photo migration first-load re-renders.** `migrateLegacy` runs N updates; each fires a notification (now muted, but the legacy code path could still cascade in some edge cases). Verify and tighten.
@@ -140,6 +138,8 @@ Fixed items (✅) tagged with the resolving commit hash. Verified-false / closed
 - ✅ **Path-finder hop tooltip floating mid-modal.** Replaced with an `aria-label` that names the person. (`d403bc5`)
 - ✅ **Photo uploader buttons inconsistent.** Upload / Reframe / Remove all carry icons. (`07516dd` + follow-ups)
 - ✅ **Bare-text dialog buttons across modals.** Sweep covered Cancel / Save / Close / Remove / Forget / Today / Clear and the story-editor footer. (`de8e6be`)
+- ✅ **Full SVG re-render on every store mutation.** Topology-signature gate: when the structural bits (parents / spouses / petOwners / isPet / deathDate / story-count presence / photo presence / marriages keys / view toggles) haven't changed, render() skips layout + DOM rebuild and patches cosmetic bits (name / dates / density-chip number) on existing nodes. (`51d2f8c`)
+- ✅ **People-view search re-renders the entire grid per keystroke.** Debounced 120 ms + person cards cached in `Map<id, {sig, node}>`. Cache reuses DOM when name/date/place/photo are stable; pruned once size > 2× population. (`51d2f8c`)
 
 ### Tier D — Low
 
