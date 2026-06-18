@@ -1419,17 +1419,18 @@
   margin: 0;
 }
 .highlights__grid {
-  display: grid;
-  /* auto-fit collapses to a single column when the inspector is narrow
-     (typically ~360px on the right pane). 2-col was forcing card-name
-     truncation + clipping the eyebrow labels. */
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
-.highlights__card { min-width: 0; }
+.highlights__card {
+  min-width: 0;
+  /* One-per-row layout: lay the label/eyebrow on its own row, then the
+     person row underneath, then the footer chip on the right of the
+     person row. Reads like a list of cards. */
+  flex-direction: column;
+}
 .highlights__label {
-  /* Eyebrow labels are UPPERCASE with 0.08em tracking — let them wrap if
-     there isn't room rather than overflow the card. */
   white-space: normal;
   line-height: 1.25;
 }
