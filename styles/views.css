@@ -88,8 +88,32 @@
   box-shadow: var(--shadow-md);
   z-index: 2;
 }
-.tree-controls .btn { width: 36px; height: 36px; padding: 0; border: 0; background: transparent; border-radius: var(--r-pill); }
-.tree-controls .btn:hover { background: var(--surface-2); }
+/* Tree-controls buttons: keep them quiet by default. The hover halo is a
+   tighter inner circle (28×28) so it never balloons to the full button
+   bounds and looks like a separate avatar next to the icon. */
+.tree-controls .btn {
+  width: 36px; height: 36px; padding: 0;
+  border: 0; background: transparent; border-radius: 50%;
+  position: relative;
+  color: var(--text-2);
+  box-shadow: none;
+}
+.tree-controls .btn::before {
+  content: ""; position: absolute;
+  left: 50%; top: 50%;
+  width: 28px; height: 28px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: transparent;
+  transition: background var(--t-fast);
+  z-index: 0;
+}
+.tree-controls .btn:hover::before { background: var(--surface-2); }
+.tree-controls .btn > * { position: relative; z-index: 1; }
+.tree-controls .btn:focus-visible { box-shadow: 0 0 0 3px var(--olive-soft); }
+/* Suppress the focus halo on plain mouse interaction — :focus alone (no
+   :focus-visible) shouldn't render a ring for these tiny round buttons. */
+.tree-controls .btn:focus:not(:focus-visible) { box-shadow: none; }
 .tree-controls__divider { width: 1px; height: 18px; background: var(--line); margin: 0 4px; }
 .tree-controls__pct { padding: 0 10px; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--text-2); font-weight: 600; min-width: 44px; text-align: center; }
 
