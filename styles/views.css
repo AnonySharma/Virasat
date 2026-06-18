@@ -212,11 +212,20 @@
   stroke-dasharray: 0;
   opacity: 1;
 }
-/* Wedding-rings emblem (assets/wedding-rings.svg). Soft gold glow on the
-   icon gives the marriage marker a focal point. */
+/* Wedding-rings emblem (assets/wedding-rings.svg).
+   The chained drop-shadows build up a thick white halo around the icon so
+   the gold pops off the green photo rings. The first three shadows are
+   stacked white (giving us a denser ~3px outer outline than a single
+   shadow can), the last is a soft warm gold glow. */
 .t-couple-knot__icon {
-  filter: drop-shadow(0 0 2px rgba(184, 154, 90, .45));
+  filter:
+    drop-shadow(0 0 1.2px rgba(255, 255, 255, 1))
+    drop-shadow(0 0 1.2px rgba(255, 255, 255, 1))
+    drop-shadow(0 0 1.2px rgba(255, 255, 255, 1))
+    drop-shadow(0 0 3px rgba(184, 154, 90, .45));
 }
+/* The backing disc is used in the export PNG path; keep it cheap. */
+.t-couple-knot__backing { fill: var(--bg-elev); stroke: rgba(184, 154, 90, .45); stroke-width: .75; }
 
 /* Subtle hover pulse — invites the click that opens the marriage modal.
    Anchored at the knot's centre via transform-box so the pulse scales
@@ -227,7 +236,11 @@
   transition: filter var(--t-fast);
 }
 .t-couple-knot:hover .t-couple-knot__icon {
-  filter: drop-shadow(0 0 5px rgba(184, 154, 90, .9));
+  filter:
+    drop-shadow(0 0 1.2px rgba(255, 255, 255, 1))
+    drop-shadow(0 0 1.2px rgba(255, 255, 255, 1))
+    drop-shadow(0 0 1.2px rgba(255, 255, 255, 1))
+    drop-shadow(0 0 5px rgba(184, 154, 90, .9));
 }
 .t-couple-knot:hover {
   animation: knot-pulse 1500ms cubic-bezier(.4,.0,.2,1) infinite;
