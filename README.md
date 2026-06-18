@@ -32,6 +32,7 @@
 ### Export / import
 - **Export** modal: choose what to include (photos, dates, locations) and the format — full JSON or minimal (names + relations only). Live size preview.
 - **Import** accepts both family-tree JSON exports and Google Form **CSV** responses.
+- The import format is **the same** as the export format — round-trip is lossless when "Include photos / dates / locations" are all on. The shape is `{ version, meta, people: [...] }`; only the `people` array is required, and missing fields on each person are filled with defaults at load time, so older or hand-edited exports still load.
 
 ### Mobile
 - Bottom tab bar replaces the top nav.
@@ -128,6 +129,7 @@ The following are tracked here as ideas to grow the app over time. Wording is ke
   - *Compact* — only shows direct lineage (default focus on whoever is set as "self"), good at-a-glance.
   - *Detailed* — shows every person who married into the family, *and* their parents, children and grandchildren as long as the chain stays connected. Useful when, for example, your aunt's family settled elsewhere and you want their branch visible too.
 - **Pin a "self" person.** All views can then highlight relationship paths and label everyone with how they relate to you ("paternal grandmother", "spouse's brother", etc.).
+- **Highlight descendants from a selected person.** Select anyone in the tree and only their lineage going forward — their spouse(s) and the entire descendant subtree underneath — stays at full opacity; everyone else dims. A "Show descendants of [Name]" mode that complements the existing alive/deceased filter, but operates on relationship topology instead of status. Optionally include or exclude spouses-married-in further down the line.
 - **Relationship tags.** Mark adoption, step-, half-, partner (unmarried), divorced, deceased-in-infancy. The tree should render these visually (dashed couple line for divorced, etc.).
 
 ### Photos
