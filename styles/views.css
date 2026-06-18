@@ -1004,13 +1004,15 @@
 }
 .crop-frame__inner.is-dragging { cursor: grabbing; }
 .crop-frame__img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  object-position: 50% 50%;
+  /* Width / height / transform are set by JS (per-frame manual layout
+     so we get slack on BOTH axes regardless of frame aspect, instead of
+     just the long axis like object-fit: cover gave us). */
+  position: absolute; left: 0; top: 0;
   display: block;
-  transform-origin: center;
   pointer-events: none;
   -webkit-user-drag: none;
+  max-width: none; max-height: none;
+  transform-origin: 0 0;
 }
 .crop-frame--round .crop-frame__inner {
   width: 180px; height: 180px;
