@@ -195,6 +195,15 @@
 .t-node-photo-ring--ancestor { stroke: var(--gold); stroke-width: 2.5; }
 .t-node:hover .t-node-photo-ring { stroke-width: 3.5; }
 .t-node.is-selected .t-node-photo-ring { stroke: var(--gold); stroke-width: 3.5; }
+/* Visible keyboard-focus indicator — the SVG group itself takes focus, but
+   the ring inside is the actual visual cue. Default browser focus ring
+   doesn't render well on SVG, so we drive a strong gold ring instead. */
+.t-node:focus { outline: none; }
+.t-node:focus-visible .t-node-photo-ring {
+  stroke: var(--gold);
+  stroke-width: 4;
+  filter: drop-shadow(0 0 4px rgba(184, 154, 90, 0.6));
+}
 
 /* Lineage focus — when one person is selected, their ancestors / descendants
    / partners stay full-strength and everyone else softly fades. */
@@ -364,6 +373,9 @@
   /* Lineage banner slide-in: vestibular-sensitive users see the change
      instantly instead of an animated reveal. */
   .lineage-banner { transition: none !important; }
+  /* Story cards, modals, and toasts: silence the remaining motion on the
+     opt-out path. transition: none also covers hover transforms. */
+  .story-card, .modal, .toast { animation: none !important; transition: none !important; }
 }
 
 /* — Tree node contextual menu — */
@@ -990,4 +1002,13 @@
   font-variant-numeric: tabular-nums;
   font-size: 13px;
   color: var(--text-2);
+}
+
+/* === Touch-target minima on coarse pointers (mobile / tablet) ===
+   WCAG 2.5.5 wants ≥44×44 hit areas. Heritage select options + icon
+   buttons are tighter than that on desktop for visual density; bump
+   them only when a coarse pointer is in use. */
+@media (pointer: coarse) {
+  .btn--icon { min-width: 44px; min-height: 44px; }
+  .hsel__opt { min-height: 44px; padding-top: 12px; padding-bottom: 12px; }
 }
