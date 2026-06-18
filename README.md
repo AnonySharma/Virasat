@@ -25,14 +25,19 @@ The right pane shows a person's full biography in collapsible sections:
 - **Life achievements**
 - **Education**
 - **Family** (parents / spouse(s) / children / siblings — each clickable to navigate)
+- **Stories** — long-form memories with optional title, body, and comma-separated tags. Edit/delete in a dedicated modal; the header search matches story bodies and tags.
 - **Photo** (large preview + edit button)
 - **Notes & memories** (debounced auto-save)
 
-Action row above the sections: add a note, share as image, edit, delete. Section open/closed state persists across sessions.
+Action row above the sections: add a note, share as image (full profile poster), edit, delete. Section open/closed state persists across sessions.
 
 ### Lineage focus
 
-Click any person in the tree and only their lineage stays at full opacity — every ancestor, every descendant, and every spouse along the way. Everyone else fades to ~22%. Click empty space (or a different person) to switch focus.
+Click any person in the tree and only their lineage (the person + every spouse + every descendant) stays at full opacity. Connecting lines and the gold wedding emblems between in-lineage couples brighten with them; everyone else fades to ~22%. A *Viewing as: <Name> · Reset view* banner sits above the canvas while focus is active — click Reset (or pick someone else) to switch.
+
+### Date precision flags
+
+Each birth / death date can be tagged **exact / about / before / after**. Renders as `c. 1968` / `before 1968` / `after 1968` everywhere — profile chips, inspector rows, tree node compact form (`c.`/`<`/`>`), and a softly faded edge gradient on the timeline bar so uncertainty is visible at a glance.
 
 ### Soft filters (don't switch views)
 
@@ -51,6 +56,7 @@ Top-left rail has **All / Living / Deceased** filters. Toggling one **dims non-m
 - **Father / Mother / Spouse(s)** as separate single-pickers (mutually exclusive). Spouses render as a dynamic list of avatar + picker rows with a "+" pill to add another.
 - **Hindi twin** for every text field — every name, place, occupation, description, achievement, education, note has an optional `_hi` companion. Hindi shows when language = HI **and** you wrote one; otherwise the English original is shown. Nothing is machine-translated.
 - **Photo uploader** — auto-resized to 512px JPEG (~85% quality), stored in IndexedDB.
+- **Reframe button** — open a side-by-side editor with two crop frames against the same source photo. Drag inside each to choose what's centred; one slider zooms both. The round frame is what shows in tree nodes and avatars; the wide 16:9 frame is the hero band on the profile page and the share poster. Stored as `photoCropAvatar` and `photoCropHero` (focal point + zoom factor), applied at render-time.
 
 ### Languages — EN / HI
 
@@ -66,6 +72,7 @@ Single modal with everything in one place:
 
 - **Field toggles** — Include photos / dates / locations (apply to both PNG and JSON).
 - **PNG quality** — Sketch / Standard / Great / Heirloom heritage radio cards with file-size estimates.
+- **Lineage-only PNG** — when a person is in lineage focus and you open Export, an *Only \<Name\>'s lineage* toggle is shown and turned on by default. The PNG renders just that subtree (focus + spouse as joint roots, descendants below) framed tightly around the in-lineage nodes, edges, and couple knots.
 - **JSON options** — Minimal mode (names + relations only) and "Embed photos in JSON" (base64).
 - **Save PNG** — always downloads a self-contained image.
 - **Save JSON** — single self-contained file. Photos are inlined as base64 on the `photo` field; round-trip with Import is lossless.
@@ -73,7 +80,15 @@ Single modal with everything in one place:
 ### Image export
 
 - **Tree → PNG** at any quality preset. CSS variables resolved to literals; photos inlined as base64; couple knots and connectors all rendered correctly when detached from the document.
-- **Profile → 1200×630 PNG card** with photo, name (Cormorant), occupation, lifespan chip, and "Virasat" wordmark — sharable to social.
+- **Full-profile poster** — the Share button generates a tall poster with the entire profile: hero (with the avatar crop honoured), lifeline chips, About, Achievements, Education, Family chips, Stories (title + body + tags), and Notes. Heritage palette, free-flowing height, ready to send.
+
+### Editable tree title
+
+The big title above the tree (e.g. *Sharma Family Tree*) is fully editable — click the pencil to type whatever you'd like: a surname, a phrase, the family motto. The first word still gets the gold accent. The same string is printed on every PNG export.
+
+### Offline / PWA
+
+A service worker caches the entire app shell (HTML, CSS, JS, icons, fonts) on first visit. On returning visits the cache responds first (stale-while-revalidate) so the app boots instantly even without a network. Add to home screen on iOS / Android — `manifest.webmanifest` declares standalone display mode, the heritage theme colour, and the same icon as the favicon. The app also calls `navigator.storage.persist()` so Safari won't evict your IndexedDB photos after 7 idle days.
 
 ### Reset everything
 
@@ -168,6 +183,7 @@ lib/
   components/
     heritage-datepicker.js       calendar popover with year-only mode
     heritage-select.js           custom dropdown (replaces native <select>)
+    crop-editor.js               two-frame photo crop editor (avatar + hero)
     inspector.js                 right-pane person details with sections
     profile-view.js              fallback full-page profile (kept for safety)
   views/
@@ -175,10 +191,14 @@ lib/
     tree-view.js                 SVG tree with pan/zoom + lineage highlight
     timeline-view.js             horizontal timeline
   features/
-    image-export.js              tree → PNG, profile → PNG card
+    image-export.js              tree → PNG (full or lineage-only),
+                                 profile → full-profile poster
     export-import.js             export modal + JSON/CSV import
     collect-form.js              Google Form template + CSV importer
-  app.js                         view router, rail wiring, filters
+  app.js                         view router, rail wiring, filters,
+                                 service-worker registration
+manifest.webmanifest             PWA install metadata
+sw.js                            service worker (offline-first cache)
 ```
 
 ---

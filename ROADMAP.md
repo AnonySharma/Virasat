@@ -21,7 +21,7 @@ If any of these resonate, open an issue or just hack on it. The whole app is van
 
 ## Photos
 
-- **Image cropping UI** with two preview frames (small circular avatar, larger profile rectangle), each draggable / resizable independently. One source image, two crop rectangles stored against it (`photoCropAvatar`, `photoCropHero`); render-time SVG `clipPath` applies the appropriate crop. Avoids the "great close-up looks bad on the profile, great profile shot looks tiny in the tree" trade-off.
+- ~~**Image cropping UI** with two preview frames (small circular avatar, larger profile rectangle), each draggable / resizable independently. One source image, two crop rectangles stored against it (`photoCropAvatar`, `photoCropHero`); render-time SVG `clipPath` applies the appropriate crop.~~ ✅ Shipped — Reframe button on the form opens a side-by-side editor; values stored as `{ x, y, scale }` per frame; avatars + share poster honour the avatar crop, profile hero band honours the hero crop.
 - **Multiple photos per person** — not just one avatar. A small gallery (childhood, wedding, etc.) per profile, with one designated "primary" photo for the avatar.
 - **Auto-tag who's in a group photo** by clicking faces and assigning a person — useful for old family albums.
 - ~~**Photos stored as binary** in IndexedDB (not base64 in localStorage).~~ ✅ Shipped.
@@ -33,9 +33,9 @@ If any of these resonate, open an issue or just hack on it. The whole app is van
 
 - **GEDCOM import / export** so you can interop with Ancestry / FamilySearch and other family-tree apps.
 - **Documents / sources.** Attach scans of letters, certificates, articles. Cite them on dates and achievements so future generations can verify.
-- **Stories** — long-form memories tied to a person, with tags (family, childhood, war, migration). Searchable.
+- ~~**Stories** — long-form memories tied to a person, with tags (family, childhood, war, migration). Searchable.~~ ✅ Shipped — dedicated inspector section with add/edit/delete, optional title + comma-separated tags; the header search matches story bodies and tags via `FamilyStore.searchStories`.
 - **Voice notes.** A 30-second voice memo per relative is priceless and trivially small in storage.
-- **Date precision flags** — "around 1942", "before 1968", "after 1972". Store as a precision modifier on each date; render as `c. 1942` in chips. The timeline shows uncertainty as a soft fade gradient at the edges of the bar.
+- ~~**Date precision flags** — "around 1942", "before 1968", "after 1972". Store as a precision modifier on each date; render as `c. 1942` in chips. The timeline shows uncertainty as a soft fade gradient at the edges of the bar.~~ ✅ Shipped — `birthDatePrecision` / `deathDatePrecision` of `exact|about|before|after`; rendered everywhere (profile chips, tree compact form, timeline edge fade).
 - **Calendar systems** — record dates in Vikram Samvat / Hijri / etc. alongside Gregorian, with a per-tree default.
 
 ---
@@ -59,9 +59,9 @@ If any of these resonate, open an issue or just hack on it. The whole app is van
 
 ## App polish
 
-- **Offline / PWA.** A service worker so the app works offline and feels like a native app on phones. Add a `manifest.webmanifest`, register a worker that caches the app shell, and handle font/CDN assets with cache-first.
+- ~~**Offline / PWA.** A service worker so the app works offline and feels like a native app on phones. Add a `manifest.webmanifest`, register a worker that caches the app shell, and handle font/CDN assets with cache-first.~~ ✅ Shipped — `sw.js` precaches the app shell on install and serves stale-while-revalidate for same-origin GETs, cache-first for fonts/Font Awesome. `manifest.webmanifest` declares standalone display mode + heritage theme colour. App also calls `navigator.storage.persist()` so iOS Safari doesn't evict the IndexedDB photos after 7 idle days.
 - **Print / PDF.** Generate a clean printable poster of the tree, or a per-person profile page suitable for a memory book.
-- **Search across stories**, not just names.
+- ~~**Search across stories**, not just names.~~ ✅ Shipped — header search routes through `FamilyStore.searchStories(q)` and pulls people whose story body or tag matches.
 - **Relationship path finder.** Tap any two people, see the shortest relationship chain ("Anil → father Ramesh → wife Sushila → niece Priya").
 - **Family anniversaries** — surface birthdays, marriage anniversaries, death anniversaries on a per-day calendar, optionally with notification reminders.
 - **Heritage map** — drop pins where each ancestor was born / lived / died on a soft-style map, to visualise how the family scattered or stayed.
@@ -103,3 +103,10 @@ If any of these resonate, open an issue or just hack on it. The whole app is van
 - ~~JSON export/import with photos inlined as base64; round-trip lossless.~~
 - ~~Reset everything — wipes localStorage state, IndexedDB photos, the inspector selection, and the filter.~~
 - ~~Mobile responsive: hamburger rail, slide-in inspector, touch pan/zoom.~~
+- ~~Date precision flags (`exact|about|before|after`) rendered in profile chips, tree compact form, and as a faded edge gradient on the timeline.~~
+- ~~Stories — long-form memories with tags, dedicated inspector section, header search includes story bodies + tags.~~
+- ~~Two-frame photo cropping (avatar + 16:9 hero), applied at render time.~~
+- ~~Lineage banner ("Viewing as: Name · Reset view") + lineage-only PNG export.~~
+- ~~Full-profile share poster (hero, lifeline chips, About, Achievements, Education, Family, Stories, Notes).~~
+- ~~Editable tree title (any free-form string) printed across exports.~~
+- ~~Offline-capable PWA via service worker + web app manifest.~~

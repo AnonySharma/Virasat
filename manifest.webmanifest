@@ -1,0 +1,21 @@
+{
+  "name": "Virasat — Family Heritage",
+  "short_name": "Virasat",
+  "description": "A calm, heritage-inspired workspace for preserving names, photos, and stories from your family tree.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F8F6F2",
+  "theme_color": "#5E7D63",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "lifestyle"],
+  "lang": "en"
+}
