@@ -464,6 +464,21 @@
 }
 .timeline-bar:hover { filter: brightness(1.06); transform: translateY(-1px); }
 .timeline-bar--deceased { background: var(--rust); }
+/* Date-precision fades — when birth or death is "about/before/after",
+   the relevant edge of the lifespan bar fades out, signalling
+   uncertainty without changing the bar's start/end years. */
+.timeline-bar--fade-left {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 28px);
+          mask-image: linear-gradient(to right, transparent 0, #000 28px);
+}
+.timeline-bar--fade-right {
+  -webkit-mask-image: linear-gradient(to left, transparent 0, #000 28px);
+          mask-image: linear-gradient(to left, transparent 0, #000 28px);
+}
+.timeline-bar--fade-left.timeline-bar--fade-right {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+}
 .timeline-bar__avatar { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; overflow: hidden; }
 .timeline-bar__avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 
@@ -734,3 +749,42 @@
   transition: background var(--t-fast), border-color var(--t-fast);
 }
 .person-chip:hover { border-color: var(--gold); background: var(--bg-elev); }
+
+/* === Stories block (inspector) === */
+.stories-block { display: flex; flex-direction: column; gap: 10px; }
+.story-card {
+  position: relative;
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 14px 16px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+}
+.story-card:hover { background: var(--bg-elev); border-color: var(--gold); }
+.story-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.story-card__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 17px; font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.story-card__body {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-2);
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.story-card__tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.story-card__meta {
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
