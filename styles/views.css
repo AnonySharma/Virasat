@@ -712,6 +712,15 @@
   -webkit-user-select: none;
 }
 .inspector-section__head:hover { background: var(--surface-2); }
+/* Custom focus outline — the default UA outline traces the section-head's
+   bounding box and touches the icon's left edge. Inset gold ring keeps the
+   focus indicator inside the row and away from the icon glyph. */
+.inspector-section__head:focus { outline: none; }
+.inspector-section__head:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: -4px;
+  border-radius: var(--r-sm);
+}
 .inspector-section__title {
   font-family: var(--font-display);
   font-size: 18px;
@@ -938,8 +947,14 @@
   transition: transform var(--t-fast);
 }
 
-/* === Crop editor === */
-.crop-editor { display: flex; flex-direction: column; gap: 16px; min-width: min(720px, 90vw); }
+/* === Crop editor ===
+   Two preview frames stacked side-by-side on wide modals, single column
+   below 640px. Sized so the full editor (avatar + hero + footer row) fits
+   inside the modal max-width without horizontal scrolling. */
+.crop-editor {
+  display: flex; flex-direction: column; gap: 16px;
+  /* No min-width — modal max-width is 600px; the contents flow inside that. */
+}
 .crop-editor__hint {
   margin: 0;
   font-size: 13.5px;
@@ -948,14 +963,14 @@
 }
 .crop-frames {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 180px 1fr;
   gap: 18px;
   align-items: start;
 }
 @media (max-width: 640px) {
-  .crop-frames { grid-template-columns: 1fr; }
+  .crop-frames { grid-template-columns: 1fr; justify-items: center; }
 }
-.crop-frame { display: flex; flex-direction: column; gap: 8px; }
+.crop-frame { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .crop-frame__label {
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -983,7 +998,7 @@
   -webkit-user-drag: none;
 }
 .crop-frame--round .crop-frame__inner {
-  width: 220px; height: 220px;
+  width: 180px; height: 180px;
   border-radius: 50%;
   box-shadow: 0 0 0 3px var(--gold);
 }
@@ -1006,29 +1021,29 @@
   opacity: 0.85;
 }
 .crop-frame--round .crop-frame__hint { bottom: auto; top: 50%; transform: translate(-50%, -50%); }
-.crop-zoom {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+
+/* Per-frame zoom slider — avatar and hero are tuned independently. */
+.crop-frame__zoom {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
+  width: 100%;
 }
-.crop-zoom__label {
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  font-weight: 600;
-}
-.crop-zoom__input { flex: 1; }
-.crop-zoom__value {
-  min-width: 56px;
+.crop-frame__zoom i { color: var(--text-3); font-size: 11px; }
+.crop-frame__zoom-input { flex: 1; min-width: 0; }
+.crop-frame__zoom-value {
+  min-width: 44px;
   text-align: right;
   font-variant-numeric: tabular-nums;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-2);
+  font-weight: 600;
+}
+
+.crop-editor__footer-row {
+  display: flex; justify-content: flex-end;
 }
 
 /* === Phone-size adjustments to tree stage and pan-hint ===
