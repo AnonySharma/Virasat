@@ -160,6 +160,20 @@
 .t-node:hover .t-node-photo-ring { stroke-width: 3.5; }
 .t-node.is-selected .t-node-photo-ring { stroke: var(--gold); stroke-width: 3.5; }
 
+/* Lineage focus — when one person is selected, their ancestors / descendants
+   / partners stay full-strength and everyone else softly fades. */
+.t-node.is-lineage .t-node-photo-ring { stroke: var(--olive-deep); stroke-width: 2.5; }
+.t-node.is-faded {
+  opacity: .22;
+  transition: opacity var(--t-med);
+}
+.t-node.is-faded:hover { opacity: .65; }
+.t-edge.is-faded {
+  opacity: .25;
+  transition: opacity var(--t-med);
+}
+.t-couple-knot.is-faded { opacity: .25; }
+
 .t-node-name {
   font-family: var(--font-display);
   font-weight: 500;
