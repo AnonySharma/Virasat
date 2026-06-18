@@ -59,6 +59,10 @@
     </label>
 
     <div class="app-header__actions">
+      <button class="theme-toggle btn--icon" id="theme-toggle" type="button" aria-label="Toggle theme" title="Toggle theme">
+        <i class="fa-solid fa-moon theme-toggle__moon" aria-hidden="true"></i>
+        <i class="fa-solid fa-sun theme-toggle__sun" aria-hidden="true"></i>
+      </button>
       <div class="lang-switch" role="group" aria-label="Language">
         <button class="lang-switch__btn is-active" data-lang="en" type="button" aria-pressed="true" aria-label="English">EN</button>
         <button class="lang-switch__btn" data-lang="hi" type="button" aria-pressed="false" aria-label="हिन्दी">HI</button>
@@ -101,11 +105,24 @@
         </ul>
       </section>
 
+      <section class="rail-block" id="rail-anniversaries-block" hidden>
+        <h3 class="rail-heading" data-i18n="rail.anniversaries">Coming up</h3>
+        <div class="rail-anniv" id="rail-anniversaries"></div>
+      </section>
+
+      <section class="rail-block" id="rail-maintenance-block" hidden>
+        <h3 class="rail-heading" data-i18n="rail.maintenance">Needs attention</h3>
+        <ul class="rail-list" id="rail-maintenance"></ul>
+      </section>
+
       <section class="rail-block">
         <h3 class="rail-heading" data-i18n="rail.tools">Tools</h3>
         <ul class="rail-list">
           <li><button class="rail-item" id="tool-add" type="button"><i class="fa-solid fa-user-plus"></i><span data-i18n="rail.addPerson">Add Person</span></button></li>
           <li><button class="rail-item" id="tool-edit" type="button"><i class="fa-regular fa-pen-to-square"></i><span data-i18n="rail.editTree">Manage people</span></button></li>
+          <li><button class="rail-item" id="tool-path" type="button"><i class="fa-solid fa-route"></i><span data-i18n="rail.findRelation">Find relation</span></button></li>
+          <li><button class="rail-item" id="tool-print" type="button"><i class="fa-solid fa-print"></i><span data-i18n="rail.printBook">Print family book</span></button></li>
+          <li><button class="rail-item" id="tool-sample" type="button"><i class="fa-solid fa-wand-magic-sparkles"></i><span data-i18n="rail.trySample">Try sample family</span></button></li>
           <li><button class="rail-item rail-item--danger" id="tool-reset" type="button"><i class="fa-solid fa-trash-can"></i><span data-i18n="rail.reset">Reset everything</span></button></li>
         </ul>
       </section>
@@ -162,6 +179,7 @@
   <script src="lib/components/heritage-datepicker.js"></script>
   <script src="lib/components/heritage-select.js"></script>
   <script src="lib/components/crop-editor.js"></script>
+  <script src="lib/components/path-finder.js"></script>
   <script src="lib/components/inspector.js"></script>
   <script src="lib/components/profile-view.js"></script>
 
@@ -174,6 +192,7 @@
   <script src="lib/features/image-export.js"></script>
   <script src="lib/features/export-import.js"></script>
   <script src="lib/features/collect-form.js"></script>
+  <script src="lib/features/print-book.js"></script>
 
   <!-- entry -->
   <script src="lib/app.js"></script>

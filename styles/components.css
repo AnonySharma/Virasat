@@ -891,3 +891,114 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .exp-json-row {
   display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
 }
+
+/* ===========================================================
+   Print stylesheet — driven by PrintBook.open() which builds
+   .print-book-root with one .print-page per relative.
+   =========================================================== */
+.print-book-root { display: none; }
+@media print {
+  /* Hide everything else so only the book prints. */
+  body > *:not(.print-book-root) { display: none !important; }
+  body.is-printing { background: #fff; }
+  .print-book-root { display: block; }
+  .print-page {
+    page-break-after: always;
+    break-after: page;
+    width: 100%;
+    min-height: 100vh;
+    padding: 28mm 22mm;
+    box-sizing: border-box;
+    color: #1a1a1a;
+    background: #fffdf7;
+    font-family: var(--font-sans), system-ui, sans-serif;
+  }
+  .print-page:last-child { page-break-after: auto; }
+
+  .print-page--cover {
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center;
+  }
+  .print-cover__eyebrow {
+    font-size: 12pt; letter-spacing: 0.3em; text-transform: uppercase;
+    color: #5E7D63; margin-bottom: 14mm;
+  }
+  .print-cover__title {
+    font-family: var(--font-display);
+    font-size: 56pt; font-weight: 500; line-height: 1.05;
+    color: #1F1D19; margin: 0;
+  }
+  .print-cover__rule {
+    width: 80mm; height: 1pt; background: #B89A5A;
+    margin: 14mm auto;
+  }
+  .print-cover__date { font-size: 11pt; color: #7A7363; }
+
+  .print-person__head {
+    display: flex; align-items: center; gap: 10mm;
+    border-bottom: 1pt solid #E4DECF;
+    padding-bottom: 8mm; margin-bottom: 8mm;
+  }
+  .print-person__photo {
+    width: 36mm; height: 36mm;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2pt solid #B89A5A;
+    flex-shrink: 0;
+    background: #DAE2D5;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 24pt; color: #5E7D63;
+  }
+  .print-person__photo img { width: 100%; height: 100%; object-fit: cover; }
+  .print-person__photo--initials img { display: none; }
+  .print-person__title h2 {
+    font-family: var(--font-display);
+    font-size: 28pt; font-weight: 500;
+    margin: 0 0 2mm 0; line-height: 1.1;
+  }
+  .print-person__occupation {
+    font-style: italic; color: #5E7D63; font-size: 12pt; margin-bottom: 2mm;
+  }
+  .print-person__lifespan { font-size: 10.5pt; color: #7A7363; }
+
+  .print-section { margin-bottom: 6mm; }
+  .print-section h3 {
+    font-family: var(--font-display);
+    font-size: 14pt; font-weight: 500; color: #1F1D19;
+    margin: 0 0 3mm 0;
+    padding-bottom: 1mm;
+    border-bottom: 0.5pt solid #E4DECF;
+  }
+  .print-prose {
+    font-size: 11pt; line-height: 1.6; color: #1F1D19;
+    margin: 0; white-space: pre-wrap;
+  }
+  .print-prose--muted { color: #555; font-size: 10.5pt; }
+  .print-list {
+    margin: 0; padding-left: 5mm;
+    font-size: 11pt; line-height: 1.55;
+  }
+  .print-list li { margin-bottom: 1mm; }
+  .print-stories { display: flex; flex-direction: column; gap: 4mm; }
+  .print-story {
+    border-left: 1pt solid #B89A5A;
+    padding-left: 4mm;
+  }
+  .print-story h4 {
+    font-family: var(--font-display);
+    font-size: 12pt; font-weight: 500;
+    margin: 0 0 1mm 0;
+  }
+  .print-story p {
+    font-size: 11pt; line-height: 1.6;
+    margin: 0; color: #1F1D19;
+    white-space: pre-wrap;
+  }
+  .print-person__foot {
+    position: absolute; bottom: 14mm; left: 22mm; right: 22mm;
+    text-align: center;
+    font-size: 9pt; color: #7A7363;
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+}
