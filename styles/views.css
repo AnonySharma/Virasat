@@ -201,10 +201,84 @@
 }
 .t-node.is-faded:hover { opacity: .65; }
 .t-edge.is-faded {
-  opacity: .25;
-  transition: opacity var(--t-med);
+  opacity: .22;
+  transition: opacity var(--t-med), stroke var(--t-med), stroke-width var(--t-med);
+}
+.t-edge.is-lineage {
+  stroke: var(--olive-deep, #4a6a4f);
+  stroke-width: 2.4;
+  opacity: 1;
+  transition: opacity var(--t-med), stroke var(--t-med), stroke-width var(--t-med);
 }
 .t-couple-knot.is-faded { opacity: .25; }
+.t-couple-knot.is-lineage { filter: drop-shadow(0 0 4px rgba(184,154,90,0.55)); }
+
+/* Viewing-as banner — sits inside the tree stage, top-centre */
+.lineage-banner {
+  position: absolute;
+  left: 50%;
+  top: 16px;
+  transform: translateX(-50%) translateY(-4px);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--ivory, #F8F6F2);
+  border: 1px solid rgba(94, 125, 99, 0.22);
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(40, 36, 28, 0.12), 0 1px 2px rgba(40, 36, 28, 0.08);
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text);
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-med), transform var(--t-med);
+}
+.lineage-banner.is-on {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+.lineage-banner[hidden] { display: none; }
+.lineage-banner__label {
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  font-weight: 500;
+}
+.lineage-banner__name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.lineage-banner__reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  margin-left: 4px;
+  background: transparent;
+  border: 1px solid rgba(184, 154, 90, 0.45);
+  border-radius: 999px;
+  color: var(--gold-deep, #8a6f30);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+}
+.lineage-banner__reset:hover {
+  background: var(--gold-soft, rgba(184,154,90,0.15));
+  border-color: var(--gold, #b89a5a);
+  color: var(--gold-deep, #6d561f);
+}
+.lineage-banner__reset:focus-visible {
+  outline: 2px solid var(--gold, #b89a5a);
+  outline-offset: 2px;
+}
 
 .t-node-name {
   font-family: var(--font-display);
