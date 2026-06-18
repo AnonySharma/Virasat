@@ -235,13 +235,20 @@ lib/
                                  service-worker registration
 manifest.webmanifest             PWA install metadata
 sw.js                            service worker (offline-first cache)
+docs/
+  ROADMAP.md                     priority-ranked feature backlog
+  ISSUES.md                      open bugs + tech-debt + resolved log
+  CLAUDE.md                      working agreement, taste rules
+                                 (read-this-first for any new agent)
+  CONTEXT.md                     architectural reference (data model,
+                                 module map, key flows, footguns)
 ```
 
 ---
 
 ## Roadmap
 
-Future feature ideas live in [`ROADMAP.md`](ROADMAP.md) — most have a clear shape, some are sketches. Anything that gets shipped is struck through there and folded into Features above.
+Future feature ideas live in [`docs/ROADMAP.md`](docs/ROADMAP.md) — priority-ranked P1–P5, with shipped items struck through and folded into Features above. Bug list + tech-debt at [`docs/ISSUES.md`](docs/ISSUES.md). For agents picking the project up: [`docs/CLAUDE.md`](docs/CLAUDE.md) is the working agreement and taste rules; [`docs/CONTEXT.md`](docs/CONTEXT.md) is the architectural reference.
 
 ---
 
