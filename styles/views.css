@@ -27,6 +27,27 @@
   color: var(--olive-deep);
   font-style: italic;
 }
+/* Pencil button next to the family name — only the icon shows; on hover
+   it gains a soft olive halo. */
+.view-head__rename {
+  align-self: center;
+  width: 30px; height: 30px;
+  border: 0; background: transparent;
+  border-radius: 50%;
+  display: inline-grid; place-items: center;
+  color: var(--text-4);
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: 4px;
+  opacity: 0;
+  transition: opacity var(--t-fast), background var(--t-fast), color var(--t-fast);
+}
+.view-head__title:hover .view-head__rename,
+.view-head__rename:focus-visible { opacity: 1; }
+.view-head__rename:hover { background: var(--olive-soft); color: var(--olive-deep); }
+@media (hover: none) {
+  .view-head__rename { opacity: 1; }
+}
 .view-head__sub {
   font-size: 13px; color: var(--text-3);
   font-variant-numeric: tabular-nums;
@@ -97,7 +118,10 @@
   position: relative;
   color: var(--text-2);
   box-shadow: none;
+  outline: none;             /* never paint the UA outline; we handle focus below */
 }
+.tree-controls .btn:focus { outline: none; box-shadow: none; }
+.tree-controls .btn:active { transform: none; }
 .tree-controls .btn::before {
   content: ""; position: absolute;
   left: 50%; top: 50%;
@@ -107,13 +131,21 @@
   background: transparent;
   transition: background var(--t-fast);
   z-index: 0;
+  pointer-events: none;
 }
 .tree-controls .btn:hover::before { background: var(--surface-2); }
-.tree-controls .btn > * { position: relative; z-index: 1; }
+/* Centre the FA icon precisely inside the button — without these rules the
+   minus/plus glyphs land at slightly different y because of their own
+   glyph-box paddings, so the hover halo appears mis-aligned with them. */
+.tree-controls .btn { display: inline-grid; place-items: center; }
+.tree-controls .btn > * {
+  position: relative; z-index: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 14px; height: 14px;
+  font-size: 13px; line-height: 1;
+}
+/* Only show a halo on keyboard focus, not after a mouse click. */
 .tree-controls .btn:focus-visible { box-shadow: 0 0 0 3px var(--olive-soft); }
-/* Suppress the focus halo on plain mouse interaction — :focus alone (no
-   :focus-visible) shouldn't render a ring for these tiny round buttons. */
-.tree-controls .btn:focus:not(:focus-visible) { box-shadow: none; }
 .tree-controls__divider { width: 1px; height: 18px; background: var(--line); margin: 0 4px; }
 .tree-controls__pct { padding: 0 10px; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--text-2); font-weight: 600; min-width: 44px; text-align: center; }
 
