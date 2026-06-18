@@ -1357,3 +1357,144 @@
 .theme-toggle__moon { opacity: 1; transform: rotate(0deg); }
 .theme-toggle.is-dark .theme-toggle__moon { opacity: 0; transform: rotate(90deg); }
 .theme-toggle.is-dark .theme-toggle__sun  { opacity: 1; transform: rotate(0deg); color: var(--gold); }
+
+/* === Story-density badge on tree node === */
+.t-node-density-bg {
+  fill: var(--olive);
+  stroke: var(--bone);
+  stroke-width: 2;
+}
+.t-node-density-num {
+  fill: var(--bone);
+  pointer-events: none;
+}
+
+/* === Pet tether between bonded human + pet === */
+.t-pet-tether {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.t-node.is-faded ~ .t-pet-tether,
+.t-pet-tether.is-faded { opacity: 0.18; }
+
+/* Pets toggle off state */
+.tree-controls .btn.is-off i { opacity: 0.35; }
+.tree-controls .btn.is-off::after {
+  content: ""; position: absolute;
+  left: 8px; right: 8px; top: 50%;
+  height: 1.5px;
+  background: var(--rust);
+  transform: translateY(-50%) rotate(-32deg);
+  border-radius: 1px;
+}
+
+/* === Family Highlights — empty inspector === */
+.highlights {
+  display: flex; flex-direction: column;
+  gap: 14px;
+  padding: 18px 22px 22px;
+}
+.highlights__intro {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-bottom: 4px;
+}
+.highlights__title {
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 500;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.highlights__eyebrow {
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-3);
+}
+.highlights__hint {
+  font-size: 13px; color: var(--text-3);
+  line-height: 1.5;
+  margin: 0;
+}
+.highlights__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.highlights__card {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  text-align: left;
+  font: inherit; color: var(--text);
+  transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+}
+.highlights__card:hover { background: var(--bg-elev); border-color: var(--gold); transform: translateY(-1px); }
+.highlights__card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.highlights__label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-3);
+}
+.highlights__label i { color: var(--gold); font-size: 11px; }
+.highlights__person {
+  display: flex; align-items: center; gap: 8px;
+}
+.highlights__person .avatar { width: 32px; height: 32px; font-size: 12px; flex-shrink: 0; }
+.highlights__person-name {
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.highlights__footer {
+  font-size: 11px; color: var(--text-3);
+  margin-top: 2px;
+}
+
+/* === Family-archive completion bar === */
+.completion {
+  margin-top: 10px;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.completion__head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.completion__title {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-3);
+}
+.completion__pct {
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 500;
+  color: var(--gold);
+}
+.completion__bar {
+  height: 6px;
+  background: var(--bg-sunken, var(--bone));
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.completion__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--olive), var(--gold));
+  border-radius: 999px;
+  transition: width 400ms ease;
+}
+.completion__legend {
+  display: flex; flex-wrap: wrap; gap: 8px 14px;
+  font-size: 11px; color: var(--text-3);
+}

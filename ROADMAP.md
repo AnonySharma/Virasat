@@ -117,15 +117,30 @@ If any of these resonate, open an issue or just hack on it. The whole app is van
 
 These came out of the round-3 product / responsive / feature-completeness pass. Not bugs — feature gaps and worthwhile next steps. See `ISSUES.md` for the bug findings from the same audit.
 
-- **Anniversary surfacing.** A small "Coming up" rail card listing birthdays / death anniversaries in the next 30 days. Cheap to build (we already compute years), high emotional value — families remember less than they expect.
-- **"People without dates" maintenance list.** A rail stat / filter for *Missing birth date · N people* so power users can spot gaps. Same surface could host *Missing photos* and *Missing description*.
-- **Contact info per person.** Phone, email, address. Many trees double as a living family directory. Add a collapsible *Contact* inspector section with per-field privacy flags (hide from exports). Critical for the part of the tree that's still alive.
-- **Pets / companion animals.** A toggle on the Add form, paw icon in the tree, optional. Sounds frivolous; warm differentiator for a family-history app.
-- **PDF family book export.** Multi-page, one person per page, hero photo + bio + achievements + stories. Print-ready, spiral-bound at a local shop. Grandparents want a book, not a poster.
+- ~~**Anniversary surfacing.** A small "Coming up" rail card listing birthdays / death anniversaries in the next 30 days.~~ ✅ Shipped — `FamilyStore.upcomingAnniversaries(days)` + a "Coming up" rail card. Each event shows avatar + name + "in N days"; click → inspector.
+- ~~**"People without dates" maintenance list.** A rail stat / filter for *Missing birth date · N people*.~~ ✅ Shipped — `maintenanceStats()` + `peopleMissing(field)`; "Needs attention" rail card with deep-links into a filtered People view (banner + Clear button).
+- ~~**Contact info per person.** Phone, email, address.~~ ✅ Shipped — `person.contact = { phone, email, address, privatePhone, privateEmail, privateAddress }`. Per-field privacy flags strip values from JSON / poster exports. Inspector renders rows that link via `tel:` / `mailto:` / Google Maps. Form has a contact group with private toggle pills.
+- ~~**Pets / companion animals.**~~ ✅ Shipped — `person.isPet`, `person.petOwners`. Tree paints a paw badge top-right of the photo ring + a dashed gold tether to the first owner. A paw button in the tree-controls cluster toggles pets on/off (persisted via `localStorage virasat.showPets`).
+- ~~**PDF family book export.**~~ ✅ Shipped — `PrintBook.open()` builds a hidden DOM with one A4 page per person (hero photo, name, occupation, lifespan, About, Achievements, Education, Stories, Notes) + a cover page; calls `window.print()`. User picks "Save as PDF" in the native dialog.
 - **Voice memos as a primary form CTA.** ROADMAP already lists voice notes. Make the affordance load-bearing — *Record a 30-second memory* with a waveform preview, beside the Notes field.
-- **Lineage path-finder.** Tap two people, see the shortest relationship chain. `lineageOf()` already computes lineage sets; a bidirectional BFS finishes the job.
-- **Dark-mode toggle.** `[data-theme="dark"]` is referenced in tokens.css but no UI sets the attribute. README claims dark mode — either ship it or remove the claim. Recommend ship: ~30 lines + a header pill, all the tokens already exist.
+- ~~**Lineage path-finder.**~~ ✅ Shipped — `findRelationPath(a, b)` BFS over parent / child / spouse edges. Modal renders the shortest chain as avatars + relation chips (mother / father / son / spouse / etc.).
+- ~~**Dark-mode toggle.**~~ ✅ Shipped — header pill (sun / moon icons) flips `data-theme="dark"`; persists via `localStorage virasat.theme`. Active rail item gets a gold-soft + bright-text override so it doesn't read as disabled in dark.
 - **Multiple photos per person.** One *primary* avatar + a small gallery (childhood, wedding, late portrait). Crop editor already handles two frames; extending to N+ is a natural step.
 - **Memorial poster** using `photoCropHero`. The hero crop is rendered on the profile page but ignored by the share poster. A dedicated *Memorial print* template (A4 landscape, hero photo at the top, lifespan + key dates underneath) is straightforward now that the crop data exists.
-- **Global stories search drawer.** `searchStories()` exists in the data store but isn't wired to the header search input. Either route the header through it (showing matching people in the People view) or open a dedicated *Search stories* drawer from the rail.
-- **Sample-data button as a permanent rail action.** Currently the sample is offered only on first run. Add a small *Try sample family* button under Tools (with a confirm dialog) so demoers can reset → reload sample without clearing storage.
+- ~~**Global stories search drawer.** `searchStories()` exists in the data store but isn't wired to the header search input.~~ ✅ Shipped — header search routes through `PeopleView.setSearch` which calls `searchStories(q)` and renders dedicated story-result cards (avatar, story title, snippet around the matched word with the query highlighted, tag chips). Click → inspector force-opens the Stories section + scrolls + flashes a gold halo around the matched card.
+- ~~**Sample-data button as a permanent rail action.**~~ ✅ Shipped — "Try sample family" under Tools, gated by a destructive confirm so it doesn't silently overwrite an existing tree.
+
+---
+
+## Heritage UX layer (round-4, 2026-06-19)
+
+Inspired by a product critique: lift the app from "admin dashboard" toward "family heirloom".
+
+- ~~**Family Highlights** — replace the empty "Select a person" inspector state with cards: oldest ancestor, latest addition, most stories, next anniversary.~~ ✅ Shipped.
+- ~~**Editorial title** — `The Sharma Family · Established c. 1910 · 14 members · 4 generations · 8 memories` reads less like a CRUD app.~~ ✅ Shipped — eyebrow line + memories count derived from total stories.
+- ~~**Story density** — small olive disc with a number top-left of each tree node, surfacing how much soul is captured per person. Tree as archive map, not just relationship diagram.~~ ✅ Shipped — story count for now; photos / videos when those land.
+- ~~**Family Archive completion** — gold gradient bar in the empty inspector showing % of birth dates / photos / descriptions filled across the tree. Mild gamification for keeping the record alive.~~ ✅ Shipped.
+- ~~**Timeline header consistency** — was using a different `section-head` pattern; now uses the shared `view-head` so all three primary views match.~~ ✅ Shipped.
+- **Family Map view.** Birthplace, migration, current residence, connected through generations. A new top-nav tab. Powerful for genealogy; non-trivial to build (needs a tile provider + clustering). Deferred.
+- **Layered canvas background.** Subtle paper texture + faded family motifs (letters, stamps, seals, temple carvings) at 3-5% opacity + faint generation rings emanating from the oldest ancestor. The current ivory + olive radial is generic. Deferred until the rest stabilises.
+- **Photo / video / document counts** on tree nodes (alongside the story count) once those data types exist.

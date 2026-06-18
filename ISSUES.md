@@ -341,3 +341,51 @@ The audits surfaced eleven feature ideas that aren't bugs and don't belong in `I
 ---
 
 *Round 3 generated 2026-06-18 from four parallel audits. All round-1 + round-2 fixes confirmed working. Round-3 fixes landing next commit.*
+
+---
+
+## Round 4 — feature shipping + UX polish (2026-06-19)
+
+Round-3 ROADMAP items implemented end-to-end. This pass also pulled in a heritage-UX critique: empty inspector → family highlights, editorial title, story density on tree nodes, archive completion bar, timeline UI consistency.
+
+### Closed (shipped)
+
+- ✅ Anniversaries rail card (`upcomingAnniversaries(days)`)
+- ✅ Maintenance rail card (`maintenanceStats()` + `peopleMissing(field)` + filtered People view)
+- ✅ Per-person contact (phone / email / address) with per-field privacy flags applied during export
+- ✅ Pets — `isPet` flag + paw badge top-right + `petOwners` field + dashed gold tether to first owner + paw toggle in tree controls (`localStorage virasat.showPets`)
+- ✅ Lineage path-finder modal (`findRelationPath(a, b)` BFS + relation labels)
+- ✅ Print family book — `PrintBook.open()` + `@media print` stylesheet (cover + one A4 per person)
+- ✅ Dark-mode toggle (header pill, persisted to `localStorage virasat.theme`)
+- ✅ Try-sample-family rail action (gated by confirm)
+- ✅ Family highlights in empty inspector (oldest ancestor, latest addition, most stories, next anniversary)
+- ✅ Editorial tree title — eyebrow `Established c. NNNN` + memory count in subtitle
+- ✅ Story-density chip top-left of each tree node
+- ✅ Family-archive completion bar in empty inspector
+- ✅ Timeline header migrated to shared `view-head` for visual consistency
+- ✅ Story-result cards in People search — open person's profile + scroll to the matching story + flash a gold halo
+- ✅ Inspector contact section with `tel:` / `mailto:` / Maps deep-links
+- ✅ Sample data — every living member has contact info; pet (Kabir, Anil & Priya's beagle) bonded to its owners
+
+### New findings during round-4
+
+- ✅ **Dark-mode rail-active state read as disabled.** `--olive-soft` (rgba 0.20 over near-black) + `--olive-deep` text gave a low-contrast pill on dark. Fixed by overriding `:root[data-theme="dark"] .rail-item.is-active` to gold-soft bg + bright text token.
+- 🟡 **Pet tether routing through the canvas centre** when the pet sits far from its owner. Currently a single cubic Bezier; when the curve crosses unrelated nodes it can read as a forced parent-child link. Polish task — rewire as a corner-routing path that leaves the pet from the bottom and approaches the owner from below their photo ring.
+- 🟡 **Pets hidden but tether stays visible** in some intermediate render states (filtering the people array drops the pet but the edges layer doesn't always re-render until the next zoom). Low priority — `setShowPets` calls `render()` which clears `edgesG` first.
+- 🟡 **Density chip overlaps the photo when the avatar is small** at 50% zoom. Below 0.6× the chip should fade or scale.
+
+### Open (carry-over from earlier rounds)
+
+- Multiple photos per person (gallery)
+- Memorial poster template
+- Voice memos
+- Family Map view
+- Layered canvas background
+
+### Don't bother
+
+- Semantic search ("all doctors" / "people from Hyderabad"). User explicitly declined: plain text-match across name / notes / story title-body-tags is enough.
+
+---
+
+*Round 4 generated 2026-06-19. Schema additions: `person.contact`, `person.isPet`, `person.petOwners`. New modules: `PathFinder`, `PrintBook`. New helpers: `upcomingAnniversaries`, `maintenanceStats`, `peopleMissing`, `findRelationPath`, `relationLabel`.*

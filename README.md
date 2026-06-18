@@ -82,6 +82,39 @@ Single modal with everything in one place:
 - **Tree → PNG** at any quality preset. CSS variables resolved to literals; photos inlined as base64; couple knots and connectors all rendered correctly when detached from the document.
 - **Full-profile poster** — the Share button generates a tall poster with the entire profile: hero (with the avatar crop honoured), lifeline chips, About, Achievements, Education, Family chips, Stories (title + body + tags), and Notes. Heritage palette, free-flowing height, ready to send.
 
+### Family Highlights, Coming up, Needs attention
+
+Three rail / inspector cards lift the app from "admin dashboard" toward "heirloom":
+
+- **Family Highlights** — when nobody's selected, the inspector shows the *Oldest ancestor*, *Latest addition*, *Most stories*, and *Next anniversary*. Click any card → opens that person's profile.
+- **Coming up** (rail) — birthdays + death anniversaries in the next 30 days, sorted by days-away.
+- **Needs attention** (rail) — counts of people missing a birth date / photo / description. Click any row → People view filtered to those folks, with a banner at the top + Clear button.
+- **Family Archive completion bar** — gold gradient progress bar shown in the empty inspector, with the % of fields filled across the tree (photos, birth dates, descriptions). Mild gamification for keeping the record alive.
+
+### Contact info per person · privacy-aware
+
+Each person carries optional `phone`, `email`, and `address`. Inspector renders rows that link via `tel:` / `mailto:` / Google Maps. Each field has its own *Private* toggle — flagged values are stripped from JSON / PNG / poster exports but stay in your local store. Useful for the part of the tree that's still alive.
+
+### Pets / companion animals
+
+A *Companion animal* checkbox on the form marks a person as a pet. The tree paints a small gold paw badge top-right of the photo ring + a dashed gold tether to the first owner (`petOwners[]`). A paw button in the tree-controls cluster toggles pets on / off (persisted across sessions). Pets carry the same fields as humans — dates, stories, places — so they belong to the family record properly.
+
+### Find a relation
+
+A path-finder modal under Tools — pick any two people, see the shortest relationship chain rendered as avatars + relation chips (*mother / wife / son / nephew*). BFS over parents / children / spouses, so it works across blended families and multiple marriages.
+
+### Print family book
+
+Tools → *Print family book* builds a hidden DOM with one A4 page per relative (cover page + per-person bio with hero photo, lifespan, About, Achievements, Education, Stories, Notes), then opens the system print dialog. Pick *Save as PDF* and you've got a multi-page heirloom ready for spiral binding at any local print shop.
+
+### Dark mode
+
+A header pill (sun / moon) flips the whole app to a warm-dark heritage palette. Persists per-device via `localStorage virasat.theme`. Tokens stay paired so the gold accents and olive lineage colours read correctly on both surfaces.
+
+### Story-density on the tree
+
+A small olive disc top-left of each photo ring shows the number of stories captured for that person. The tree reads as an archive map, not just a relationship diagram.
+
 ### Editable tree title
 
 The big title above the tree (e.g. *Sharma Family Tree*) is fully editable — click the pencil to type whatever you'd like: a surname, a phrase, the family motto. The first word still gets the gold accent. The same string is printed on every PNG export.
