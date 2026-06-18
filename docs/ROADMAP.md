@@ -203,6 +203,99 @@ After the current product is stable and we have at least one real-world user fee
 
 ---
 
+### Stack & security review — should we move off vanilla JS for production?
+
+The owner asked, before going public: is vanilla JS + localStorage actually safe? Should we move to a "better" stack that handles state more rigorously? Four parallel audit agents looked at this from distinct angles — security/data-leakage, framework comparison, state-management correctness, production-readiness checklist. Their consolidated findings:
+
+#### Headline answer
+
+**Stay vanilla. Harden security at the source. Don't rewrite.**
+
+Three independently-arrived-at conclusions:
+
+1. **The vanilla code is not the security problem.** `UI.el(tag, attrs, children)` routes children through `createTextNode(String(c))` — security-equivalent to React's JSX auto-escaping. Every user-text field in the codebase (`person.name`, `description`, `story.body`, `notes`, `achievements[]`, etc.) was traced and confirmed rendered as text nodes, not innerHTML. There are six `innerHTML = ""` calls (all clearings, all safe) and one **dangerous** `html` attribute on `UI.el` that's currently unused but is a future-bug trap. **Action: remove the `html` attribute. Five-minute fix.**
+2. **localStorage isn't worse than IndexedDB for this threat model.** Both are same-origin plaintext, both readable by any script that runs on the origin. The defence isn't "move to IDB" — it's "no malicious script ever reaches the origin", which means CSP + SRI + careful dependency hygiene. Encryption in either store works the same way. *Migrating from localStorage to IDB is security theatre.*
+3. **Framework migrations don't solve any of the actual gaps.** React/Next/Svelte don't give you CSP, SRI, EXIF stripping, deletion flows, or audit logs by default. They add ~200 KB and a build step in exchange for a rendering model the app doesn't need (no per-field reactivity bottleneck — the SVG layout is the cost, and that's imperative either way).
+
+#### What's actually load-bearing in `FamilyStore`
+
+The state-management audit found the existing model is **sneaky-good**:
+- Single source of truth (closure-scoped `state`), public API only via getters / mutation methods.
+- Mutations are atomic per-call.
+- 250 ms persist debounce + flush on `beforeunload` / `pagehide` / `visibilitychange=hidden` is the correct pattern for localStorage's constraints.
+- Cross-tab sync via the `storage` event is implemented (most local-first apps skip this).
+- Topology-signature gating in tree-view delivers React-like partial re-renders without React — name edits on a 100-person tree cost ~1 ms (textContent updates) instead of 50 ms (full SVG rebuild).
+
+What it's **missing** from the industry-standard scorecard: immutable updates, time-travel/undo, selectors/memoisation, devtools, type safety. None of these are required for a single-user document editor at 50–500 people scale.
+
+What it's **fragile** about (fixable in ~100 lines without changing the model):
+- Cross-tab silent overwrite — Tab A persisting silently discards Tab B's pending debounced write. Should surface a "Another tab updated this tree — reload?" banner.
+- One-tab corrupt JSON wipes the other tab's view via the cross-tab `storage` listener — should validate before reloading.
+- `syncSpouses` is non-transactional — mid-mutation crash could leave spouse arrays asymmetric. Batch in one mutation.
+- Birth-year edits that shift generations don't bust the topology signature (rare; year would have to cross a generation boundary). Add `getYear(birthDate)` to the signature.
+
+#### Framework comparison — what we'd lose by migrating
+
+The framework-comparison agent ran nine candidates (Vanilla / Vanilla+Vite / Svelte 5 / Solid.js / Preact+Signals / React+Zustand / Next.js+Postgres / Remix / Astro) against eleven criteria specific to this app. The matrix conclusions:
+
+- **No framework preserves the no-build deploy property.** That's a real cost — the app is hand-edited and pushed; "open `index.html` in a browser" works for any future maintainer who picks the project up.
+- **Server-first frameworks (Next, Remix) are wrong for this app.** Virasat is a client-only document editor with offline-first as its raison d'être. Server-side rendering + DB-backed state inverts the model.
+- **Astro is wrong** — it's a static-site generator; you'd recreate the whole SPA inside an Astro island (20–30 days fighting the framework).
+- **Solid.js / Svelte 5** would each need 15–25 days for a full rewrite, with no clear win for a 500-person-max single-user document editor.
+- **Preact + Signals** is the only candidate worth considering long-term — 5 KB bundle, JSX auto-escaping (genuine security win for *new* code, doesn't fix existing safety which is already good), signals fit read-heavy rendering. 15–20 day rewrite. **Not yet justified.**
+
+The TL;DR from that agent's report: *"Stay vanilla + harden security now (1–2 days). Revisit the framework question in 2027 if vanilla state management becomes tangled — and only then consider Preact."*
+
+#### Production-readiness gate
+
+The production-checklist agent gave the current stack a **38 % readiness score** for "public web app exposed to the internet", with three categorical blockers:
+
+| Tier | Blocker | Fix time |
+|---|---|---|
+| **Legal / data protection** | No Privacy Policy. No right-to-erasure flow. No consent flow for shared trees. | ~1 day |
+| **Data security** | EXIF stripping unverified (canvas.toBlob *should* strip it but no test confirms). `UI.el`'s `html` attribute is an XSS trap. CSP / SRI / X-Frame-Options can't be set on GitHub Pages. | ~1 day (move to Cloudflare Pages for headers) |
+| **Operational** | No backups. No monitoring. No incident-response plan. | ~1 day |
+
+When the P3.5 cloud-sync work lands, the same agent gave a **63 %** readiness score with one extra blocker (rate limiting / abuse prevention) and warned that multi-tenant scoping bugs could leak user data across trees if the per-tree localStorage / IDB scoping (already documented above in this section) isn't done meticulously.
+
+**Total time-to-launch:**
+- Single-device public alpha: ~4 days of hardening on top of current state.
+- Full P3.5 multi-tenant production: P3.5 dev (~17 days) + 1 week security hardening = ~6 weeks total.
+
+#### The hardening checklist (do these regardless of stack choice)
+
+In priority order, all doable on the existing vanilla codebase without migrating to a framework:
+
+1. **Remove the `html` attribute from `UI.el`** (5 min). It's unused and an XSS trap.
+2. **Add CSP via `<meta http-equiv="Content-Security-Policy">`** (15 min). Restrict `script-src 'self'`, whitelist Google Fonts + Font Awesome + Supabase origins, deny inline scripts, deny `frame-ancestors`. Meta-tag CSP is weaker than HTTP-header CSP but functional.
+3. **Add SRI hashes to the two CDN `<link>` tags** (15 min). `<link integrity="sha384-..." crossorigin="anonymous">`. Protects against Google Fonts / Font Awesome supply-chain compromise.
+4. **Verify EXIF stripping in `photo-store.js`** (2 hr). Write a test: upload a photo with known GPS coordinates → verify the IDB blob is stripped. If any browser leaks, add `piexifjs` (3 KB) defensively.
+5. **Migrate hosting from GitHub Pages to Cloudflare Pages** (1 hr, no code changes). Same static-site model, but Cloudflare Workers transforms can set real HTTP headers — CSP, X-Frame-Options, Referrer-Policy, Permissions-Policy, X-Content-Type-Options.
+6. **Add cross-tab conflict banner** (1 hr). When the `storage` event fires while the user is mid-edit, show a non-blocking "Another tab updated this tree — your last edit was discarded. [Reload]" instead of silently swallowing.
+7. **Make `syncSpouses` transactional** (30 min). Batch all updates into a single `state.people = next` assignment to avoid mid-mutation crash leaving arrays asymmetric.
+8. **Privacy Policy + right-to-erasure flow** (1 day). Mandatory for any GDPR/CCPA-relevant launch. The "Reset everything" button can be re-purposed as the deletion path; needs clearer copy + email confirmation.
+9. **Pre-launch privacy audit on every user-text rendering site** (30 min). Document each one as "renders via `UI.el → createTextNode`" or "is `textContent`/`.value` assignment". Lock in the convention.
+
+That's ~3 calendar days of work to take the current vanilla codebase from "good enough for friends-and-family beta" to "good enough for a public soft-launch with a privacy policy". A rewrite would take 15–25 days minimum and not improve the security score by anything close to what those 3 days achieve.
+
+#### When to revisit the framework question
+
+Three triggers — any one of them justifies a re-evaluation, none of them are urgent today:
+
+1. **Inspector or tree complexity exceeds ~10 sections per panel** with cross-section dependencies. Current count is 8 inspector sections; any further growth and the manual subscribe + render dance starts looking like home-grown reactivity.
+2. **External contributors join.** Vanilla is the lowest-barrier baseline for "anyone with HTML knowledge", but a popular open-source project will find more contributors via React / Preact than vanilla. Migration time becomes the price of admission to a larger contributor pool.
+3. **A second view or feature needs the same SVG-layout-style imperative rendering with reactive state.** Today the tree is the only place doing this, and the topology-signature gate handles it. A second imperative-render island would benefit from a framework's escape hatch (Preact's `useEffect`, Svelte's actions, etc.).
+
+When any of these trigger fires, **Preact + Signals** is the destination — 5 KB bundle, JSX auto-escaping, signals model fits read-heavy doc-editor workload, ESM CDN import means the no-build property survives if you're disciplined about avoiding JSX (use `h(...)` calls in plain JS).
+
+#### Bottom line
+
+Vanilla JS + localStorage + GitHub Pages is **fine for production** with three days of hardening (CSP, SRI, EXIF verification, Cloudflare Pages migration, Privacy Policy, deletion flow, cross-tab conflict banner). Moving to a framework now would burn 15–25 days for ~5 % security improvement that can be achieved in 3 days at the source. The state-management model is sneaky-good for this workload — a framework would *replace* it with something that's not obviously better and likely worse for the SVG-layout work that dominates the cost.
+
+The single biggest win to actually unlock public production is **moving hosting to Cloudflare Pages so we can set real HTTP security headers**. That's an afternoon's work and worth more than any rewrite.
+
+---
+
 ## P4 — Nice polish, no rush
 
 - **Layered canvas background.** Subtle paper texture + faded family motifs (letters, stamps, seals, temple carvings) at 3–5% opacity + faint generation rings emanating from the oldest ancestor. The current ivory + olive radial is fine but generic.
