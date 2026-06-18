@@ -845,8 +845,11 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   padding: 6px 12px;
   border-radius: var(--r-pill);
   cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
   transition: background var(--t-fast), color var(--t-fast);
 }
+.hdp__foot-btn i { font-size: 11px; color: var(--text-3); }
+.hdp__foot-btn:hover i { color: var(--gold); }
 .hdp__foot-btn:hover { background: var(--surface-2); color: var(--text); }
 
 .hdp__year-only-toggle {

@@ -82,14 +82,13 @@ Single modal with everything in one place:
 - **Tree → PNG** at any quality preset. CSS variables resolved to literals; photos inlined as base64; couple knots and connectors all rendered correctly when detached from the document.
 - **Full-profile poster** — the Share button generates a tall poster with the entire profile: hero (with the avatar crop honoured), lifeline chips, About, Achievements, Education, Family chips, Stories (title + body + tags), and Notes. Heritage palette, free-flowing height, ready to send.
 
-### Family Highlights, Coming up, Needs attention
+### Family Highlights · Needs attention
 
-Three rail / inspector cards lift the app from "admin dashboard" toward "heirloom":
+The inspector's empty state and the rail surface a small "soul of the tree" panel each:
 
-- **Family Highlights** — when nobody's selected, the inspector shows the *Oldest ancestor*, *Latest addition*, *Most stories*, and *Next anniversary*. Click any card → opens that person's profile.
-- **Coming up** (rail) — birthdays + death anniversaries in the next 30 days, sorted by days-away.
+- **Family Highlights** (right inspector, when nobody's selected) — *Oldest ancestor*, *Latest addition*, *Most stories*, *Next anniversary*. Cards stack one-per-row so the labels never clip. Click any card → opens that person's profile.
+- **Family Archive completion bar** — gold gradient progress bar in the same panel, showing the % of fields filled across the tree (photos, birth dates, descriptions). Mild gamification for keeping the record alive.
 - **Needs attention** (rail) — counts of people missing a birth date / photo / description. Click any row → People view filtered to those folks, with a banner at the top + Clear button.
-- **Family Archive completion bar** — gold gradient progress bar shown in the empty inspector, with the % of fields filled across the tree (photos, birth dates, descriptions). Mild gamification for keeping the record alive.
 
 ### Contact info per person · privacy-aware
 
@@ -97,7 +96,11 @@ Each person carries optional `phone`, `email`, and `address`. Inspector renders 
 
 ### Pets / companion animals
 
-A *Companion animal* checkbox on the form marks a person as a pet. The tree paints a small gold paw badge top-right of the photo ring + a dashed gold tether to the first owner (`petOwners[]`). A paw button in the tree-controls cluster toggles pets on / off (persisted across sessions). Pets carry the same fields as humans — dates, stories, places — so they belong to the family record properly.
+A *Companion animal* checkbox on the form marks a person as a pet, and a separate `petOwners[]` field links the pet to its humans.
+
+- **In the tree** the pet sits **one generation below its owners** (just like a child) and connects with a **dashed gold riser** so it reads as "bonded" rather than "biological". When a couple has only a pet (no kids), the entire trunk + rail dashes too. A small gold paw badge tops the right of the pet's photo ring.
+- **Lineage focus** pulls in any pet whose owner is in lineage, so Kabir stays bright when Anil is selected.
+- **View Options popover** in the tree-controls cluster (sliders icon) toggles *Show pets* on / off, plus *Show story count* and *Show dates*. Each persists per-device.
 
 ### Find a relation
 
