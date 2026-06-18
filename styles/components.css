@@ -207,6 +207,10 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   font-variant-numeric: tabular-nums;
 }
 .rail-item.is-active .rail-count { background: rgba(255,255,255,.7); color: var(--olive-deep); }
+.rail-item--danger { color: var(--danger); }
+.rail-item--danger i { color: var(--danger); opacity: .8; }
+.rail-item--danger:hover { background: var(--danger-soft); color: var(--danger); }
+.rail-item--danger:hover i { color: var(--danger); opacity: 1; }
 
 .rail-stats {
   margin: 6px 12px 0; padding: 0;
@@ -466,6 +470,61 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   content: "No relations yet."; color: var(--text-3); padding: 6px 8px;
   font-size: 13px; font-style: italic;
 }
+
+/* — PNG quality picker (radio-card style) — */
+.png-quality {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+@media (min-width: 600px) {
+  .png-quality { grid-template-columns: repeat(4, 1fr); }
+}
+.png-quality__card {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 12px 12px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg-elev);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--t-fast), background var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
+  font-family: var(--font-sans);
+  color: var(--text-2);
+  position: relative;
+}
+.png-quality__card:hover { border-color: var(--line-2); background: var(--surface-2); }
+.png-quality__card.is-active {
+  border-color: var(--olive);
+  background: var(--olive-soft);
+  box-shadow: 0 0 0 3px rgba(94, 125, 99, .12);
+  color: var(--olive-deep);
+}
+.png-quality__label {
+  font-family: var(--font-display);
+  font-size: 17px; font-weight: 500;
+  letter-spacing: -0.01em;
+  display: flex; align-items: center; gap: 6px;
+  color: var(--text);
+}
+.png-quality__card.is-active .png-quality__label { color: var(--olive-deep); }
+.png-quality__badge {
+  font-size: 11px; color: var(--gold);
+}
+.png-quality__desc {
+  font-size: 11.5px;
+  color: var(--text-3);
+  line-height: 1.35;
+}
+.png-quality__card.is-active .png-quality__desc { color: var(--olive-deep); opacity: .85; }
+.png-quality__size {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-4);
+  margin-top: 2px;
+  font-weight: 600;
+}
+.png-quality__card.is-active .png-quality__size { color: var(--olive-deep); opacity: .9; }
 
 /* — Heritage select (custom dropdown) — */
 .hsel {
