@@ -212,10 +212,32 @@
   stroke-dasharray: 0;
   opacity: 1;
 }
-/* The gold knot rings themselves get a soft glow so the marriage marker
-   reads as a focal point rather than another connector. */
-.t-couple-knot circle {
-  filter: drop-shadow(0 0 2px rgba(184, 154, 90, .35));
+/* Wedding-rings emblem (assets/wedding-rings.svg). Soft gold glow on the
+   icon gives the marriage marker a focal point. */
+.t-couple-knot__icon {
+  filter: drop-shadow(0 0 2px rgba(184, 154, 90, .45));
+}
+
+/* Subtle hover pulse — invites the click that opens the marriage modal.
+   Anchored at the knot's centre via transform-box so the pulse scales
+   from the middle of the emblem, not the SVG origin. */
+.t-couple-knot {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: filter var(--t-fast);
+}
+.t-couple-knot:hover .t-couple-knot__icon {
+  filter: drop-shadow(0 0 5px rgba(184, 154, 90, .9));
+}
+.t-couple-knot:hover {
+  animation: knot-pulse 1500ms cubic-bezier(.4,.0,.2,1) infinite;
+}
+@keyframes knot-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.18); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-couple-knot:hover { animation: none; }
 }
 
 /* — Tree node contextual menu — */
