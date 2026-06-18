@@ -207,6 +207,11 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   font-variant-numeric: tabular-nums;
 }
 .rail-item.is-active .rail-count { background: rgba(255,255,255,.7); color: var(--olive-deep); }
+/* Dark mode brightens --olive-deep to a near-white sage so it reads on
+   the dark olive-soft active surface — but the rail-count pill keeps a
+   near-white background, so that token disappears against it. Pin the
+   pill text to a hard olive that contrasts on white. */
+:root[data-theme="dark"] .rail-item.is-active .rail-count { color: #3F5944; }
 .rail-item--danger { color: var(--danger); }
 .rail-item--danger i { color: var(--danger); opacity: .8; }
 .rail-item--danger:hover { background: var(--danger-soft); color: var(--danger); }

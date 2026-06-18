@@ -237,7 +237,6 @@
   transition: opacity var(--t-med), stroke var(--t-med), stroke-width var(--t-med);
 }
 .t-couple-knot.is-faded { opacity: .25; }
-.t-couple-knot.is-lineage { filter: drop-shadow(0 0 4px rgba(184,154,90,0.55)); }
 
 /* Viewing-as banner — sits inside the tree stage, top-centre */
 .lineage-banner {
@@ -357,12 +356,15 @@
   opacity: 0.7;
 }
 /* Wedding-rings emblem (assets/wedding-rings.svg).
-   Thin white outline against the photo rings — no spread, just enough to
-   keep the gold readable when it's overlapping a darker photo. */
+   Crisp white outline against the photo rings — chained zero-blur
+   drop-shadows in the four cardinal directions stack into a clean
+   ~2px border (no glow) so the gold stays readable on dark photos. */
 .t-couple-knot__icon {
   filter:
-    drop-shadow(0 0 0.6px rgba(255, 255, 255, 1))
-    drop-shadow(0 0 0.6px rgba(255, 255, 255, 1));
+    drop-shadow(1px 0 0 #fff)
+    drop-shadow(-1px 0 0 #fff)
+    drop-shadow(0 1px 0 #fff)
+    drop-shadow(0 -1px 0 #fff);
 }
 /* The backing disc is used in the export PNG path; keep it cheap. */
 .t-couple-knot__backing { fill: var(--bg-elev); stroke: rgba(184, 154, 90, .45); stroke-width: .75; }
@@ -377,9 +379,10 @@
 }
 .t-couple-knot:hover .t-couple-knot__icon {
   filter:
-    drop-shadow(0 0 0.6px rgba(255, 255, 255, 1))
-    drop-shadow(0 0 0.6px rgba(255, 255, 255, 1))
-    drop-shadow(0 0 1.2px rgba(184, 154, 90, .65));
+    drop-shadow(1px 0 0 #fff)
+    drop-shadow(-1px 0 0 #fff)
+    drop-shadow(0 1px 0 #fff)
+    drop-shadow(0 -1px 0 #fff);
 }
 .t-couple-knot:hover {
   animation: knot-pulse 1500ms cubic-bezier(.4,.0,.2,1) infinite;
