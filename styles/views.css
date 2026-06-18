@@ -333,7 +333,11 @@
   fill: none;
   stroke: var(--ink-5);
   stroke-width: 1.25;
-  stroke-linecap: round;
+  /* butt caps + miter joins so trunk / rail / riser meet flush without the
+     half-disc overshoot that produced visible "steps" at corners (more
+     visible at the thicker stroke-width used for lineage focus). */
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
   opacity: .75;
 }
 /* The marriage filament leading into the gold knot. Solid gold, slightly
@@ -343,6 +347,14 @@
   stroke-width: 2;
   stroke-dasharray: 0;
   opacity: 1;
+}
+/* Pet-bond riser — same shape as a child riser but dashed gold, so it
+   reads as "bonded with the family" rather than as a biological link. */
+.t-edge--pet {
+  stroke: var(--gold);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  opacity: 0.7;
 }
 /* Wedding-rings emblem (assets/wedding-rings.svg).
    The chained drop-shadows build up a thick white halo around the icon so
@@ -1369,17 +1381,8 @@
   pointer-events: none;
 }
 
-/* === Pet tether between bonded human + pet === */
-.t-pet-tether {
-  fill: none;
-  stroke: var(--gold);
-  stroke-width: 1.5;
-  stroke-dasharray: 4 4;
-  opacity: 0.55;
-  pointer-events: none;
-}
-.t-node.is-faded ~ .t-pet-tether,
-.t-pet-tether.is-faded { opacity: 0.18; }
+/* (Pet tether retired — pets are now child-edge risers with .t-edge--pet
+   styling, drawn as part of drawEdges.) */
 
 /* Pets toggle off state */
 .tree-controls .btn.is-off i { opacity: 0.35; }
