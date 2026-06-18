@@ -8,7 +8,7 @@ The convention this codebase follows: **every user-controlled string reaches the
 
 ## The single safe primitive — `UI.el`
 
-`lib/utils/ui-utils.js`:
+`lib/ui/dom.js`:
 
 ```js
 function el(tag, attrs, children) {
@@ -106,7 +106,7 @@ If you're a future contributor reviewing a PR that does any of these — push ba
 
 ```sh
 # 1. Confirm UI.el has no html branch.
-grep -n 'k === "html"' lib/utils/ui-utils.js
+grep -n 'k === "html"' lib/ui/dom.js
 # Expect: no matches.
 
 # 2. Confirm no innerHTML calls take user data.

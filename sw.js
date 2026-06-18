@@ -13,7 +13,7 @@
  * Cache version is part of the cache name, so bumping CACHE_VERSION on
  * a release activates a clean replacement during `activate`.
  */
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const SHELL_CACHE = "virasat-shell-" + CACHE_VERSION;
 const RUNTIME_CACHE = "virasat-runtime-" + CACHE_VERSION;
 const CDN_CACHE = "virasat-cdn-" + CACHE_VERSION;
@@ -29,21 +29,23 @@ const SHELL = [
   "./styles/base.css",
   "./styles/components.css",
   "./styles/views.css",
-  "./lib/utils/i18n.js",
-  "./lib/utils/data-store.js",
-  "./lib/utils/photo-store.js",
-  "./lib/utils/ui-utils.js",
+  "./lib/core/i18n.js",
+  "./lib/core/data-store.js",
+  "./lib/core/photo-store.js",
+  "./lib/ui/dom.js",
   "./lib/components/heritage-datepicker.js",
   "./lib/components/heritage-select.js",
   "./lib/components/crop-editor.js",
+  "./lib/components/path-finder.js",
   "./lib/components/inspector.js",
-  "./lib/components/profile-view.js",
   "./lib/views/people-view.js",
   "./lib/views/tree-view.js",
   "./lib/views/timeline-view.js",
+  "./lib/views/profile-view.js",
   "./lib/features/image-export.js",
   "./lib/features/export-import.js",
   "./lib/features/collect-form.js",
+  "./lib/features/print-book.js",
   "./lib/app.js"
 ];
 

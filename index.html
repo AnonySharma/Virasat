@@ -173,11 +173,13 @@
   <input type="file" id="import-file-input" accept="application/json,text/csv,.csv,.json" hidden />
   <div class="toast-root" id="toast-root" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- utils first (data, i18n, photos, dom) -->
-  <script src="lib/utils/i18n.js"></script>
-  <script src="lib/utils/data-store.js"></script>
-  <script src="lib/utils/photo-store.js"></script>
-  <script src="lib/utils/ui-utils.js"></script>
+  <!-- core: state + storage + i18n. Everything else depends on these. -->
+  <script src="lib/core/i18n.js"></script>
+  <script src="lib/core/data-store.js"></script>
+  <script src="lib/core/photo-store.js"></script>
+
+  <!-- ui primitives -->
+  <script src="lib/ui/dom.js"></script>
 
   <!-- shared components -->
   <script src="lib/components/heritage-datepicker.js"></script>
@@ -185,12 +187,12 @@
   <script src="lib/components/crop-editor.js"></script>
   <script src="lib/components/path-finder.js"></script>
   <script src="lib/components/inspector.js"></script>
-  <script src="lib/components/profile-view.js"></script>
 
   <!-- views -->
   <script src="lib/views/people-view.js"></script>
   <script src="lib/views/tree-view.js"></script>
   <script src="lib/views/timeline-view.js"></script>
+  <script src="lib/views/profile-view.js"></script>
 
   <!-- features -->
   <script src="lib/features/image-export.js"></script>

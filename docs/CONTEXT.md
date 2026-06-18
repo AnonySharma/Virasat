@@ -16,23 +16,27 @@ This is the long-form reference: data model, module relationships, sequence flow
      ├── styles/components.css    — buttons, chips, cards, modal, picker
      ├── styles/views.css         — view-specific (tree / people / timeline)
      │
-     ├── lib/utils/i18n.js                — EN/HI strings + DOM applier
-     ├── lib/utils/data-store.js          — FamilyStore (the single API surface)
-     ├── lib/utils/photo-store.js         — IDB-backed photo blobs
-     ├── lib/utils/ui-utils.js            — UI.el, UI.openModal, UI.toast, UI.confirm
+     ├── lib/core/
+     │   ├── i18n.js                      — EN/HI strings + DOM applier
+     │   ├── data-store.js                — FamilyStore (the single API surface)
+     │   └── photo-store.js               — IDB-backed photo blobs
+     │
+     ├── lib/ui/
+     │   └── dom.js                       — UI.el, UI.openModal, UI.toast, UI.confirm,
+     │                                      UI.emptyState, UI.cancelBtn, UI.saveBtn, UI.clamp
      │
      ├── lib/components/
      │   ├── heritage-datepicker.js       — calendar popover with year-only mode
      │   ├── heritage-select.js           — custom <select> replacement
      │   ├── crop-editor.js               — two-frame photo cropping modal
      │   ├── path-finder.js               — "find a relation" BFS modal
-     │   ├── inspector.js                 — right-pane person view
-     │   └── profile-view.js              — fallback full-page profile
+     │   └── inspector.js                 — right-pane person view
      │
      ├── lib/views/
      │   ├── people-view.js               — list / search / form
      │   ├── tree-view.js                 — SVG tree + lineage focus
-     │   └── timeline-view.js             — horizontal lifespan bars
+     │   ├── timeline-view.js             — horizontal lifespan bars
+     │   └── profile-view.js              — fallback full-page profile
      │
      ├── lib/features/
      │   ├── image-export.js              — tree → PNG, profile → poster
@@ -352,7 +356,7 @@ Every textual person field has an `_hi` companion: `name`/`name_hi`, `birthPlace
 
 The form has paired EN/HI inputs side-by-side. There's no auto-translate — empty `_hi` falls back to `_en`.
 
-`I18n` (in `lib/utils/i18n.js`) covers the static UI strings (button labels, section headings, empty-state copy). Dictionary in `dict.en` and `dict.hi`. The DOM applier walks `[data-i18n]`, `[data-i18n-placeholder]`, `[data-i18n-title]` and rewrites on language change.
+`I18n` (in `lib/core/i18n.js`) covers the static UI strings (button labels, section headings, empty-state copy). Dictionary in `dict.en` and `dict.hi`. The DOM applier walks `[data-i18n]`, `[data-i18n-placeholder]`, `[data-i18n-title]` and rewrites on language change.
 
 ---
 

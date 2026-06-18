@@ -87,6 +87,8 @@ Fixed items (✅) tagged with the resolving commit hash. Verified-false / closed
 
 ### Tier B — High
 
+- ✅ **Service worker `SHELL` array out of sync with `index.html`.** `path-finder.js` and `print-book.js` were loaded by the page but missing from `SHELL`, so offline mode broke for those features. Both added; `CACHE_VERSION` bumped to `v3` to invalidate stale caches. (this commit)
+- ✅ **Timeline bar avatar ignored `photoCropAvatar`.** Real bug — couples-photo crops showed the wrong face on the timeline because the bar avatar didn't honour the user-chosen focal point. `buildBarAvatar` now mirrors `UI.avatar`'s crop application. (this commit)
 - ✅ **Service worker bypass — `sw.js` was being cached.** `sw.js` is now bypass-cached; `CACHE_VERSION = v2`. (`655b493`)
 - ✅ **Google Fonts CSS / Font Awesome CSS not in `SHELL`.** Added `CDN_SHELL` precached on install. (`655b493`)
 - ✅ **Crop editor drag math divided by `state.scale`.** Removed; mapped by per-axis slack. Then a final pass switched to manual `<img>` sizing + `transform: translate` + a `MIN_SCALE = 1.05` floor so drag works on both axes regardless of frame aspect. (`655b493`, `319a01f`, `ceb3dde`)

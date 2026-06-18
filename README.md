@@ -211,26 +211,30 @@ styles/
                                  heritage select, date picker, png-quality
   views.css                      view-specific styles
 lib/
-  utils/
+  core/
     i18n.js                      EN/HI strings + DOM applier
-    data-store.js                localStorage CRUD + helpers
+    data-store.js                FamilyStore — localStorage CRUD + helpers
     photo-store.js               IndexedDB photo blob storage + migration
-    ui-utils.js                  DOM helpers, modal, toast, confirm, avatar
+  ui/
+    dom.js                       UI.el / openModal / toast / confirm /
+                                 emptyState / cancelBtn / saveBtn / clamp
   components/
     heritage-datepicker.js       calendar popover with year-only mode
     heritage-select.js           custom dropdown (replaces native <select>)
     crop-editor.js               two-frame photo crop editor (avatar + hero)
+    path-finder.js               BFS "find a relation" modal
     inspector.js                 right-pane person details with sections
-    profile-view.js              fallback full-page profile (kept for safety)
   views/
     people-view.js               list + add/edit form
     tree-view.js                 SVG tree with pan/zoom + lineage highlight
     timeline-view.js             horizontal timeline
+    profile-view.js              fallback full-page profile (kept for safety)
   features/
     image-export.js              tree → PNG (full or lineage-only),
                                  profile → full-profile poster
     export-import.js             export modal + JSON/CSV import
     collect-form.js              Google Form template + CSV importer
+    print-book.js                printable family book (one A4 per person)
   app.js                         view router, rail wiring, filters,
                                  service-worker registration
 manifest.webmanifest             PWA install metadata
