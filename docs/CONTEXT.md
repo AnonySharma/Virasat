@@ -71,9 +71,8 @@ This is the load-bearing module. Every view, every feature, every export reads o
     {
       id: "p_xxx",
       name: string, name_hi: string,
-      photo: base64 | null,            // legacy, auto-migrated to IDB
-      photoId: string | null,          // IDB blob key
-      photoUrl: string | null,         // committed asset path (sample data)
+      photo: base64 | null,            // pre-migration data URL, auto-moves to IDB
+      photoId: string | null,          // IDB blob key (post-migration)
       photoCropAvatar: { x, y, scale } | null,
       photoCropHero: { x, y, scale } | null,
       birthDate: "YYYY[-MM[-DD]]" | null,
@@ -139,11 +138,12 @@ Listeners are 5 today: app.js (view re-render + rail counts), inspector.js (pane
 
 ## 3 · Photo flow
 
-Photos are blobs in IndexedDB (`familyTree.photos` database, `photos` object store). The store has three resolution sources for a given person:
+Photos are blobs in IndexedDB (`familyTree.photos` database, `photos` object store). The store has two resolution sources for a given person:
 
-1. `person.photoUrl` — committed asset path (used by sample data: `assets/sample/p33.jpg`). Highest priority.
-2. `person.photoId` — IDB blob key. Resolved to a Blob URL on demand, cached in `urlCache: Map<id, objectUrl>`.
-3. `person.photo` — base64 data URL. Legacy / freshly-imported. Auto-migrated to `photoId` on next page load via `migrateLegacy()`.
+1. `person.photoId` — IDB blob key. Resolved to a Blob URL on demand, cached in `urlCache: Map<id, objectUrl>`.
+2. `person.photo` — base64 data URL. Pre-migration / freshly-imported. Auto-migrated to `photoId` on next page load via `migrateLegacy()`.
+
+Sample data ships with photos already inlined as base64 (`tests/inline-sample-photos.mjs` does the conversion from `assets/sample/*.jpg`). The legacy `photoUrl` field that pointed at committed asset paths was removed 2026-06-19 — backups are now fully self-contained.
 
 ### Read API
 
@@ -325,7 +325,7 @@ Field-toggle flow:
 applyFieldToggles(out, opts) →
   — if !includeDates: drop birthDate, deathDate
   — if !includeLocations: drop birthPlace*, deathPlace*
-  — if !includePhotos: drop photo, photoId, photoUrl
+  — if !includePhotos: drop photo, photoId
   — for each contact field: if private*, blank the value
   — strip privacy flags themselves
   — drop empty contact objects
