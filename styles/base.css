@@ -221,9 +221,14 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .app-title__text { font-size: 18px; }
 }
 
-/* Hamburger + kebab only visible on small screens */
-.hamburger-btn { display: none; }
-.kebab-btn { display: none; }
+/* Hamburger + kebab only visible on small screens.
+   The element carries class="btn btn--icon hamburger-btn"; .btn defines
+   `display: inline-flex` and loads in components.css *after* base.css,
+   so a plain `.hamburger-btn { display: none }` rule loses the cascade
+   tie-break to .btn. Bumping specificity to button.hamburger-btn (1
+   element + 1 class) wins cleanly without !important. */
+button.hamburger-btn { display: none; }
+button.kebab-btn { display: none; }
 
 /* Inspector close button — always present, only visible when needed */
 .inspector-close {
