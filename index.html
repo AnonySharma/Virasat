@@ -200,6 +200,11 @@
   <script src="lib/features/collect-form.js"></script>
   <script src="lib/features/print-book.js"></script>
 
+  <!-- sample data: bundled "Try sample family" tree. Lives in tests/ to
+       keep lib/ free of base64 photo blobs. Loaded eagerly so the
+       welcome offer + rail tool can call SampleData.build() sync. -->
+  <script src="tests/sample-data.js"></script>
+
   <!-- entry -->
   <script src="lib/app.js"></script>
 </body>

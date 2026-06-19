@@ -119,7 +119,8 @@ const order = [
   "lib/features/image-export.js",
   "lib/features/export-import.js",
   "lib/features/collect-form.js",
-  "lib/features/print-book.js"
+  "lib/features/print-book.js",
+  "tests/sample-data.js"
 ];
 
 const failures = [];
@@ -152,7 +153,8 @@ const expectedGlobals = [
   "ImageExport",
   "ExportImport",
   "CollectForm",
-  "PrintBook"
+  "PrintBook",
+  "SampleData"
 ];
 for (const g of expectedGlobals) {
   if (typeof global[g] === "undefined") failures.push("missing global: " + g);
@@ -184,13 +186,17 @@ try {
 
 // --- Sample data shape: every person has photo (no photoUrl field) ---------
 try {
-  const sample = global.FamilyStore.sampleData();
-  for (const p of sample.people) {
-    if ("photoUrl" in p) failures.push("sample person still has photoUrl: " + p.id);
-    if (!p.photo && !p.photoId) failures.push("sample person without photo: " + p.id);
+  const sample = global.SampleData.build();
+  if (!sample.people || !Array.isArray(sample.people)) {
+    failures.push("SampleData.build() didn't return { people: [] }");
+  } else {
+    for (const p of sample.people) {
+      if ("photoUrl" in p) failures.push("sample person still has photoUrl: " + p.id);
+      if (!p.photo && !p.photoId) failures.push("sample person without photo: " + p.id);
+    }
   }
 } catch (e) {
-  failures.push("sampleData() threw: " + (e && e.message));
+  failures.push("SampleData.build() threw: " + (e && e.message));
 }
 
 // --- Report ----------------------------------------------------------------

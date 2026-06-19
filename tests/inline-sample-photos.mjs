@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Inline assets/sample/*.jpg as base64 inside lib/core/data-store.js's
+// Inline assets/sample/*.jpg as base64 inside tests/sample-data.js's
 // sampleData(). Replaces every line of the form
 //
 //   photoUrl: "assets/sample/p12.jpg",
@@ -9,15 +9,14 @@
 //   photo: "data:image/jpeg;base64,/9j/4AAQ...",
 //
 // Why: photoUrl is a "fetch this from disk" reference. It only resolves
-// when the bundled asset is reachable (local dev / production host /
-// PWA cache hit). Backups produced via the Save backup flow are
-// supposed to be portable to any device — a photoUrl field is a path,
-// not data. Inlining as base64 makes the sample data fully self-
-// contained, lets us drop the photoUrl schema field entirely, and
-// gives us one consistent rendering path (PhotoStore.getUrl reads from
-// IDB after migrateLegacy runs).
+// when the bundled asset is reachable. Backups produced via the Save
+// backup flow are supposed to be portable to any device — a photoUrl
+// field is a path, not data. Inlining as base64 makes the sample data
+// fully self-contained, lets us drop the photoUrl schema field entirely,
+// and gives us one consistent rendering path (PhotoStore.getUrl reads
+// from IDB after migrateLegacy runs).
 //
-// Idempotent: running this twice on an already-inlined data-store.js
+// Idempotent: running this twice on an already-inlined sample-data.js
 // is a no-op (the regex won't match the inlined `photo: "data:..."`
 // lines). Verified at the end of the script by re-grepping.
 //
@@ -29,7 +28,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
-const dataStorePath = path.join(repoRoot, "lib/core/data-store.js");
+const dataStorePath = path.join(repoRoot, "tests/sample-data.js");
 const sampleDir = path.join(repoRoot, "assets/sample");
 
 const src = fs.readFileSync(dataStorePath, "utf8");
@@ -75,5 +74,5 @@ fs.writeFileSync(dataStorePath, out);
 console.log("");
 console.log("Replaced " + totalReplaced + " photoUrl entries.");
 console.log("Total inlined data: " + (totalBytesOut / 1024).toFixed(1) + " KB of base64.");
-console.log("data-store.js: " + (Buffer.byteLength(src, "utf8") / 1024).toFixed(1) + " KB → "
+console.log("sample-data.js: " + (Buffer.byteLength(src, "utf8") / 1024).toFixed(1) + " KB → "
   + (Buffer.byteLength(out, "utf8") / 1024).toFixed(1) + " KB");
