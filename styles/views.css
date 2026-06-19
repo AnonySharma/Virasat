@@ -312,6 +312,14 @@
   fill: var(--text);
   letter-spacing: -0.015em;
 }
+/* Phone: tighter type so paired couple-knot first-names don't visually
+   collide. The two photos sit 14 px apart at full SVG scale, but the
+   labels at the same node coordinates render close enough to overlap
+   when the SVG is scaled down to phone width. */
+@media (max-width: 720px) {
+  .t-node-name { font-size: 14px; }
+  .t-node-dates { font-size: 10px; }
+}
 .t-node-dates {
   font-size: 11px;
   fill: var(--text-3);
@@ -1066,16 +1074,21 @@
    and the pan-hint slides up so it never overlaps the system home bar. */
 @media (max-width: 640px) {
   .tree-stage { margin: 0 12px 12px; border-radius: var(--r-lg); }
-  .tree-pan-hint {
-    left: 10px;
-    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-    padding: 5px 12px;
-    font-size: 10.5px;
-  }
+  /* Hide the pan hint on phone — touch users already know how to pan,
+     the hint mostly competed with the zoom cluster for screen real estate. */
+  .tree-pan-hint { display: none; }
+  /* Phone: cluster stays bottom-right but is bounded by viewport so it
+     never overflows. Slightly tighter buttons + percent column. */
   .tree-controls {
     right: 10px;
     bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    max-width: calc(100vw - 32px);
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: 4px;
   }
+  .tree-controls .btn { width: 32px; height: 32px; }
+  .tree-controls__pct { padding: 0 6px; font-size: 11px; min-width: 36px; }
   .tree-gen-label { left: 12px; font-size: 14px; }
   .tree-gen-label::after { width: 18px; }
 }
@@ -1576,4 +1589,26 @@
 }
 .tree-view-options__switch input:checked + .tree-view-options__track::before {
   transform: translateX(12px);
+}
+
+/* === Profile-view mobile polish ===
+   On phone the profile fills the visible area and pushes the Back button
+   off-screen as the user scrolls. Sticky-pin the topbar to the top of the
+   view container so Back is always one tap away. */
+@media (max-width: 768px) {
+  .profile { padding: 12px; gap: 14px; }
+  .profile__topbar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--bg);
+    padding: 8px 4px;
+    margin: -12px -12px 0;
+    padding-inline: 12px;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .profile__topbar-actions { flex-wrap: wrap; }
+  .profile__name { font-size: 28px; }
+  .profile__hero .avatar { width: 80px; height: 80px; font-size: 24px; }
 }

@@ -206,14 +206,24 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   }
   .app-rail.is-open { transform: translateX(0); }
   .header-search { display: none; }
-  .nav-btn__label { display: none; }
-  .nav-btn { padding: 8px 10px; }
   .app-title__sub { display: none; }
   .hamburger-btn { display: inline-flex !important; }
+  /* On phone the rail handles view switching (Tree/People/Timeline live in
+     it); the duplicate top-of-header row would just compete for space. */
+  .app-nav { display: none; }
+  /* Action row + lang/theme cluster collapse into the kebab overflow menu.
+     Desktop unchanged — these rules only apply ≤ 768 px. */
+  .app-header__actions { display: none; }
+  .kebab-btn { display: inline-flex !important; }
+  /* Header layout on phone: hamburger | title (centred) | kebab */
+  .app-header { padding: 0 var(--s-4); gap: var(--s-3); }
+  .app-title { margin-inline: auto; }
+  .app-title__text { font-size: 18px; }
 }
 
-/* Hamburger only visible on small screens */
+/* Hamburger + kebab only visible on small screens */
 .hamburger-btn { display: none; }
+.kebab-btn { display: none; }
 
 /* Inspector close button — always present, only visible when needed */
 .inspector-close {

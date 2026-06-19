@@ -89,6 +89,13 @@
         <span class="btn__label-md" data-i18n="actions.export">Export</span>
       </button>
     </div>
+
+    <!-- Phone-only kebab — opens an overflow menu mirroring the desktop
+         action row. Hidden on >= 769px; the desktop row handles those. -->
+    <button class="btn btn--ghost btn--icon kebab-btn" id="kebab-btn" type="button"
+            aria-label="More actions" aria-haspopup="menu" aria-expanded="false">
+      <i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i>
+    </button>
   </header>
 
   <!-- 3-pane body -->
