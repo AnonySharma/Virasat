@@ -43,6 +43,10 @@ declare const TreeList: any;
 declare const Sharing: any;
 declare const SampleData: any;
 declare const supabase: any;
+// Not in the smoke.mjs global list: assigned late by app.js (window.Filter =
+// { get, set }) and read back within the same file. Declared here so its use
+// sites type-check like the other cross-module globals.
+declare const Filter: any;
 
 // The same names are also reached as members of `window` (e.g.
 // `window.PhotoStore`, `window.I18n`) in guard expressions. Mirror them onto
@@ -74,4 +78,5 @@ interface Window {
   Sharing: any;
   SampleData: any;
   supabase: any;
+  Filter: any;
 }
