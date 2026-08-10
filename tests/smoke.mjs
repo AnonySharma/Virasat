@@ -122,6 +122,7 @@ const order = [
   "lib/features/print-book.js",
   "lib/auth/config.js",
   "lib/auth/auth-store.js",
+  "lib/auth/cloud-store.js",
   "lib/auth/sign-in.js",
   "tests/sample-data.js"
 ];
@@ -159,6 +160,7 @@ const expectedGlobals = [
   "PrintBook",
   "VirasatConfig",
   "Auth",
+  "CloudStore",
   "SignIn",
   "SampleData"
 ];
