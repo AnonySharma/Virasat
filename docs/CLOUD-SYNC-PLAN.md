@@ -275,16 +275,19 @@ else loadedVersion = data.version;
   anon REST read (`GET /rest/v1/trees?select=id&limit=1`) to keep it warm. (pg_cron does *not*
   help — the pause is driven by external request inactivity.)
 
-**Setup steps:**
-1. Create Supabase project → copy Project URL + anon key into `lib/auth/config.js`.
-2. SQL editor → run the full SQL above. Confirm `tree-photos` bucket is **private**.
+**Setup steps** — a filled-in, project-specific runbook lives in
+[`docs/SUPABASE-SETUP.md`](./SUPABASE-SETUP.md). Summary:
+1. ✅ Done — Project URL + anon key are in `lib/auth/config.js`
+   (ref `kogchpccsphiecitwaav`).
+2. SQL editor → run [`supabase/schema.sql`](../supabase/schema.sql). Confirm the
+   `tree-photos` bucket is **private**.
 3. Auth → Providers: enable Email (password), Email OTP/magic-link, Google. For Google: create an
    OAuth client in Google Cloud, authorized redirect URI
-   `https://<PROJECT>.supabase.co/auth/v1/callback`, paste id/secret into Supabase.
-4. Auth → URL Configuration: **Site URL** `https://<USER>.github.io/Virasat/` (trailing slash);
-   **Additional Redirect URLs** same + `http://localhost:PORT/` for dev.
-5. Client uses `flowType:'pkce'`, `persistSession:true`, `autoRefreshToken:true`.
-6. Add the GitHub Actions keep-alive cron.
+   `https://kogchpccsphiecitwaav.supabase.co/auth/v1/callback`, paste id/secret into Supabase.
+4. Auth → URL Configuration: **Site URL** `https://anonysharma.github.io/Virasat/`;
+   **Redirect URLs** `https://anonysharma.github.io/Virasat/**` + `http://localhost:8000/**` for dev.
+5. Client uses `flowType:'pkce'`, `persistSession:true`, `autoRefreshToken:true` (already set in `auth-store.js`).
+6. Add the GitHub Actions keep-alive cron (later).
 
 ---
 
