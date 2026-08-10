@@ -1,0 +1,124 @@
+# Continuous checks — run on every push and PR.
+#
+# Virasat is a NO-BUILD app: ~26 ordered classic <script> IIFEs served as
+# static files on GitHub Pages, with no bundler or transpile step. That's a
+# deliberate longevity choice, so this workflow's job is to KEEP it true and
+# catch regressions the moment they land — without ever introducing a build.
+#
+# Three gates, all read-only, none of which produce a deployable artifact:
+#   1. tests    — the node tests/*.mjs suite (smoke + cloud/auth logic). These
+#                 already existed but nothing ran them automatically; now they
+#                 gate every push.
+#   2. typecheck — `tsc --noEmit` over jsconfig.json. Only files marked
+#                 `// @ts-check` are checked (opt-in), so this is type-checking,
+#                 NOT compilation: it emits nothing and the shipped .js is the
+#                 hand-authored source, unchanged.
+#   3. no-build  — greps for anything that would silently break the no-build /
+#                 classic-<script> model (ESM import/export in shipped lib code,
+#                 a package.json, TypeScript/JSX source files). Turns the
+#                 "no build step" convention into an enforced invariant.
+#
+# TypeScript is fetched via `npx` at run time — nothing is vendored, there is
+# no package.json, and node_modules never enters the repo.
+#
+# Security note: no `run:` step interpolates any ${{ github.event.* }} or other
+# attacker-controllable input; the only expansion used is github.ref, and only
+# as a YAML value in the concurrency group (never inside a shell command).
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch: {}
+
+# A newer push to the same branch supersedes an in-flight run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run test suite (node tests/*.mjs)
+        run: |
+          set -euo pipefail
+          fail=0
+          for t in tests/*.mjs; do
+            echo "::group::$t"
+            if node "$t"; then
+              echo "PASS $t"
+            else
+              echo "::error file=$t::test failed"
+              fail=1
+            fi
+            echo "::endgroup::"
+          done
+          exit $fail
+
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: tsc --noEmit (opt-in // @ts-check files only)
+        # Pinned major so a future TS release can't fail CI without an
+        # intentional bump here. --noEmit is redundant with jsconfig but
+        # explicit so the intent (check, don't build) is unmissable.
+        run: npx -y -p typescript@5 tsc --noEmit -p jsconfig.json
+
+  no-build:
+    name: no-build invariant
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject anything that would require a build step
+        run: |
+          set -euo pipefail
+          status=0
+
+          # 1. No ESM import/export in shipped browser code. lib/ files are
+          #    classic-script IIFEs; an `import`/`export` there would need a
+          #    bundler or type=module reordering. (tests/*.mjs are Node-only
+          #    harnesses and legitimately use ESM — they are never shipped.)
+          if grep -REn '^[[:space:]]*(import|export)[[:space:]]' lib/ 2>/dev/null; then
+            echo "::error::ESM import/export found in lib/ — shipped code must stay classic-script IIFEs (no build step)."
+            status=1
+          fi
+
+          # 2. No package manifest / lockfile — their presence implies an
+          #    npm-driven build or dependency install in the deploy path.
+          for f in package.json package-lock.json yarn.lock pnpm-lock.yaml; do
+            if [ -e "$f" ]; then
+              echo "::error file=$f::$f present — Virasat ships with no package manager / build step."
+              status=1
+            fi
+          done
+
+          # 3. No TypeScript/JSX SOURCE files. Ambient *.d.ts (types/) are
+          #    declaration-only (emit nothing) and allowed; .ts/.tsx/.jsx would
+          #    require compilation.
+          if find . -path ./node_modules -prune -o \
+                \( -name '*.ts' ! -name '*.d.ts' -o -name '*.tsx' -o -name '*.jsx' \) -print \
+                | grep -q .; then
+            echo "::error::.ts/.tsx/.jsx source found — only hand-authored .js ships; use // @ts-check + JSDoc instead."
+            status=1
+          fi
+
+          if [ "$status" -eq 0 ]; then echo "no-build invariant holds ✓"; fi
+          exit $status
