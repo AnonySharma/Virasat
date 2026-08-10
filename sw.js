@@ -13,7 +13,7 @@
  * Cache version is part of the cache name, so bumping CACHE_VERSION on
  * a release activates a clean replacement during `activate`.
  */
-const CACHE_VERSION = "v17";
+const CACHE_VERSION = "v18";
 const SHELL_CACHE = "virasat-shell-" + CACHE_VERSION;
 const RUNTIME_CACHE = "virasat-runtime-" + CACHE_VERSION;
 const CDN_CACHE = "virasat-cdn-" + CACHE_VERSION;
@@ -50,6 +50,7 @@ const SHELL = [
   "./lib/auth/auth-store.js",
   "./lib/auth/cloud-store.js",
   "./lib/auth/sign-in.js",
+  "./lib/auth/first-run.js",
   "./lib/auth/tree-list.js",
   "./lib/auth/sharing.js",
   "./tests/sample-data.js",
@@ -69,14 +70,18 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     Promise.all([
       caches.open(SHELL_CACHE).then((cache) => cache.addAll(SHELL)),
-      // Cross-origin fetches require `mode: "no-cors"` to be cacheable when
-      // CORS headers are missing (Font Awesome's CDN, sometimes Google
-      // Fonts depending on referer). We tolerate individual failures so a
-      // network blip on first install doesn't abort the whole installation.
+      // Fetch these in CORS mode (the default), NOT no-cors. The page loads
+      // Font Awesome's CSS with integrity=... crossorigin, and Subresource
+      // Integrity CANNOT be verified against an opaque (no-cors) response — the
+      // browser rejects the stylesheet and icons silently vanish until a hard
+      // refresh bypasses us. Both CDNs send `access-control-allow-origin: *`,
+      // so a normal CORS fetch yields a verifiable response we can safely
+      // cache. Only store a real 200 (never an opaque type). Individual
+      // failures are tolerated so a first-install network blip doesn't abort.
       caches.open(CDN_CACHE).then((cache) =>
         Promise.all(CDN_SHELL.map((url) =>
-          fetch(url, { mode: "no-cors" })
-            .then((resp) => cache.put(url, resp))
+          fetch(url)
+            .then((resp) => { if (resp && resp.status === 200 && resp.type !== "opaque") return cache.put(url, resp); })
             .catch(() => {})
         ))
       )
@@ -114,7 +119,11 @@ self.addEventListener("fetch", (event) => {
   // and survives any future reordering of the handlers above it.
   if (url.hostname.endsWith(".supabase.co")) return;
 
-  // Cross-origin fonts/icons/SDK → cache-first.
+  // Cross-origin fonts/icons/SDK → cache-first. Never cache an opaque
+  // response: a CSS loaded with SRI (Font Awesome) can't be integrity-checked
+  // against an opaque body, so caching one would break icons on the next
+  // visit. The request keeps its own mode (a `crossorigin` <link> is already
+  // CORS), so a cacheable 200 here is CORS-clean and verifiable.
   if (isCdnHost(url)) {
     event.respondWith(
       caches.open(CDN_CACHE).then(async (cache) => {
@@ -122,7 +131,7 @@ self.addEventListener("fetch", (event) => {
         if (hit) return hit;
         try {
           const resp = await fetch(req);
-          if (resp && resp.status === 200) cache.put(req, resp.clone());
+          if (resp && resp.status === 200 && resp.type !== "opaque") cache.put(req, resp.clone());
           return resp;
         } catch (e) {
           return hit || new Response("", { status: 504 });

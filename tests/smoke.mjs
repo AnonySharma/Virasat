@@ -124,6 +124,7 @@ const order = [
   "lib/auth/auth-store.js",
   "lib/auth/cloud-store.js",
   "lib/auth/sign-in.js",
+  "lib/auth/first-run.js",
   "lib/auth/tree-list.js",
   "lib/auth/sharing.js",
   "tests/sample-data.js"
@@ -164,6 +165,7 @@ const expectedGlobals = [
   "Auth",
   "CloudStore",
   "SignIn",
+  "FirstRun",
   "TreeList",
   "Sharing",
   "SampleData"

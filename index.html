@@ -211,14 +211,15 @@
   <script src="lib/features/collect-form.js"></script>
   <script src="lib/features/print-book.js"></script>
 
-  <!-- cloud auth (optional): local-first by default. With empty
-       lib/auth/config.js these are inert — no SDK is fetched and the app
-       boots exactly as the offline PWA. The Supabase SDK is loaded lazily
-       by auth-store.js only when config.js holds real credentials. -->
+  <!-- cloud auth: gated on lib/auth/config.js. This build ships real
+       credentials, so the Supabase SDK is loaded lazily by auth-store.js and
+       the sign-in gate appears. Blank the config to make these inert again —
+       no SDK is fetched and the app boots as the offline single-device PWA. -->
   <script src="lib/auth/config.js"></script>
   <script src="lib/auth/auth-store.js"></script>
   <script src="lib/auth/cloud-store.js"></script>
   <script src="lib/auth/sign-in.js"></script>
+  <script src="lib/auth/first-run.js"></script>
   <script src="lib/auth/tree-list.js"></script>
   <script src="lib/auth/sharing.js"></script>
 

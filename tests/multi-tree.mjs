@@ -10,6 +10,9 @@
 //   • a viewer-role tree flips FamilyStore into read-only (mutators no-op)
 //   • an editor/owner tree clears read-only
 //   • deleteTree() of the active tree moves to another before deleting
+//   • first-run: an empty account resolves to a null tree (no auto-create)
+//   • createTree() adopts the tree from the null first-run state
+//   • deleting the LAST tree returns to first-run, not an auto-created one
 //
 // Run: node tests/multi-tree.mjs
 
@@ -216,6 +219,33 @@ await (async function run() {
   CS.stop();
   assert(lsMap["virasat.activeTreeId"] == null, "stop() should clear the saved active tree id");
   assert(FS.isReadOnly() === false, "stop() should clear read-only");
+
+  // --- first-run: an empty account resolves to NO active tree --------------
+  // Wipe every tree + membership so resolveTree finds nothing. start() must
+  // NOT auto-create a tree (that produced the unwanted "Family family tree");
+  // it stays active with a null tree so app.js can show the first-run screen.
+  trees.length = 0;
+  members.length = 0;
+  for (const k of Object.keys(lsMap)) delete lsMap[k];
+  await CS.start();
+  assert(CS.isActive() === true, "start() stays active on an empty account (first-run)");
+  assert(CS.activeTreeId() === null, "empty account must resolve to a null tree, got " + CS.activeTreeId());
+  assert(trees.length === 0, "start() must NOT auto-create a tree for an empty account, got " + trees.length);
+  assert(lsMap["virasat.activeTreeId"] == null, "first-run must not persist an active tree id");
+
+  // --- first-run: createTree from the null state adopts the new tree -------
+  const firstId = await CS.createTree("Sharma family tree", "Sharma");
+  assert(CS.activeTreeId() === firstId, "createTree from first-run should switch to the new tree");
+  assert(CS.getRole() === "owner", "creator of the first tree is owner");
+  assert(FS.isReadOnly() === false, "first created tree must be editable");
+
+  // --- delete the LAST tree → back to first-run, not an auto-created one ---
+  const res = await CS.deleteTree(firstId);
+  assert(res && res.emptied === true, "deleting the last tree should report emptied:true");
+  assert(CS.activeTreeId() === null, "after deleting the last tree we return to the null first-run state");
+  assert(!trees.some((t) => t.id === firstId), "the deleted last tree row should be gone");
+  assert(trees.length === 0, "deleting the last tree must NOT auto-create a replacement, got " + trees.length);
+  CS.stop();
 })();
 
 // --- Report ------------------------------------------------------------------

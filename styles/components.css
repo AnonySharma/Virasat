@@ -1244,6 +1244,149 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 }
 .signin__error[hidden] { display: none; }
 
+/* ── Landing (pre-login intro) ─────────────────────────────────────────────
+   Shown on the same jali backdrop as the sign-in gate. show() renders BOTH the
+   landing card and the auth card; the .signin--landing class picks which is
+   visible, so "Get started" is a pure class swap (no re-render). */
+.signin--landing .signin__card:not(.landing__card) { display: none; }
+.signin:not(.signin--landing) .landing__card { display: none; }
+
+.landing__card { max-width: 440px; }
+.landing__pitch {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-2);
+  margin: 0;
+  text-wrap: balance;
+}
+.landing__features {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  margin: var(--s-2) 0;
+  text-align: left;
+}
+.landing__feature { display: flex; gap: var(--s-4); align-items: flex-start; }
+.landing__feature-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-size: 16px;
+}
+.landing__feature-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 2px 0 3px;
+}
+.landing__feature-body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-3);
+  margin: 0;
+}
+.landing__footer {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-4);
+  margin: var(--s-1) 0 0;
+  text-align: center;
+}
+.landing__card .signin__link { margin-top: calc(-1 * var(--s-2)); }
+
+/* ── First-run (signed in, no tree yet) ────────────────────────────────────
+   Reuses the .signin jali backdrop. A topbar carries the greeting + a sign-out
+   escape hatch; the card offers create / import / sample. */
+.firstrun { flex-direction: column; }
+.firstrun__topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+}
+.firstrun__greeting { font-size: 13px; color: var(--text-3); }
+.firstrun__signout {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+}
+.firstrun__signout:hover { color: var(--text); text-decoration: underline; }
+.firstrun__signout:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--olive-soft); }
+.firstrun__card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--s-8) var(--s-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.firstrun__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-2);
+}
+.firstrun__title {
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.firstrun__subtitle {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-3);
+  margin: 0;
+  text-wrap: balance;
+}
+.firstrun__form { display: flex; flex-direction: column; gap: var(--s-4); }
+.firstrun__form .btn--block { margin-top: var(--s-1); }
+.firstrun__alts { display: flex; flex-direction: column; gap: var(--s-3); }
+.firstrun__alt {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--s-3) var(--s-4);
+  cursor: pointer;
+  color: var(--text);
+  transition: border-color .15s ease, background .15s ease;
+}
+.firstrun__alt:hover { border-color: var(--accent); background: var(--accent-soft); }
+.firstrun__alt:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--olive-soft); }
+.firstrun__alt > i { flex: none; font-size: 16px; color: var(--accent-deep); width: 20px; text-align: center; }
+.firstrun__alt-text { display: flex; flex-direction: column; gap: 1px; }
+.firstrun__alt-title { font-size: 14px; font-weight: 600; }
+.firstrun__alt-body { font-size: 12.5px; color: var(--text-3); line-height: 1.4; }
+
 /* ── Viewer role (read-only shared trees) ──────────────────────────────────
    The store guard (FamilyStore.setReadOnly) is the correctness backstop; this
    hides every affordance that would mutate the tree so a viewer never taps a
