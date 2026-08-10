@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Behavioural test for cloud-store's multi-tree API + role gating (Phases 5-6).
+// Behavioural test for cloud-store's multi-tree API + role gating.
 //
 // Runs the REAL cloud-store.js + data-store.js against a MOCK Supabase client
 // backing an in-memory `trees` table + `tree_members` table, and asserts:

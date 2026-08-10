@@ -84,11 +84,11 @@ python3 -m http.server 8000
 
 Expected: the **sign-in gate** appears (cloud is on). Create an account with
 email + password → you land on the empty app. Sign out via the account menu
-(coming in a later phase) or clear the session in DevTools → Application →
-Local Storage.
+in the header.
 
-**Still local-only after sign-in** until Phase 2 (`cloud-store.js`) is built —
-nothing reads/writes the `trees` table yet. That's the next coding step.
+After sign-in your tree lives in the cloud: edits sync across devices, and the
+account menu's **Your trees** lets you keep several trees and share them by
+email with view or edit access.
 
 ---
 

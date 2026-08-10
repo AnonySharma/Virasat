@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Behavioural test for the data-store cloud-sync seam (Phase 2, task #21).
+// Behavioural test for the data-store cloud-sync seam.
 //
 // Locks in the invariants that make cloud sync safe AND keep the local-only
 // app byte-identical to before:

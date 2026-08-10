@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Behavioural test for the cloud boot-gate (Phase 1).
+// Behavioural test for the cloud boot-gate.
 //
-// Proves the property that lets Phase 1 ship before Supabase exists:
+// Proves the property that lets the app run before Supabase is configured:
 //   • empty/half-filled config  → isConfigured() false
 //   • cloud off                 → Auth.ready() resolves { cloud:false }
 //   • cloud off                 → the Supabase SDK is NEVER fetched

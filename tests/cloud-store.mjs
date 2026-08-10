@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Behavioural test for cloud-store.js (Phase 2, task #22) — the WRITE side.
+// Behavioural test for cloud-store.js — the WRITE side of sync.
 //
 // Runs the REAL cloud-store.js + data-store.js against a MOCK Supabase client
 // backing a single in-memory `trees` row, and asserts:

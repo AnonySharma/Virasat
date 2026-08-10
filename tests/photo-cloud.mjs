@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Behavioural test for the photo-store.js cloud adapter (Phase 3, task #25).
+// Behavioural test for the photo-store.js cloud adapter.
 //
 // Runs the REAL photo-store.js against a MOCK Supabase Storage bucket and
 // asserts the cloud seam without touching a real network or a real IDB:
