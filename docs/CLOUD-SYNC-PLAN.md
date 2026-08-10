@@ -131,7 +131,7 @@ explicit `.supabase.co` early-return; add the 6 new `lib/auth/*.js` files to `SH
 | **4. Local→cloud migration** ✅ | satisfied by existing Import JSON: it `replaceAll`s the local tree into the active cloud tree, which then pushes. No dedicated migration script (per user: "no need to add migration scripts") | Returning local user keeps their tree | 1 |
 | **5. Tree list + switcher** ✅ | `tree-list.js` (switch/create/rename/delete); `CloudStore.listTrees/createTree/switchTree/renameTree/deleteTree`; last-active tree persisted (`virasat.activeTreeId`); `Inspector.clear()` on switch; entry points in account menu + phone kebab; sample-CTA already cloud-gated | Multiple trees | 1.5 |
 | **6. Sharing + roles** ✅ | `sharing.js` invite-by-email + member list; owner-checked `invite_to_tree`/`revoke_access` RPCs (double as role change); `claim_invites` on login (Phase 1); viewer role → `FamilyStore.setReadOnly` guard + `body.is-viewer` hides all `.js-edit-only` affordances. RLS is the server-side boundary | Share to 2nd account; viewer can't edit | 2 |
-| **7. Realtime + offline** | channel → conflict seam; polling fallback; reconnect push | Near-live updates + offline replay | 1.5 |
+| **7. Realtime + offline** ✅ | `postgres_changes` channel on the active row → clean re-hydrate / dirty defers to the version-guard; 60s poll doubles as realtime fallback + offline-replay heartbeat; immediate replay on the window `online` event; `pendingPush` flag survives an offline push so it isn't lost; channel re-subscribes on `switchTree`, torn down on `stop`; requires `trees` in the `supabase_realtime` publication (see SQL) | Near-live updates + offline replay | 1.5 |
 | **8. Edges + polish** | PKCE redirect handling; conflict-backup UX; i18n; keep-alive verification; robots noindex | — | 1.5 |
 
 Deferred from the roadmap's 17-day estimate (all post-MVP): public/unlisted share links, audit
@@ -374,6 +374,15 @@ create policy photos_update on storage.objects for update
   using (bucket_id='tree-photos' and public.can_edit_tree((split_part(name,'/',1))::uuid));
 create policy photos_delete on storage.objects for delete
   using (bucket_id='tree-photos' and public.can_edit_tree((split_part(name,'/',1))::uuid));
+
+-- Realtime: cloud-store subscribes a channel to the active tree's row so other
+-- devices' pushes arrive near-live. postgres_changes only fires for tables in
+-- the supabase_realtime publication, so `trees` must be added to it. (The
+-- client also runs a 60s poll as a fallback, so this is a latency upgrade, not
+-- a correctness requirement — but without it "realtime" is really 60s-time.)
+-- RLS still applies to realtime: a client only receives change events for rows
+-- its SELECT policy lets it see, so no cross-tree leakage.
+alter publication supabase_realtime add table public.trees;
 ```
 
 **Version-guarded push (client, LWW):**
