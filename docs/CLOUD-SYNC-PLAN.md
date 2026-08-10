@@ -123,9 +123,9 @@ explicit `.supabase.co` early-return; add the 6 new `lib/auth/*.js` files to `SH
 
 | Phase | Scope | Demo milestone | Days |
 |---|---|---|---|
-| **0. Supabase setup** | Create project; run SQL; enable 3 auth providers; redirect URLs; bucket; keep-alive cron | — | 0.5 |
-| **1. Auth + gate** | UMD SDK + `config.js` + `auth-store.js` + `sign-in.js`; app.js gate; SW SDK caching + v12 | Sign in 3 ways → gated empty app | 2 |
-| **2. Cloud tree CRUD** | `cloud-store.js` load/push/version-guard; FamilyStore hydrate/version methods; persist() split; per-tree cache | Edits round-trip to a 2nd device | 2 |
+| **0. Supabase setup** | ✅ Project live (ref `kogchpccsphiecitwaav`); schema applied; email+password enabled | — | 0.5 |
+| **1. Auth + gate** ✅ | UMD SDK (lazy, SRI) + `config.js` + `auth-store.js` + `sign-in.js`; app.js gate; SW SDK caching + v12; jali sign-in backdrop | Sign in 3 ways → gated empty app | 2 |
+| **2. Cloud tree CRUD** | `cloud-store.js` load/push/version-guard; FamilyStore hydrate/version methods; persist() split; per-tree cache; **account menu (avatar/email + sign-out) in header + phone kebab** — deferred from Phase 1 | Edits round-trip to a 2nd device; user can see who they are + sign out | 2 |
 | **3. Photo cloud adapter** | upload on `fileToPhotoId`; download fallback in `getUrl`; compound keys; switch-revoke; remote delete; print/export `await` fix | Photos sync across devices | 1.5 |
 | **4. Local→cloud migration** | first sign-in detects `familyTree.v1`, offers "Upload as new cloud tree", inlines base64 photos to Storage, keeps local as fallback | Returning local user keeps their tree | 1 |
 | **5. Tree list + switcher** | `tree-list.js`; `activeTreeId` pointer; `Inspector.clear()` on switch; sample-CTA gating | Multiple trees | 1.5 |
@@ -135,6 +135,13 @@ explicit `.supabase.co` early-return; add the 6 new `lib/auth/*.js` files to `SH
 
 Deferred from the roadmap's 17-day estimate (all post-MVP): public/unlisted share links, audit
 log, server-side viewer redaction. First real demo lands end of Phase 1 (~day 2.5).
+
+**Phase 1 shipped (commits `882a38b`, `dbb1a56`, `f04fbbd`), with two deliberate deferrals:**
+- **Account menu / sign-out UI** — Phase 1 is auth+gate only; there is currently no in-app way
+  to see who you're signed in as or sign out (only DevTools clears the session). `Auth.signOut()`
+  and `Auth.getUser()` already exist; the header UI that calls them lands in **Phase 2**.
+- **SDK loads lazily** (not a static UMD `<script>`) so a local-only user fetches zero bytes of
+  it; cloud-off stays truly zero-network. Verified by `tests/auth-gate.mjs`.
 
 ---
 

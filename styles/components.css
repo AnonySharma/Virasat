@@ -1110,10 +1110,29 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   align-items: center;
   justify-content: center;
   padding: var(--s-5);
-  background:
-    radial-gradient(120% 120% at 50% 0%, var(--gold-soft) 0%, transparent 55%),
-    var(--bg);
+  /* Heritage backdrop: a jali (carved lattice screen, as in havelis and
+     Mughal architecture) — an endlessly interlocking motif that echoes
+     generations connecting. Inline SVG data-URI so it stays crisp at any
+     zoom with no extra file/build step (same idiom as the .select chevron).
+     Layers top→bottom: soft gold glow · faint centre veil that lets the
+     card breathe · the jali lattice · the ivory base. */
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(120% 120% at 50% -10%, var(--gold-soft) 0%, transparent 55%),
+    radial-gradient(60% 55% at 50% 48%, var(--bg) 0%, transparent 70%),
+    url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%235E7D63' stroke-opacity='0.14' stroke-width='1'%3E%3Ccircle cx='0' cy='0' r='28'/%3E%3Ccircle cx='56' cy='0' r='28'/%3E%3Ccircle cx='0' cy='56' r='28'/%3E%3Ccircle cx='56' cy='56' r='28'/%3E%3Ccircle cx='28' cy='28' r='28'/%3E%3Ccircle cx='28' cy='28' r='3.5' fill='%23B89A5A' fill-opacity='0.18' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: no-repeat, no-repeat, repeat;
+  background-position: center top, center center, center center;
+  background-size: auto, auto, 60px 60px;
   overflow-y: auto;
+}
+/* On dark surfaces the olive lattice would nearly vanish — lift it to a warm
+   gold so the jali still reads. */
+:root[data-theme="dark"] .signin {
+  background-image:
+    radial-gradient(120% 120% at 50% -10%, var(--gold-soft) 0%, transparent 55%),
+    radial-gradient(60% 55% at 50% 48%, var(--bg) 0%, transparent 70%),
+    url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23B89A5A' stroke-opacity='0.16' stroke-width='1'%3E%3Ccircle cx='0' cy='0' r='28'/%3E%3Ccircle cx='56' cy='0' r='28'/%3E%3Ccircle cx='0' cy='56' r='28'/%3E%3Ccircle cx='56' cy='56' r='28'/%3E%3Ccircle cx='28' cy='28' r='28'/%3E%3Ccircle cx='28' cy='28' r='3.5' fill='%23B89A5A' fill-opacity='0.22' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
 }
 .signin__card {
   width: 100%;
