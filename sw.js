@@ -13,7 +13,7 @@
  * Cache version is part of the cache name, so bumping CACHE_VERSION on
  * a release activates a clean replacement during `activate`.
  */
-const CACHE_VERSION = "v15";
+const CACHE_VERSION = "v16";
 const SHELL_CACHE = "virasat-shell-" + CACHE_VERSION;
 const RUNTIME_CACHE = "virasat-runtime-" + CACHE_VERSION;
 const CDN_CACHE = "virasat-cdn-" + CACHE_VERSION;
@@ -50,6 +50,8 @@ const SHELL = [
   "./lib/auth/auth-store.js",
   "./lib/auth/cloud-store.js",
   "./lib/auth/sign-in.js",
+  "./lib/auth/tree-list.js",
+  "./lib/auth/sharing.js",
   "./tests/sample-data.js",
   "./lib/app.js"
 ];

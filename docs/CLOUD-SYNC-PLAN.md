@@ -128,9 +128,9 @@ explicit `.supabase.co` early-return; add the 6 new `lib/auth/*.js` files to `SH
 | **1. Auth + gate** ✅ | UMD SDK (lazy, SRI) + `config.js` + `auth-store.js` + `sign-in.js`; app.js gate; SW SDK caching + v12; jali sign-in backdrop | Sign in 3 ways → gated empty app | 2 |
 | **2. Cloud tree CRUD** ✅ | `cloud-store.js` load/push/version-guard; FamilyStore hydrate/version methods; persist() split; per-tree cache; account menu (avatar/email + sign-out) in header + phone kebab | Edits round-trip to a 2nd device; user can see who they are + sign out | 2 |
 | **3. Photo cloud adapter** ✅ | upload on `fileToPhotoId`; download fallback in `getUrl`; flat keys + switch-revoke; remote delete; print `await` fix | Photos sync across devices | 1.5 |
-| **4. Local→cloud migration** | first sign-in detects `familyTree.v1`, offers "Upload as new cloud tree", inlines base64 photos to Storage, keeps local as fallback | Returning local user keeps their tree | 1 |
-| **5. Tree list + switcher** | `tree-list.js`; `activeTreeId` pointer; `Inspector.clear()` on switch; sample-CTA gating | Multiple trees | 1.5 |
-| **6. Sharing + roles** | `sharing.js` invite-by-email; `claim_invites` on login; viewer UI hiding (edit/add/delete removed) | Share to 2nd account; viewer can't edit | 2 |
+| **4. Local→cloud migration** ✅ | satisfied by existing Import JSON: it `replaceAll`s the local tree into the active cloud tree, which then pushes. No dedicated migration script (per user: "no need to add migration scripts") | Returning local user keeps their tree | 1 |
+| **5. Tree list + switcher** ✅ | `tree-list.js` (switch/create/rename/delete); `CloudStore.listTrees/createTree/switchTree/renameTree/deleteTree`; last-active tree persisted (`virasat.activeTreeId`); `Inspector.clear()` on switch; entry points in account menu + phone kebab; sample-CTA already cloud-gated | Multiple trees | 1.5 |
+| **6. Sharing + roles** ✅ | `sharing.js` invite-by-email + member list; owner-checked `invite_to_tree`/`revoke_access` RPCs (double as role change); `claim_invites` on login (Phase 1); viewer role → `FamilyStore.setReadOnly` guard + `body.is-viewer` hides all `.js-edit-only` affordances. RLS is the server-side boundary | Share to 2nd account; viewer can't edit | 2 |
 | **7. Realtime + offline** | channel → conflict seam; polling fallback; reconnect push | Near-live updates + offline replay | 1.5 |
 | **8. Edges + polish** | PKCE redirect handling; conflict-backup UX; i18n; keep-alive verification; robots noindex | — | 1.5 |
 
@@ -318,6 +318,50 @@ begin
   select t.tree_id, auth.uid(), t.role, t.invited_by from taken
   on conflict (tree_id,user_id) do nothing;
   get diagnostics claimed = row_count; return claimed; end; $$;
+
+-- Owner-only sharing RPCs (Phase 6). SECURITY DEFINER so they can look a user
+-- up by email in auth.users (the client can't) and write tree_members without
+-- exposing user_ids. Both re-check ownership so a non-owner call is a no-op error.
+-- invite_to_tree doubles as the role-change path: re-inviting an existing member
+-- with a new role updates both the invite row and their live membership.
+create or replace function public.invite_to_tree(p_tree uuid, p_email citext, p_role text)
+  returns void language plpgsql security definer set search_path = public as $$
+declare target uuid;
+begin
+  if not public.is_tree_owner(p_tree) then raise exception 'not tree owner'; end if;
+  if p_role not in ('editor','viewer') then raise exception 'bad role'; end if;
+  if lower(p_email) = lower(auth.email()) then raise exception 'cannot invite yourself'; end if;
+
+  -- Record / update the invitation (the owner-readable member directory).
+  insert into public.tree_invites(tree_id,email,role,invited_by)
+  values (p_tree,p_email,p_role,auth.uid())
+  on conflict (tree_id,email) do update set role=excluded.role;
+
+  -- If that email already has an account, apply the role live. Mark the invite
+  -- claimed so the directory shows them as active, not pending.
+  select id into target from auth.users where lower(email)=lower(p_email) limit 1;
+  if target is not null then
+    insert into public.tree_members(tree_id,user_id,role,invited_by)
+    values (p_tree,target,p_role,auth.uid())
+    on conflict (tree_id,user_id) do update set role=excluded.role;
+    update public.tree_invites set claimed_at=coalesce(claimed_at,now())
+      where tree_id=p_tree and email=p_email;
+  end if;
+end; $$;
+
+create or replace function public.revoke_access(p_tree uuid, p_email citext)
+  returns void language plpgsql security definer set search_path = public as $$
+declare target uuid;
+begin
+  if not public.is_tree_owner(p_tree) then raise exception 'not tree owner'; end if;
+  delete from public.tree_invites where tree_id=p_tree and email=p_email;
+  select id into target from auth.users where lower(email)=lower(p_email) limit 1;
+  if target is not null then
+    -- Never remove the owner's own membership via this path.
+    delete from public.tree_members m
+      where m.tree_id=p_tree and m.user_id=target and m.role <> 'owner';
+  end if;
+end; $$;
 
 -- Private photo bucket; object key = <tree_id>/<photo_id>.jpg
 insert into storage.buckets (id,name,public) values ('tree-photos','tree-photos',false)

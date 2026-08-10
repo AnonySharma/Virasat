@@ -48,8 +48,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // doesn't equal the row's current version matches 0 rows (PGRST116).
 function makeDb(row) {
   return {
-    from() {
-      const q = { _op: null, _patch: null, _eqs: {}, _row: row };
+    from(table) {
+      const q = { _op: null, _patch: null, _eqs: {}, _row: row, _table: table };
       q.select = () => q;
       q.order = () => q;
       q.limit = () => Promise.resolve({ data: q._row ? [{ id: q._row.id }] : [], error: null });
@@ -57,6 +57,11 @@ function makeDb(row) {
       q.insert = (patch) => { q._op = "insert"; q._patch = patch; return q; };
       q.update = (patch) => { q._op = "update"; q._patch = patch; return q; };
       q.single = () => {
+        // tree_members: cloud-store.loadRole() reads the caller's role. The
+        // owner (on_tree_created trigger) always has an 'owner' row.
+        if (q._table === "tree_members") {
+          return Promise.resolve({ data: { role: "owner" }, error: null });
+        }
         if (q._op === "insert") {
           Object.assign(q._row, q._patch, { id: q._row.id, version: 1 });
           return Promise.resolve({ data: { id: q._row.id }, error: null });

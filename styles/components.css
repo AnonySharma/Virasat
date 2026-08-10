@@ -1241,3 +1241,138 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 }
 .signin__error[hidden] { display: none; }
 
+/* ── Viewer role (read-only shared trees) ──────────────────────────────────
+   The store guard (FamilyStore.setReadOnly) is the correctness backstop; this
+   hides every affordance that would mutate the tree so a viewer never taps a
+   dead control. Every such control carries .js-edit-only. Export/print/find
+   are read-only and intentionally stay visible. */
+body.is-viewer .js-edit-only { display: none !important; }
+
+/* ── Tree list (multi-tree switcher) ──────────────────────────────────────── */
+.tree-list { display: flex; flex-direction: column; gap: 6px; min-width: min(420px, 78vw); }
+.tree-list__loading,
+.tree-list__empty {
+  color: var(--text-2);
+  font-size: 14px;
+  padding: 16px 4px;
+  text-align: center;
+}
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 4px 6px 4px 4px;
+  background: var(--bg-elev);
+}
+.tree-row--active { border-color: var(--olive-soft); background: var(--surface-2); }
+.tree-row__main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  border: 0;
+  padding: 8px 8px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+}
+.tree-row__main.is-active { cursor: default; }
+.tree-row__main:not(.is-active):hover { background: var(--surface-2); }
+.tree-row__icon { width: 18px; text-align: center; color: var(--accent-deep); flex: 0 0 auto; }
+.tree-row__label { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tree-row__name {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tree-row__role {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+}
+.tree-row__role--active { color: var(--accent-deep); }
+.tree-row__actions { display: flex; align-items: center; gap: 2px; flex: 0 0 auto; }
+.tree-row__action {
+  background: transparent;
+  border: 0;
+  width: 32px; height: 32px;
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.tree-row__action:hover { background: var(--surface-2); color: var(--text); }
+.tree-row__action--danger:hover { background: var(--danger-soft, #fbeaea); color: var(--danger, #b3261e); }
+
+/* ── Sharing (invite + members) ───────────────────────────────────────────── */
+.share { display: flex; flex-direction: column; gap: 14px; min-width: min(440px, 80vw); }
+.share__subtitle { margin: 0; color: var(--text-2); font-size: 14px; }
+.share__note {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+}
+.share-form { display: flex; flex-direction: column; gap: 10px; }
+.share-form__actions { display: flex; justify-content: flex-end; }
+.share__members-title {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+}
+.share-members { display: flex; flex-direction: column; gap: 6px; }
+.share-members__loading,
+.share-members__empty { color: var(--text-2); font-size: 13px; padding: 8px 2px; }
+.share-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg-elev);
+}
+.share-member__info { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.share-member__email {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.share-member__pills { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.share-member__role {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+}
+.share-member__pending {
+  font-size: 11px;
+  color: var(--accent-deep);
+  background: var(--accent-soft);
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+.share-member__controls { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.share-member__select { padding: 4px 8px; font-size: 13px; height: auto; }
+.share-member__remove { color: var(--text-2); }
+.share-member__remove:hover { color: var(--danger, #b3261e); }
+
