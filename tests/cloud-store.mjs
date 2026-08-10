@@ -29,9 +29,10 @@ global.localStorage = {
 };
 global.window = global;
 const events = [];
+const emitted = [];   // full events, so we can inspect .detail (conflict backup)
 global.window.addEventListener = () => {};
 global.document = { addEventListener() {} };
-global.dispatchEvent = (e) => { events.push(e.type); return true; };
+global.dispatchEvent = (e) => { events.push(e.type); emitted.push(e); return true; };
 global.CustomEvent = class { constructor(t, o) { this.type = t; Object.assign(this, o || {}); } };
 
 const failures = [];
@@ -143,12 +144,23 @@ await (async function run() {
     { id: "b2", name: "Other Device Person", parents: [], spouses: [] }
   ], marriages: {}, meta: { familyName: "Server" } };
   events.length = 0;
+  emitted.length = 0;
 
   FS.addPerson({ name: "Doomed Local Edit" });   // our base is 4, server is 9
   await CS.flush();
 
   assert(events.includes("virasat:cross-tab-conflict"),
     "a stale push should fire virasat:cross-tab-conflict, got " + JSON.stringify(events));
+  // The conflict event must carry the LOSING local snapshot so the banner can
+  // offer to save it before last-writer-wins discards it. Snapshot is captured
+  // BEFORE hydrate, so it still contains our doomed edit.
+  const conflictEvt = emitted.find((e) => e.type === "virasat:cross-tab-conflict");
+  const losing = conflictEvt && conflictEvt.detail && conflictEvt.detail.losing;
+  assert(losing && Array.isArray(losing.people),
+    "the conflict event should carry detail.losing with the pre-hydrate state");
+  assert(losing && losing.people.some((p) => p.name === "Doomed Local Edit"),
+    "the losing snapshot should still contain the doomed local edit, got "
+    + JSON.stringify(losing && losing.people.map((p) => p.name)));
   assert(FS.getVersion() === 9, "after conflict we should adopt the server version (9), got " + FS.getVersion());
   const afterConflict = FS.getPeople().map((p) => p.name);
   assert(afterConflict.includes("Other Device Person") && !afterConflict.includes("Doomed Local Edit"),

@@ -1020,8 +1020,8 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   position: fixed;
   left: 50%; bottom: 24px;
   transform: translateX(-50%);
-  display: inline-flex; align-items: center; gap: 12px;
-  max-width: min(540px, calc(100vw - 32px));
+  display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  max-width: min(560px, calc(100vw - 32px));
   padding: 10px 12px 10px 16px;
   background: var(--bg-elev);
   color: var(--text);
@@ -1034,7 +1034,10 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   animation: xTabBannerIn .25s ease-out;
 }
 .x-tab-banner__icon { color: var(--gold); font-size: 14px; flex-shrink: 0; }
-.x-tab-banner__msg { flex: 1; min-width: 0; }
+/* Message takes the row; the actions keep their size and wrap below on a
+   narrow screen (the banner has three buttons in the cloud conflict case). */
+.x-tab-banner__msg { flex: 1 1 200px; min-width: 0; }
+.x-tab-banner .btn { flex-shrink: 0; }
 .x-tab-banner__close { width: 32px; height: 32px; padding: 0; }
 @keyframes xTabBannerIn {
   from { opacity: 0; transform: translate(-50%, 8px); }

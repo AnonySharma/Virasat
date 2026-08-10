@@ -1,0 +1,55 @@
+# Keep the Supabase free-tier project awake.
+#
+# Free Supabase projects pause after ~7 days with no API activity; the next
+# visitor then eats a multi-second cold start. A trivial anon REST read every
+# few days keeps the project warm. (Postgres pg_cron does NOT help — the pause
+# is driven by EXTERNAL request inactivity, so the ping must come from outside.)
+#
+# The request uses the public anon key, which is safe to expose (Row-Level
+# Security is the real boundary) and already ships in lib/auth/config.js. It's
+# read from repo secrets so rotating the key never means editing this file;
+# if the secrets are unset the step is skipped rather than failing the run.
+#
+# Setup: repo → Settings → Secrets and variables → Actions → add
+#   SUPABASE_URL       e.g. https://kogchpccsphiecitwaav.supabase.co
+#   SUPABASE_ANON_KEY  the anon/public key from Project Settings → API
+name: keep-supabase-awake
+
+on:
+  schedule:
+    # Every 3 days at 07:17 UTC. The odd minute avoids the top-of-hour cron
+    # stampede on GitHub's shared runners (jobs can be delayed or dropped then).
+    - cron: "17 7 */3 * *"
+  workflow_dispatch: {}   # allow a manual "Run workflow" from the Actions tab
+
+# If a scheduled run is somehow still going when the next fires, don't stack.
+concurrency:
+  group: keep-supabase-awake
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping Supabase REST (trivial anon read)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "SUPABASE_URL / SUPABASE_ANON_KEY not set — skipping keep-alive."
+            echo "Add them in Settings → Secrets and variables → Actions to enable."
+            exit 0
+          fi
+          # limit=1 keeps the response tiny; RLS returns 0 rows for the anon
+          # role anyway, so nothing sensitive is ever fetched. -f fails the step
+          # on an HTTP error so a broken URL/key surfaces in the Actions log.
+          code=$(curl -fsS -o /dev/null -w "%{http_code}" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/trees?select=id&limit=1")
+          echo "Supabase responded HTTP $code — project is awake."
