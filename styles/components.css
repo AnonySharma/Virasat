@@ -40,6 +40,10 @@
 
 /* — Inputs — */
 .field { display: flex; flex-direction: column; gap: 6px; }
+/* display:flex above outranks the [hidden] attribute's UA display:none, so a
+   `field.hidden = true` (e.g. sign-in's first-name field) wouldn't hide
+   without this. */
+.field[hidden] { display: none; }
 .field__label {
   font-size: 11px; font-weight: 600; color: var(--text-3);
   text-transform: uppercase; letter-spacing: .08em;
@@ -1110,6 +1114,12 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   flex-direction: column;
   gap: 2px;
 }
+.kebab-menu__meta-greeting {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
 .kebab-menu__meta-label {
   font-size: 11px;
   font-weight: 600;
@@ -1245,60 +1255,131 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .signin__error[hidden] { display: none; }
 
 /* ── Landing (pre-login intro) ─────────────────────────────────────────────
-   Shown on the same jali backdrop as the sign-in gate. show() renders BOTH the
-   landing card and the auth card; the .signin--landing class picks which is
-   visible, so "Get started" is a pure class swap (no re-render). */
-.signin--landing .signin__card:not(.landing__card) { display: none; }
-.signin:not(.signin--landing) .landing__card { display: none; }
+   A FULL-PAGE intro on the same jali backdrop as the sign-in gate — a hero
+   plus a row of feature tiles that fills the viewport, deliberately unlike the
+   compact sign-in card so the two screens read as distinct pages. show()
+   renders BOTH the landing and the auth card; the .signin--landing class picks
+   which is visible, so "Get started" is a pure class swap (no re-render).
 
-.landing__card { max-width: 440px; }
+   The landing needs the whole viewport, but .signin centres its child (right
+   for the card). When landing is showing, override that: stretch to fill and
+   drop the page padding so the landing owns its own spacing. */
+.signin--landing { align-items: stretch; justify-content: stretch; padding: 0; }
+.signin--landing .signin__card { display: none; }
+.signin:not(.signin--landing) .landing { display: none; }
+
+.landing {
+  flex: 1;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-8) var(--s-6);
+}
+.landing__inner {
+  width: 100%;
+  max-width: 940px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-8);
+}
+.landing__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-3);
+  max-width: 620px;
+}
+.landing__logo { width: 72px; height: 72px; margin-bottom: var(--s-1); }
+.landing__title {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 6vw, 60px);
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
 .landing__pitch {
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: clamp(16px, 2.2vw, 20px);
+  line-height: 1.55;
   color: var(--text-2);
   margin: 0;
   text-wrap: balance;
 }
-.landing__features {
+.landing__actions {
   display: flex;
   flex-direction: column;
-  gap: var(--s-4);
-  margin: var(--s-2) 0;
-  text-align: left;
+  align-items: center;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
 }
-.landing__feature { display: flex; gap: var(--s-4); align-items: flex-start; }
+.landing__cta {
+  height: 50px;
+  padding-inline: var(--s-8);
+  font-size: 16px;
+  border-radius: var(--r-xl);
+}
+/* Three feature tiles side-by-side on a wide screen; they wrap to a single
+   column on phones (see the query below). */
+.landing__features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-5);
+  width: 100%;
+}
+.landing__feature {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+  padding: var(--s-6);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-sm);
+}
 .landing__feature-icon {
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--r-lg);
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--accent-soft);
   color: var(--accent-deep);
-  font-size: 16px;
+  font-size: 18px;
+  margin-bottom: var(--s-1);
 }
 .landing__feature-title {
-  font-size: 14.5px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text);
-  margin: 2px 0 3px;
+  margin: 0;
 }
 .landing__feature-body {
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 13.5px;
+  line-height: 1.55;
   color: var(--text-3);
   margin: 0;
 }
 .landing__footer {
-  font-size: 12px;
+  font-size: 12.5px;
   line-height: 1.5;
   color: var(--text-4);
-  margin: var(--s-1) 0 0;
+  margin: 0;
   text-align: center;
+  max-width: 520px;
 }
-.landing__card .signin__link { margin-top: calc(-1 * var(--s-2)); }
+@media (max-width: 720px) {
+  .landing { padding: var(--s-7) var(--s-5); }
+  .landing__inner { gap: var(--s-7); }
+  .landing__features { grid-template-columns: 1fr; gap: var(--s-4); max-width: 460px; }
+  .landing__feature { padding: var(--s-5); }
+}
 
 /* ── First-run (signed in, no tree yet) ────────────────────────────────────
    Reuses the .signin jali backdrop. A topbar carries the greeting + a sign-out
