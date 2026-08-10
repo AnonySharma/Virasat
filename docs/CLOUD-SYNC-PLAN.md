@@ -108,8 +108,9 @@ explicit `.supabase.co` early-return; add the 6 new `lib/auth/*.js` files to `SH
 ## Existing edits (~200 LOC)
 - `lib/core/data-store.js` (~60) — per-tree cache; split `persist()`; add `hydrateFromRemote`/
   `setActiveTree`/`getVersion`/`getActiveTreeId` + export them.
-- `lib/core/photo-store.js` (~70) — active-tree + compound keys; upload in `fileToPhotoId`;
-  download fallback in `getUrl`; remote delete; revoke cache on switch.
+- `lib/core/photo-store.js` (~70) — upload in `fileToPhotoId`; download fallback in `getUrl`;
+  remote delete; revoke cache on switch. **Flat IDB keys** (bare `photoId`), not compound
+  `<treeId>|<photoId>` — see the Phase 3 note for why.
 - `lib/app.js` (~50) — boot gate; move + gate `offerSampleData`/initial `activate` post-hydrate;
   `Inspector.clear()` on tree switch; account/share/tree entry points in header + phone kebab.
 - `index.html` (~12) — SDK UMD + `config.js` + `auth/*.js` script tags (correct order); account/
@@ -126,7 +127,7 @@ explicit `.supabase.co` early-return; add the 6 new `lib/auth/*.js` files to `SH
 | **0. Supabase setup** | ✅ Project live (ref `kogchpccsphiecitwaav`); schema applied; email+password enabled | — | 0.5 |
 | **1. Auth + gate** ✅ | UMD SDK (lazy, SRI) + `config.js` + `auth-store.js` + `sign-in.js`; app.js gate; SW SDK caching + v12; jali sign-in backdrop | Sign in 3 ways → gated empty app | 2 |
 | **2. Cloud tree CRUD** ✅ | `cloud-store.js` load/push/version-guard; FamilyStore hydrate/version methods; persist() split; per-tree cache; account menu (avatar/email + sign-out) in header + phone kebab | Edits round-trip to a 2nd device; user can see who they are + sign out | 2 |
-| **3. Photo cloud adapter** | upload on `fileToPhotoId`; download fallback in `getUrl`; compound keys; switch-revoke; remote delete; print/export `await` fix | Photos sync across devices | 1.5 |
+| **3. Photo cloud adapter** ✅ | upload on `fileToPhotoId`; download fallback in `getUrl`; flat keys + switch-revoke; remote delete; print `await` fix | Photos sync across devices | 1.5 |
 | **4. Local→cloud migration** | first sign-in detects `familyTree.v1`, offers "Upload as new cloud tree", inlines base64 photos to Storage, keeps local as fallback | Returning local user keeps their tree | 1 |
 | **5. Tree list + switcher** | `tree-list.js`; `activeTreeId` pointer; `Inspector.clear()` on switch; sample-CTA gating | Multiple trees | 1.5 |
 | **6. Sharing + roles** | `sharing.js` invite-by-email; `claim_invites` on login; viewer UI hiding (edit/add/delete removed) | Share to 2nd account; viewer can't edit | 2 |
@@ -176,6 +177,45 @@ account menu.
   - **Sample-data auto-offer** is suppressed when a cloud tree is active (accepting it would push
     the fixed-id sample onto a possibly-shared tree); the manual rail tool is unaffected. Role-based
     gating is **Phase 6**.
+
+**Phase 3 shipped:** photos sync across devices.
+- **What works:** `fileToPhotoId` still stores the downscaled, EXIF-stripped JPEG in IndexedDB
+  (instant + offline) **and** now uploads it in the background to the private bucket at
+  `<treeId>/<photoId>.jpg` (`upsert:true`, fire-and-forget so the Save UX never waits on the
+  network). `getUrl` gained a middle step: on an IDB miss it `storage.download()`s the bytes,
+  repopulates IDB under the same id, then hands back an object URL — so a cold device that has the
+  tree JSON but not its photos paints initials first, then swaps in the real photo, and every later
+  read (and `getUrlSync`) is instant + offline. `delete` fires a best-effort `storage.remove()`
+  alongside the local delete (covers person-delete + the edit-close reconcilers that clean up
+  superseded/speculative blobs). On a cloud tree switch / sign-out, `CloudStore` calls
+  `PhotoStore.resetCache()` to revoke the old tree's object URLs. `print-book.js` now `await`s all
+  `getUrl()`s before `window.print()` (was `.then`, which snapshotted blank photos on a cold remote
+  tree); `image-export.js` already awaited.
+- **Flat IDB keys, NOT compound `<treeId>|<photoId>` (deliberate divergence from the plan):**
+  `newPhotoId()` mints globally-unique ids, so cross-tree key collision is impossible and the
+  compound key would guard nothing. Flat keys buy two real wins: (a) switching back to an
+  already-visited tree repaints from the IDB cache **offline**, no re-download; (b) Phase 4
+  migration keeps `photoId`s verbatim — no blob re-keying. The `treeId` lives only in the Storage
+  object path (resolved fresh per call via `FamilyStore.getActiveTreeId()`), so `person.photoId` in
+  the JSONB stays bare + portable. Cost: blobs from visited trees linger in IDB (~30 KB each) —
+  storage hygiene, not a privacy or correctness issue (you already viewed them as a member);
+  `clearAll()` still wipes everything, and `resetCache()` frees the in-memory URLs on switch.
+- **All cloud calls are inert in local-only mode:** `cloudCtx()` returns null unless
+  `Auth.isCloud()` **and** an active tree, so an offline PWA does zero uploads/downloads — the
+  photo pipeline is byte-identical to before.
+- **Verified by** `tests/photo-cloud.mjs` (cloud-off no-op; no-active-tree no-op; upload path +
+  `upsert`/jpeg; download-fallback repopulates IDB + warms the sync cache; repeat read hits cache;
+  double-miss → null → initials; `resetCache` revokes+clears; `delete` fires remote delete) against
+  a mock Storage bucket + photo-store's built-in in-memory IDB fallback. smoke unchanged (22/22).
+- **Deliberate deferrals:**
+  - **LWW delete/edit race:** device A deletes a person (photo removed from bucket) while device B
+    was offline-editing that person; B's later push re-surfaces the person, but the blob is gone →
+    `getUrl` returns null → **initials**, never a broken `<img>`. Accepted LWW loss class.
+  - **A failed background upload** leaves the photo in IDB (visible on this device) + referenced by
+    the JSON, but not in the bucket; a later re-save of that person retries. No automatic
+    upload-retry queue yet (would ride on the Phase 7 reconnect-replay work).
+  - **No live-browser round-trip yet** — same CDP/system-policy block as Phase 2; covered by the
+    mock-backed test + the manual localhost checklist, pending the user's end-to-end pass.
 
 ---
 
