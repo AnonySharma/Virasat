@@ -125,7 +125,7 @@ explicit `.supabase.co` early-return; add the 6 new `lib/auth/*.js` files to `SH
 |---|---|---|---|
 | **0. Supabase setup** | ✅ Project live (ref `kogchpccsphiecitwaav`); schema applied; email+password enabled | — | 0.5 |
 | **1. Auth + gate** ✅ | UMD SDK (lazy, SRI) + `config.js` + `auth-store.js` + `sign-in.js`; app.js gate; SW SDK caching + v12; jali sign-in backdrop | Sign in 3 ways → gated empty app | 2 |
-| **2. Cloud tree CRUD** | `cloud-store.js` load/push/version-guard; FamilyStore hydrate/version methods; persist() split; per-tree cache; **account menu (avatar/email + sign-out) in header + phone kebab** — deferred from Phase 1 | Edits round-trip to a 2nd device; user can see who they are + sign out | 2 |
+| **2. Cloud tree CRUD** ✅ | `cloud-store.js` load/push/version-guard; FamilyStore hydrate/version methods; persist() split; per-tree cache; account menu (avatar/email + sign-out) in header + phone kebab | Edits round-trip to a 2nd device; user can see who they are + sign out | 2 |
 | **3. Photo cloud adapter** | upload on `fileToPhotoId`; download fallback in `getUrl`; compound keys; switch-revoke; remote delete; print/export `await` fix | Photos sync across devices | 1.5 |
 | **4. Local→cloud migration** | first sign-in detects `familyTree.v1`, offers "Upload as new cloud tree", inlines base64 photos to Storage, keeps local as fallback | Returning local user keeps their tree | 1 |
 | **5. Tree list + switcher** | `tree-list.js`; `activeTreeId` pointer; `Inspector.clear()` on switch; sample-CTA gating | Multiple trees | 1.5 |
@@ -142,6 +142,40 @@ log, server-side viewer redaction. First real demo lands end of Phase 1 (~day 2.
   and `Auth.getUser()` already exist; the header UI that calls them lands in **Phase 2**.
 - **SDK loads lazily** (not a static UMD `<script>`) so a local-only user fetches zero bytes of
   it; cloud-off stays truly zero-network. Verified by `tests/auth-gate.mjs`.
+
+**Phase 2 shipped (commits `11a19ea`, `7bb8c9f`, `d01d422`, `90acec8`):** cloud tree round-trip +
+account menu.
+- **What works:** on sign-in, `cloud-store.js` resolves the user's tree (owned → shared →
+  create-empty), hydrates `FamilyStore` before first paint, and pushes every edit back with a
+  debounced (~1.5 s) **version-guarded** UPDATE. A stale push (someone else advanced the row) hits
+  the 0-row guard → fires the existing `virasat:cross-tab-conflict` banner → re-hydrates the server
+  copy (last-writer-wins). `data-store.js` gained `hydrateFromRemote`/`setActiveTree`/`getVersion`/
+  `setVersion`/`onDirty` + a per-tree cache key (`familyTree.<treeId>.v1`); **local-only mode is
+  byte-identical to before** (all new state inert until `setActiveTree`/`onDirty` fire). Account
+  chip (desktop) + kebab row (phone) show the signed-in email and sign out (flush → stop → signOut
+  → reload).
+- **Verified by** `tests/cloud-sync.mjs` (per-tree cache, dirty-under-mute, no-dirty-on-hydrate,
+  sync cache write, throw-leaves-state-intact) + `tests/cloud-store.mjs` (resolve/hydrate against a
+  mock Supabase client, clean push bumps version, stale push → conflict + re-hydrate without
+  clobbering, stop() halts pushes). smoke now 22 scripts/22 globals.
+- **Not yet verified in a live browser:** the Playwright/CDP path is blocked by a system-admin
+  policy on this dev machine ("DevTools remote debugging is disallowed"), so the real device-to-
+  device round-trip is covered by the mock-backed test + a manual localhost checklist, not an
+  automated browser run. Needs the user (or a machine without that policy) to confirm.
+- **Deliberate deferrals (later phases, not regressions):**
+  - **Local→cloud migration** — a brand-new account gets an *empty* cloud tree; an existing
+    `familyTree.v1` is **not** auto-uploaded yet. That's **Phase 4** (offer "Upload as new cloud
+    tree"). Until then a returning local user who signs in starts fresh in the cloud (their local
+    blob is untouched under `familyTree.v1`).
+  - **Photos don't sync** — the JSONB blob carries `photoId` refs but the bytes still live only in
+    this device's IndexedDB. That's **Phase 3** (upload on `fileToPhotoId` + download fallback).
+  - **Realtime** — sync is load-on-boot + push-on-edit; a second device sees changes on its next
+    load, not live. Realtime channel + polling fallback are **Phase 7**.
+  - **Conflict backup UX** — on conflict we warn + reload (LWW); the "save my version as a backup
+    JSON first" flow is **Phase 8** (`ExportImport` has no public one-call backup trigger yet).
+  - **Sample-data auto-offer** is suppressed when a cloud tree is active (accepting it would push
+    the fixed-id sample onto a possibly-shared tree); the manual rail tool is unaffected. Role-based
+    gating is **Phase 6**.
 
 ---
 
