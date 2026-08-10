@@ -125,6 +125,51 @@ begin
   on conflict (tree_id,user_id) do nothing;
   get diagnostics claimed = row_count; return claimed; end; $$;
 
+-- — Owner-only sharing RPCs ————————————————————————————————————————————————
+-- SECURITY DEFINER so they can look a user up by email in auth.users (the
+-- client can't) and write tree_members without exposing user_ids. Both
+-- re-check ownership so a non-owner call is a no-op error. invite_to_tree
+-- doubles as the role-change path: re-inviting an existing member with a new
+-- role updates both the invite row and their live membership.
+create or replace function public.invite_to_tree(p_tree uuid, p_email citext, p_role text)
+  returns void language plpgsql security definer set search_path = public as $$
+declare target uuid;
+begin
+  if not public.is_tree_owner(p_tree) then raise exception 'not tree owner'; end if;
+  if p_role not in ('editor','viewer') then raise exception 'bad role'; end if;
+  if lower(p_email) = lower(auth.email()) then raise exception 'cannot invite yourself'; end if;
+
+  -- Record / update the invitation (the owner-readable member directory).
+  insert into public.tree_invites(tree_id,email,role,invited_by)
+  values (p_tree,p_email,p_role,auth.uid())
+  on conflict (tree_id,email) do update set role=excluded.role;
+
+  -- If that email already has an account, apply the role live. Mark the invite
+  -- claimed so the directory shows them as active, not pending.
+  select id into target from auth.users where lower(email)=lower(p_email) limit 1;
+  if target is not null then
+    insert into public.tree_members(tree_id,user_id,role,invited_by)
+    values (p_tree,target,p_role,auth.uid())
+    on conflict (tree_id,user_id) do update set role=excluded.role;
+    update public.tree_invites set claimed_at=coalesce(claimed_at,now())
+      where tree_id=p_tree and email=p_email;
+  end if;
+end; $$;
+
+create or replace function public.revoke_access(p_tree uuid, p_email citext)
+  returns void language plpgsql security definer set search_path = public as $$
+declare target uuid;
+begin
+  if not public.is_tree_owner(p_tree) then raise exception 'not tree owner'; end if;
+  delete from public.tree_invites where tree_id=p_tree and email=p_email;
+  select id into target from auth.users where lower(email)=lower(p_email) limit 1;
+  if target is not null then
+    -- Never remove the owner's own membership via this path.
+    delete from public.tree_members m
+      where m.tree_id=p_tree and m.user_id=target and m.role <> 'owner';
+  end if;
+end; $$;
+
 -- — Private photo bucket (object key = <tree_id>/<photo_id>.jpg) ——————————
 insert into storage.buckets (id,name,public) values ('tree-photos','tree-photos',false)
   on conflict (id) do nothing;
@@ -140,3 +185,21 @@ create policy photos_update on storage.objects for update
 drop policy if exists photos_delete on storage.objects;
 create policy photos_delete on storage.objects for delete
   using (bucket_id='tree-photos' and public.can_edit_tree((split_part(name,'/',1))::uuid));
+
+-- — Realtime ———————————————————————————————————————————————————————————————
+-- cloud-store subscribes a channel to the active tree's row so another
+-- device's push arrives near-live. postgres_changes only fires for tables in
+-- the supabase_realtime publication. RLS still applies to realtime events, so
+-- a client only receives changes for rows its SELECT policy lets it see — no
+-- cross-tree leakage. (The client also runs a 60s poll fallback, so this is a
+-- latency upgrade, not a correctness requirement.) Guarded so a re-run is safe:
+-- `add table` errors if the table is already a publication member.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname='supabase_realtime' and schemaname='public' and tablename='trees'
+  ) then
+    alter publication supabase_realtime add table public.trees;
+  end if;
+end $$;
