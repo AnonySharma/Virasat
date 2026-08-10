@@ -1099,6 +1099,31 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   height: 1px; background: var(--line);
   margin: 4px 6px;
 }
+/* Account block inside the popover / kebab: who's signed in. Non-interactive,
+   so it reads as a header rather than a tappable row. */
+.kebab-menu__meta {
+  padding: 8px 12px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.kebab-menu__meta-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+}
+.kebab-menu__meta-email {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  word-break: break-all;
+}
+/* Desktop account chip — an avatar-only button in the header action row.
+   The avatar span carries its own colour; keep the button chrome minimal. */
+.account-btn { padding: 4px; }
+.account-btn .avatar { cursor: pointer; }
 
 /* — Sign-in gate — full-viewport, shown only when cloud is enabled and
    nobody is signed in. Sits above everything (own layer, no modal-root). */
