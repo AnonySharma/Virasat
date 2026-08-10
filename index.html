@@ -207,6 +207,14 @@
   <script src="lib/features/collect-form.js"></script>
   <script src="lib/features/print-book.js"></script>
 
+  <!-- cloud auth (optional): local-first by default. With empty
+       lib/auth/config.js these are inert — no SDK is fetched and the app
+       boots exactly as the offline PWA. The Supabase SDK is loaded lazily
+       by auth-store.js only when config.js holds real credentials. -->
+  <script src="lib/auth/config.js"></script>
+  <script src="lib/auth/auth-store.js"></script>
+  <script src="lib/auth/sign-in.js"></script>
+
   <!-- sample data: bundled "Try sample family" tree. Lives in tests/ to
        keep lib/ free of base64 photo blobs. Loaded eagerly so the
        welcome offer + rail tool can call SampleData.build() sync. -->

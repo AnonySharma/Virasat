@@ -120,6 +120,9 @@ const order = [
   "lib/features/export-import.js",
   "lib/features/collect-form.js",
   "lib/features/print-book.js",
+  "lib/auth/config.js",
+  "lib/auth/auth-store.js",
+  "lib/auth/sign-in.js",
   "tests/sample-data.js"
 ];
 
@@ -154,6 +157,9 @@ const expectedGlobals = [
   "ExportImport",
   "CollectForm",
   "PrintBook",
+  "VirasatConfig",
+  "Auth",
+  "SignIn",
   "SampleData"
 ];
 for (const g of expectedGlobals) {

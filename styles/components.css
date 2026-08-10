@@ -1099,3 +1099,101 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   height: 1px; background: var(--line);
   margin: 4px 6px;
 }
+
+/* — Sign-in gate — full-viewport, shown only when cloud is enabled and
+   nobody is signed in. Sits above everything (own layer, no modal-root). */
+.signin {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-toast) + 10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-5);
+  background:
+    radial-gradient(120% 120% at 50% 0%, var(--gold-soft) 0%, transparent 55%),
+    var(--bg);
+  overflow-y: auto;
+}
+.signin__card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--s-8) var(--s-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.signin__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-2);
+}
+.signin__logo { width: 48px; height: 48px; }
+.signin__title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.signin__tagline {
+  font-size: 13.5px;
+  color: var(--text-3);
+  margin: 0;
+  line-height: 1.5;
+}
+.signin__form { display: flex; flex-direction: column; gap: var(--s-4); }
+.signin__form .btn--block { margin-top: var(--s-1); }
+.signin__provider { height: 42px; }
+.signin__link {
+  align-self: center;
+  background: none;
+  border: none;
+  color: var(--accent-deep);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+}
+.signin__link:hover { text-decoration: underline; }
+.signin__link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--olive-soft); }
+.signin__link:disabled { opacity: .5; cursor: default; text-decoration: none; }
+.signin__divider {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  color: var(--text-4);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.signin__divider::before,
+.signin__divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+.signin__error {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-radius: var(--r-md);
+  padding: 10px 14px;
+}
+.signin__error--note {
+  color: var(--accent-deep);
+  background: var(--accent-soft);
+}
+.signin__error[hidden] { display: none; }
+

@@ -13,7 +13,7 @@
  * Cache version is part of the cache name, so bumping CACHE_VERSION on
  * a release activates a clean replacement during `activate`.
  */
-const CACHE_VERSION = "v11";
+const CACHE_VERSION = "v12";
 const SHELL_CACHE = "virasat-shell-" + CACHE_VERSION;
 const RUNTIME_CACHE = "virasat-runtime-" + CACHE_VERSION;
 const CDN_CACHE = "virasat-cdn-" + CACHE_VERSION;
@@ -46,6 +46,9 @@ const SHELL = [
   "./lib/features/export-import.js",
   "./lib/features/collect-form.js",
   "./lib/features/print-book.js",
+  "./lib/auth/config.js",
+  "./lib/auth/auth-store.js",
+  "./lib/auth/sign-in.js",
   "./tests/sample-data.js",
   "./lib/app.js"
 ];
@@ -91,7 +94,10 @@ self.addEventListener("activate", (event) => {
 function isCdnHost(url) {
   return url.hostname === "fonts.googleapis.com"
     || url.hostname === "fonts.gstatic.com"
-    || url.hostname === "cdnjs.cloudflare.com";
+    || url.hostname === "cdnjs.cloudflare.com"
+    // Supabase JS SDK (loaded lazily by auth-store.js when cloud is enabled).
+    // Cache-first so an offline relaunch still has the client code.
+    || url.hostname === "cdn.jsdelivr.net";
 }
 
 self.addEventListener("fetch", (event) => {
@@ -99,7 +105,13 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  // Cross-origin fonts/icons → cache-first.
+  // Supabase API (auth, data, storage) must NEVER be cached — responses are
+  // per-user, auth'd, and change constantly. The cross-origin bail below
+  // already lets these through; this explicit guard makes the intent clear
+  // and survives any future reordering of the handlers above it.
+  if (url.hostname.endsWith(".supabase.co")) return;
+
+  // Cross-origin fonts/icons/SDK → cache-first.
   if (isCdnHost(url)) {
     event.respondWith(
       caches.open(CDN_CACHE).then(async (cache) => {
