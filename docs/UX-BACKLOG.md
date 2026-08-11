@@ -9,34 +9,11 @@ Each finding is verifiable against source at the cited `file:line`. Effort tags:
 **S** = small (one rule / a few lines), **M** = medium (new copy + a component
 change), **L** = large (broad sweep).
 
----
-
-## ✅ Shipped (2026-08-11 → 08-12)
-
-Landed across commits `11f433d`, `375c659`, `1a03083`, `5f9de57`. Verified
-(`node -c` per file, smoke green, tsc 5.9.3 = 0 errors). **CACHE_VERSION not yet
-bumped** — held until the rest of the queued changes land.
-
-- **[11f433d] Timeline** — square/open right-end for living bars + a
-  living/deceased legend.
-- **[1a03083] Self-profile editor** — update your display name from the account
-  menu; the account avatar now uses your name, not email initials.
-- **[375c659] Header Share** — a real owner-only invite button promoted into the
-  header, Export demoted from primary, and the misleading "Share as image"
-  renamed to "Save as image" (EN+HI).
-- **[11f433d] 6 verified bugs** — dead living/deceased chip classes; typed dates
-  silently lost unless you press Enter; sign-up "check your email" note wiped
-  instantly; no discard-guard on the person form; timeline bars clipped under the
-  sticky name column; the translated view-only banner never rendered.
-- **[5f9de57] 5 top gaps** — invisible add-child/spouse/parent (per-node
-  add-relative "+" affordance, stripped from PNG/print exports); no active-tree
-  name in the shell (now in the header sub-line); Hindi leaks (i18n sweep of the
-  person form — placeholders, hints, empty states, precision options, toasts); the
-  invisible keyboard focus ring (solid `--olive` ring + halo, meets 3:1); invites
-  with no delivery path (app-link row + copy button in the sharing dialog).
-
-Everything below is the **remaining backlog** — captured so nothing is lost, in
-rough priority order within each area.
+> **Progress:** the first two batches (11 findings) plus a third batch of 12
+> shipped on `feat/cloud-sync`. The **remaining backlog is below**; everything
+> shipped is collected in **[✅ Shipped](#-shipped)** at the bottom of this file.
+> **CACHE_VERSION is deliberately not yet bumped** — held until the rest of the
+> queued changes land.
 
 ---
 
@@ -74,20 +51,7 @@ rough priority order within each area.
 
 ## Onboarding & empty states
 
-- **[M] No language switch on landing / sign-in / first-run screens.** The EN/HI
-  toggle only lives in the app header, which is occluded until after sign-in AND
-  the first-tree screen. A Hindi-reading elder meets the whole funnel in English.
-  Add a toggle reusing `.lang-switch` into the landing hero and first-run topbar.
-  `lib/auth/sign-in.js:203-220`, `lib/auth/first-run.js:182-189`.
-- **[S] Blank app shell flashes after sign-in while the cloud tree loads.** Keep a
-  lightweight "Loading your tree…" splash between sign-in and first paint.
-  `lib/auth/sign-in.js:236-238`, `lib/app.js:720-728`.
-- **[S] People-view empty states are hardcoded English**, bypassing existing Hindi
-  keys. (Overlaps the i18n sweep; residual states remain.) `people-view.js:415-433`.
-- **[S] "First name" at sign-up has no rationale, no optional marker,** and a
-  redundant label+placeholder. Add `auth.firstNameHint`. `lib/auth/sign-in.js:44-52`.
-- **[S] First-run Import / Sample paths show busy feedback on the wrong button.**
-- **[S] No way back to the landing pitch once the auth card is revealed.**
+*(All findings in this area have shipped — see [✅ Shipped](#-shipped).)*
 
 ## Person form
 
@@ -111,35 +75,13 @@ rough priority order within each area.
 
 ## Tree canvas
 
-- **[M] The wedding-record editor is reachable only via the tiny gold knot** —
-  undiscoverable, keyboard-inaccessible, and absent for cross-row couples. Add a
-  "Marriage details" item to the node menu and make the knot focusable with
-  Enter/Space. New key `inspector.marriageDetails`. `tree-view.js:601,583,595-624`.
-- **[S] Node menu opens downward with no edge-flip and is clipped by the stage's
-  `overflow:hidden`** — bottom-row / edge nodes lose menu items incl. Delete.
-  Measure and flip/clamp after append. `tree-view.js:1459-1464`; `views.css:83`.
-  (Related to the mobile clip fix; desktop bottom-edge case remains.)
-- **[S] "Focus this lineage" fades ancestors and highlights only descendants** —
-  the opposite of what "lineage" (वंशावली) promises. Cheapest honest fix: relabel
-  to "Focus descendants"; better: also walk ancestors. `tree-view.js:1875-1902`.
-- **[M] Nodes show first-name-only; full name is in a hover `<title>` only** —
-  same-name relatives are indistinguishable on touch. Append a surname initial for
-  colliding first names. `tree-view.js:1036-1044`.
-- **[S] Right-clicking a pet offers Add spouse/child/parent,** nonsensical for a
-  companion animal.
-- **[M] After adding a relative, the new node is neither selected nor scrolled
-  into view** — it can land off-screen. Call `Inspector.show(saved.id)` + a
-  `TreeView.revealPerson(id)` pan/zoom. `people-view.js:1158-1160`, `tree-view.js:435`.
-  *(Partly related to the add-affordance gap being built now; the reveal remains.)*
+*(All findings in this area have shipped — see [✅ Shipped](#-shipped). The
+"Focus this lineage" fix relabelled to "Focus descendants" — the deeper option
+of also walking ancestors is still open if desired.)*
 
 ## Sharing, collaboration & account
 
-- **[M] Inviting defaults to "Can edit", and neither role is ever explained.**
-  Default to view-only; add a one-line `share.roleHelp` under the select.
-  `lib/auth/sharing.js:98-101`.
-- **[S] Multi-tree switching lacks a labelled home** — it lives only inside the
-  account menu behind an email-initials avatar. Add a rail entry calling
-  `TreeList.open()` reusing `tree.yourTrees`. `lib/app.js:434-447`.
+*(All findings in this area have shipped — see [✅ Shipped](#-shipped).)*
 
 ## Mobile & responsive
 
@@ -162,18 +104,73 @@ rough priority order within each area.
 
 ## Timeline & people
 
-- **[M] "present" and date-precision markers are hardcoded English** in the shared
-  lifespan label — Hindi timelines/cards read "1950–present", "c. 1950". Add
-  `common.present`, `date.circa/before/after`. `timeline-view.js:281`,
-  `data-store.js:940-946`. *(Partly covered by the i18n sweep; the shared
-  data-store formatter remains.)*
-- **[S] Search silently drops the active Living/Deceased filter in People view.**
-  Apply the same `filterMode` test in the search branch. `people-view.js:152-177`.
-- **[S] Timeline's sticky name column isn't clickable** — off-screen bars leave the
-  visible name inert. Give it `role=button`, `tabindex=0`, and the openPerson
-  handler. `timeline-view.js:319-324`.
-- **[S] People search shows no result count** — the header still reads the full
-  member total.
+*(All findings in this area have shipped — see [✅ Shipped](#-shipped).)*
+
+---
+
+## ✅ Shipped
+
+All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
+tsc 5.9.3 = 0 errors). **CACHE_VERSION deliberately not yet bumped** — held until
+the rest of the queued cloud work lands.
+
+### Batch 1–2 (2026-08-11 → 08-12)
+
+- **[11f433d] Timeline** — square/open right-end for living bars + a
+  living/deceased legend.
+- **[1a03083] Self-profile editor** — update your display name from the account
+  menu; the account avatar now uses your name, not email initials.
+- **[375c659] Header Share** — a real owner-only invite button promoted into the
+  header, Export demoted from primary, and the misleading "Share as image"
+  renamed to "Save as image" (EN+HI).
+- **[11f433d] 6 verified bugs** — dead living/deceased chip classes; typed dates
+  silently lost unless you press Enter; sign-up "check your email" note wiped
+  instantly; no discard-guard on the person form; timeline bars clipped under the
+  sticky name column; the translated view-only banner never rendered.
+- **[5f9de57] 5 top gaps** — invisible add-child/spouse/parent (per-node
+  add-relative "+" affordance, stripped from PNG/print exports); no active-tree
+  name in the shell (now in the header sub-line); Hindi leaks (i18n sweep of the
+  person form — placeholders, hints, empty states, precision options, toasts); the
+  invisible keyboard focus ring (solid `--olive` ring + halo, meets 3:1); invites
+  with no delivery path (app-link row + copy button in the sharing dialog).
+
+### Batch 3 (2026-08-12)
+
+- **[cdefb5d] Timeline & people — lifespan i18n + clickable name.** "present" and
+  the date-precision markers (`common.present`, `date.circa/before/after`) now go
+  through I18n in the shared `data-store` lifespan formatter, so Hindi
+  timelines/cards no longer read "1950–present" / "c. 1950". The timeline's sticky
+  name column is now a real button (`role=button`, `tabindex=0`, keyboard) so
+  off-screen bars are still openable.
+- **[c2d73ca] People view — filter-aware search, result count, i18n finish.**
+  Search now respects the active Living/Deceased filter (shared `matchesFilter`);
+  the header sub-line reports a live result count while searching or filtering
+  (`people.result{One,Many,None}`); the last hardcoded English (search + story-card
+  aria-labels, untitled-story title, Reframe, remove-spouse) routes through I18n.
+- **[c1e1692] Sharing — safe default + explained roles.** Invites default to
+  view-only (viewer option listed first), and a one-line `share.roleHelp` explains
+  the two roles under the select.
+- **[b716722] Tree canvas — menu clamp, marriage entry, pet gating, collisions.**
+  Node menu measures and flips/clamps within the stage so bottom/edge nodes keep
+  all items (incl. Delete); a "Marriage details" node-menu item + a focusable knot
+  (Enter/Space, `inspector.marriageDetails`) make the wedding editor discoverable
+  and keyboard-reachable; "Focus this lineage" relabelled to "Focus descendants"
+  to match what it does; colliding first names get a surname initial ("Ram S.");
+  pet nodes no longer offer add-relative.
+- **[86c89da] Reveal a newly added relative.** After a successful add, the new node
+  is selected (`Inspector.show`) and panned/zoomed into view
+  (`TreeView.revealPerson`) so it can't land off-screen.
+- **[9cb1d62] Labelled multi-tree home in the rail.** A "Your trees" rail entry
+  (`tree.yourTrees`) calls `TreeList.open()`, revealed only in cloud mode — no
+  longer hidden behind the account-menu avatar.
+- **[15eff36] Onboarding chrome, boot splash, first-run busy fix.** Landing /
+  sign-in / first-run get a shared lang + theme cluster (`UI.onboardChrome()`)
+  since the header's toggles are occluded pre-app, with live re-translation via
+  `data-i18n` + `I18n.onChange`; a "Loading your tree…" splash (`sync.loadingTree`)
+  covers the sign-in→first-paint gap; the sign-up first-name field gains an
+  "optional" tag + rationale hint (`auth.firstNameHint`) and an example-name
+  placeholder; a "Back" link (`auth.backToIntro`) returns from the auth card to the
+  landing; first-run Import/Sample now show busy on the button actually pressed.
 
 ---
 
