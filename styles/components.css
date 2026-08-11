@@ -49,6 +49,10 @@
   text-transform: uppercase; letter-spacing: .08em;
 }
 .field__hint { font-size: 12px; color: var(--text-3); }
+/* Account > Edit profile dialog: stack the name/email fields with breathing
+   room (the wrapper isn't itself a flex column like .signin__form is). */
+.profile-edit { display: flex; flex-direction: column; gap: 16px; }
+.profile-edit .input:disabled { opacity: .6; cursor: not-allowed; }
 .input, .select, .textarea {
   width: 100%;
   background: var(--bg-elev);
