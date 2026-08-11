@@ -11,23 +11,29 @@ change), **L** = large (broad sweep).
 
 ---
 
-## ✅ Being implemented now (this batch)
+## ✅ Shipped (2026-08-11 → 08-12)
 
-These are tracked separately and are **not** part of the backlog below:
+Landed across commits `11f433d`, `375c659`, `1a03083`, `5f9de57`. Verified
+(`node -c` per file, smoke green, tsc 5.9.3 = 0 errors). **CACHE_VERSION not yet
+bumped** — held until the rest of the queued changes land.
 
-- **Timeline** — square/open right-end for living bars + a living/deceased legend.
-- **Self-profile editor** — update your display name from the account menu; avatar
-  uses your name, not email initials.
-- **Header Share** — a real owner-only invite button promoted into the header,
-  Export demoted from primary, and the misleading "Share as image" renamed to
-  "Save as image".
-- **6 verified bugs** — dead living/deceased chip classes; typed dates silently
-  lost unless you press Enter; sign-up "check your email" note wiped instantly;
-  no discard-guard on the person form; timeline bars clipped under the sticky
-  name column; the translated view-only banner never rendered.
-- **5 top gaps** — invisible add-child/spouse/parent (add a node affordance);
-  no active-tree name in the shell; Hindi leaks (i18n sweep of the worst
-  offenders); invisible keyboard focus ring; invites with no delivery path.
+- **[11f433d] Timeline** — square/open right-end for living bars + a
+  living/deceased legend.
+- **[1a03083] Self-profile editor** — update your display name from the account
+  menu; the account avatar now uses your name, not email initials.
+- **[375c659] Header Share** — a real owner-only invite button promoted into the
+  header, Export demoted from primary, and the misleading "Share as image"
+  renamed to "Save as image" (EN+HI).
+- **[11f433d] 6 verified bugs** — dead living/deceased chip classes; typed dates
+  silently lost unless you press Enter; sign-up "check your email" note wiped
+  instantly; no discard-guard on the person form; timeline bars clipped under the
+  sticky name column; the translated view-only banner never rendered.
+- **[5f9de57] 5 top gaps** — invisible add-child/spouse/parent (per-node
+  add-relative "+" affordance, stripped from PNG/print exports); no active-tree
+  name in the shell (now in the header sub-line); Hindi leaks (i18n sweep of the
+  person form — placeholders, hints, empty states, precision options, toasts); the
+  invisible keyboard focus ring (solid `--olive` ring + halo, meets 3:1); invites
+  with no delivery path (app-link row + copy button in the sharing dialog).
 
 Everything below is the **remaining backlog** — captured so nothing is lost, in
 rough priority order within each area.
