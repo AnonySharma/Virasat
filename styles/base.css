@@ -127,7 +127,7 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   transition: background var(--t-fast), border-color var(--t-fast);
 }
 .header-search:hover { background: var(--surface-3); }
-.header-search:focus-within { background: var(--bg-elev); border-color: var(--accent); box-shadow: 0 0 0 4px var(--olive-soft); }
+.header-search:focus-within { background: var(--bg-elev); border-color: var(--olive); box-shadow: 0 0 0 2px var(--olive), 0 0 0 5px var(--olive-soft); }
 .header-search input {
   background: transparent; border: 0; outline: 0;
   flex: 1; color: inherit; font-size: 13px;

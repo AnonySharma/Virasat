@@ -1419,6 +1419,31 @@
   pointer-events: none;
 }
 
+/* Add-relative "+" affordance — bottom-right of a node. Rests dim so it
+   doesn't clutter a dense tree, and lifts to full olive when its node is
+   hovered/focused or the badge itself is focused (keyboard). */
+.t-node-add { opacity: 0.28; transition: opacity var(--t-fast, 140ms) ease; }
+.t-node:hover .t-node-add,
+.t-node:focus-visible .t-node-add,
+.t-node-add:hover,
+.t-node-add:focus-visible { opacity: 1; }
+.t-node-add:focus-visible { outline: none; }
+.t-node-add-bg {
+  fill: var(--olive);
+  stroke: var(--bone);
+  stroke-width: 2;
+}
+.t-node-add:focus-visible .t-node-add-bg { stroke: var(--olive-deep); stroke-width: 2.5; }
+.t-node-add:hover .t-node-add-bg { fill: var(--olive-deep); }
+.t-node-add-plus {
+  fill: var(--bone);
+  pointer-events: none;
+}
+/* Touch devices have no hover — keep the affordance always legible there. */
+@media (hover: none) {
+  .t-node-add { opacity: 0.85; }
+}
+
 /* (Pet tether retired — pets are now child-edge risers with .t-edge--pet
    styling, drawn as part of drawEdges.) */
 
