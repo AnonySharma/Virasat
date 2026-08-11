@@ -1283,6 +1283,18 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 }
 .signin__error[hidden] { display: none; }
 
+/* ── Boot splash (between sign-in and first data-complete paint) ────────────
+   Same jali backdrop as .signin so the transition from the sign-in screen is
+   seamless. A logo, a spinner, and the "Loading your tree…" line, centred. */
+.app-splash { flex-direction: column; gap: var(--s-5); }
+.app-splash__inner {
+  display: flex; flex-direction: column; align-items: center; gap: var(--s-4);
+  text-align: center;
+}
+.app-splash__logo { width: 56px; height: 56px; opacity: .95; }
+.app-splash__spinner { font-size: 22px; color: var(--accent-deep); }
+.app-splash__msg { font-size: 14px; color: var(--text-3); letter-spacing: .01em; }
+
 /* ── Landing (pre-login intro) ─────────────────────────────────────────────
    A FULL-PAGE intro on the same jali backdrop as the sign-in gate — a hero
    plus a row of feature tiles that fills the viewport, deliberately unlike the
@@ -1298,6 +1310,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .signin:not(.signin--landing) .landing { display: none; }
 
 .landing {
+  position: relative;
   flex: 1;
   min-height: 100%;
   display: flex;
@@ -1496,6 +1509,75 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .firstrun__alt-text { display: flex; flex-direction: column; gap: 1px; }
 .firstrun__alt-title { font-size: 14px; font-weight: 600; }
 .firstrun__alt-body { font-size: 12.5px; color: var(--text-3); line-height: 1.4; }
+
+/* ── Onboarding chrome (lang + theme on landing / sign-in / first-run) ──────
+   These screens render as a full-viewport overlay ABOVE the app header, so the
+   header's own EN/HI + theme toggles are unreachable. UI.onboardChrome() mints
+   a matching cluster; the slots below pin it into each screen. It reuses the
+   .lang-switch and .theme-toggle component styles verbatim so the affordance is
+   identical to the in-app one. */
+.onboard-chrome { display: inline-flex; align-items: center; gap: var(--s-3); }
+/* Landing: pinned top-right of the full-page hero. */
+.onboard-chrome-slot--landing {
+  position: absolute; top: var(--s-4); right: var(--s-5); z-index: 2;
+}
+/* Auth card: pinned to the card's own top-right corner (card is positioned). */
+.signin__card { position: relative; }
+.onboard-chrome-slot--card {
+  position: absolute; top: var(--s-4); right: var(--s-4); z-index: 2;
+}
+/* First-run already lays its topbar out as a flex row (greeting · chrome ·
+   sign-out); the chrome sits in the middle and pushes sign-out to the end. The
+   greeting shrinks + truncates so a long email can't push the controls off a
+   narrow phone. */
+.firstrun__topbar { z-index: 2; }
+.firstrun__topbar .onboard-chrome { margin-left: auto; flex: none; }
+.firstrun__topbar .firstrun__signout { margin-left: 0; flex: none; }
+.firstrun__greeting {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+@media (max-width: 480px) {
+  /* Non-essential on a phone; drop it so the lang/theme + sign-out breathe. */
+  .firstrun__greeting { display: none; }
+}
+@media (max-width: 480px) {
+  /* On a narrow phone the card chrome would collide with the brand logo; drop
+     it to a slightly smaller, tighter cluster. */
+  .onboard-chrome-slot--card { top: var(--s-3); right: var(--s-3); }
+  .onboard-chrome-slot--card .theme-toggle { width: 34px; height: 34px; }
+}
+
+/* "Back" from the auth card to the landing intro — a quiet ghost link in the
+   card's top-left, mirroring the chrome's top-right. Hidden by default; shown
+   only when the card is reachable (i.e. not on the landing itself, where the
+   card is display:none anyway). */
+.signin__back {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  background: none; border: none;
+  color: var(--text-3); font-size: 13px; font-weight: 500;
+  cursor: pointer; padding: var(--s-1) var(--s-2);
+  margin: calc(var(--s-2) * -1) 0 calc(var(--s-2) * -1) calc(var(--s-2) * -1);
+  border-radius: var(--r-sm);
+}
+.signin__back:hover { color: var(--text); }
+.signin__back:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--olive-soft); }
+.signin__back > i { font-size: 11px; }
+
+/* First-run alt buttons (Import / Sample) gain a busy spinner that swaps in for
+   the leading icon while a create is in flight (setBusyLabel toggles .is-busy
+   on the pressed button). Without this, tapping Import/Sample gave no feedback
+   on the button actually pressed. */
+.firstrun__alt-spinner { display: none; }
+.firstrun__alt.is-busy { pointer-events: none; }
+.firstrun__alt.is-busy .firstrun__alt-icon { display: none; }
+.firstrun__alt.is-busy .firstrun__alt-spinner {
+  display: inline-block;
+  flex: none; font-size: 16px; color: var(--accent-deep);
+  width: 20px; text-align: center;
+}
+.firstrun__alt:disabled { opacity: .55; cursor: default; }
+.firstrun__alt.is-busy { opacity: 1; }
 
 /* ── Viewer role (read-only shared trees) ──────────────────────────────────
    The store guard (FamilyStore.setReadOnly) is the correctness backstop; this

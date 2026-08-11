@@ -177,7 +177,7 @@ for (const g of expectedGlobals) {
 // --- UI helpers that callers depend on -------------------------------------
 const expectedUiHelpers = [
   "el", "clear", "clamp", "avatar", "toast", "openModal", "confirm",
-  "emptyState", "cancelBtn", "saveBtn", "field", "downloadFile", "pastelFor"
+  "emptyState", "cancelBtn", "saveBtn", "field", "onboardChrome", "downloadFile", "pastelFor"
 ];
 for (const k of expectedUiHelpers) {
   if (typeof global.UI?.[k] !== "function") failures.push("missing UI." + k);
