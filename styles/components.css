@@ -1063,6 +1063,22 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   .x-tab-banner { animation: none; }
 }
 
+/* === View-only banner ===
+   Quiet, persistent strip shown at the top of the canvas when the signed-in
+   member has viewer (read-only) access, explaining why edit controls are gone.
+   Not dismissable — it's an ongoing state, not a notification. */
+.viewer-banner {
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+  padding: 8px 16px;
+  background: var(--olive-soft);
+  color: var(--olive-deep);
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.viewer-banner__icon { flex-shrink: 0; opacity: .8; }
+.viewer-banner__msg { flex: 1; min-width: 0; }
+
 /* === Kebab overflow menu (phone-only header) ===
    Triggered by the .kebab-btn that's hidden ≥ 769 px. Anchored under
    the kebab; flush-right of the viewport. Same heritage tone as

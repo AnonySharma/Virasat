@@ -594,6 +594,26 @@
 }
 .timeline-bar:hover { filter: brightness(1.06); transform: translateY(-1px); }
 .timeline-bar--deceased { background: var(--rust); }
+/* Living person: the lifespan has no known end, so square off the right edge
+   (the rounded pill cap wrongly implies a fixed end date) and feather it into
+   a soft gradient so the bar reads as "ongoing" rather than "stops here". */
+.timeline-bar--ongoing {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  -webkit-mask-image: linear-gradient(to left, transparent 0, #000 10px);
+          mask-image: linear-gradient(to left, transparent 0, #000 10px);
+}
+/* When an ongoing bar also has an uncertain birth, feather both ends. */
+.timeline-bar--ongoing.timeline-bar--fade-left {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 10px), transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 10px), transparent 100%);
+}
+/* Living / deceased colour legend, sits with the zoom controls. */
+.timeline-legend { display: inline-flex; align-items: center; gap: var(--s-3); margin-left: auto; }
+.timeline-legend__item { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-2); }
+.timeline-legend__swatch { width: 14px; height: 10px; border-radius: 2px 0 0 2px; flex-shrink: 0; }
+.timeline-legend__swatch--living { background: var(--olive); border-radius: 5px 2px 2px 5px; }
+.timeline-legend__swatch--deceased { background: var(--rust); border-radius: 5px; }
 /* Death-only people: shown as a slim marker centred on the year so the bar
    doesn't visually claim a span from death-year to ~death-year+2. */
 .timeline-bar--point {
@@ -632,6 +652,11 @@
   font-size: 13px; font-weight: 500;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   color: var(--text);
+}
+/* Must equal nameColWidth() in timeline-view.js (120 on mobile) — otherwise the
+   left edge of every bar hides under this opaque sticky column. */
+@media (max-width: 720px) {
+  .timeline-name-col { width: 120px; }
 }
 
 /* ========== Inspector — biographical, photo-first ========== */
