@@ -652,6 +652,12 @@
   font-size: 13px; font-weight: 500;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   color: var(--text);
+  cursor: pointer;
+}
+.timeline-name-col:hover { background: var(--bg-hover, var(--bg-elev)); }
+.timeline-name-col:focus-visible {
+  outline: 2px solid var(--olive);
+  outline-offset: -2px;
 }
 /* Must equal nameColWidth() in timeline-view.js (120 on mobile) — otherwise the
    left edge of every bar hides under this opaque sticky column. */
