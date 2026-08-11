@@ -84,13 +84,21 @@
         <i class="fa-solid fa-clipboard" aria-hidden="true"></i>
         <span class="btn__label-md" data-i18n="actions.collect">Collect</span>
       </button>
-      <button class="btn js-edit-only" id="import-btn" type="button" title="Import">
+      <button class="btn js-edit-only" id="import-btn" type="button" title="Import" data-i18n-title="actions.import">
         <i class="fa-solid fa-file-import" aria-hidden="true"></i>
         <span class="btn__label-md" data-i18n="actions.import">Import</span>
       </button>
-      <button class="btn btn--primary" id="export-btn" type="button" title="Export">
+      <button class="btn" id="export-btn" type="button" title="Export" data-i18n-title="actions.export">
         <i class="fa-solid fa-file-export" aria-hidden="true"></i>
         <span class="btn__label-md" data-i18n="actions.export">Export</span>
+      </button>
+      <!-- Inviting family is the highest-value action in the multi-user app, so
+           Share is the header's primary button. Owner-only; shown by app.js
+           once cloud + ownership are known (hidden by default to avoid a flash
+           in local mode or for editors/viewers). -->
+      <button class="btn btn--primary" id="share-btn" type="button" title="Share" data-i18n-title="share.title" hidden>
+        <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+        <span class="btn__label-md" data-i18n="share.title">Share</span>
       </button>
     </div>
 
