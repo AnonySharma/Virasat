@@ -395,6 +395,20 @@
 .t-couple-knot:hover {
   animation: knot-pulse 1500ms cubic-bezier(.4,.0,.2,1) infinite;
 }
+/* Keyboard focus on the (now focusable) knot — mirror the node focus ring so
+   the gold dot is clearly the active target. SVG can't take box-shadow, so use
+   outline, which SVG honours in modern engines. */
+.t-couple-knot { outline: none; }
+.t-couple-knot:focus-visible .t-couple-knot__icon {
+  filter:
+    drop-shadow(1px 0 0 var(--olive))
+    drop-shadow(-1px 0 0 var(--olive))
+    drop-shadow(0 1px 0 var(--olive))
+    drop-shadow(0 -1px 0 var(--olive));
+}
+.t-couple-knot:focus-visible {
+  animation: knot-pulse 1500ms cubic-bezier(.4,.0,.2,1) infinite;
+}
 @keyframes knot-pulse {
   0%, 100% { transform: scale(1); }
   50%      { transform: scale(1.18); }
