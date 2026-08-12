@@ -560,6 +560,9 @@
   border: 1px solid var(--line);
   overflow: auto;
   -webkit-overflow-scrolling: touch;
+  /* One-finger pan scrolls natively; two-finger pinch is delivered to the JS
+     zoom handler instead of triggering the browser's native page zoom. */
+  touch-action: pan-x pan-y;
   flex: 1;
   min-height: 0;
 }
