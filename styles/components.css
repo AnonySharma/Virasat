@@ -1805,4 +1805,7 @@ body.is-viewer .js-edit-only { display: none !important; }
 .share-member__select { padding: 4px 8px; font-size: 13px; height: auto; }
 .share-member__remove { color: var(--text-2); }
 .share-member__remove:hover { color: var(--danger, #b3261e); }
+.share-member__copy { color: var(--text-2); }
+.share-member__copy:hover { color: var(--olive-deep); }
+.share-member__copy.is-copied { background: var(--olive); border-color: var(--olive); color: var(--bone); }
 
