@@ -9,72 +9,37 @@ Each finding is verifiable against source at the cited `file:line`. Effort tags:
 **S** = small (one rule / a few lines), **M** = medium (new copy + a component
 change), **L** = large (broad sweep).
 
-> **Progress:** the first two batches (11 findings) plus a third batch of 12 and
-> a fourth a11y/i18n/responsive sweep shipped on `feat/cloud-sync`. The
-> **remaining backlog is below**; everything shipped is collected in
-> **[✅ Shipped](#-shipped)** at the bottom of this file. **CACHE_VERSION is
-> deliberately not yet bumped** — held until the rest of the queued changes land.
+> **Progress:** every finding from the original 8-agent audit has now shipped on
+> `feat/cloud-sync` (batches 1–5, below). **The original backlog is fully
+> cleared.** Everything is collected in **[✅ Shipped](#-shipped)** at the bottom
+> of this file. **CACHE_VERSION is deliberately not yet bumped** — held until the
+> rest of the queued changes land. A fresh deep UX + usability review is being
+> run to surface anything new; net-new findings will be appended under
+> **[Follow-up review](#follow-up-review-2026-08-12)** as they come in.
 
 ---
 
-## Accessibility & i18n
+## Original audit — fully cleared ✅
 
-- **[M] Save validation is a 2.4s polite toast with no `aria-invalid`.** Set
-  `aria-invalid` on the field and render a persistent inline error tied via
-  `aria-describedby`; and/or make danger toasts assertive. Copy already exists
-  (`form.nameRequired`, `form.dateInvalid`). `lib/views/people-view.js:1082-1100`.
-- **[M] Mobile kebab/hamburger: `aria-expanded` stale, focus not moved.** Toggle
-  `aria-expanded` on open/close, move focus to the first item on open, restore to
-  the anchor on close, add ArrowUp/Down between items. `lib/app.js:240-345, 547-553`.
+All 59 findings across the eight audit areas (Accessibility & i18n, Header/nav/IA,
+Onboarding & empty states, Person form, Tree canvas, Sharing/collaboration/account,
+Mobile & responsive, Timeline & people) have shipped. See **[✅ Shipped](#-shipped)**
+for the per-batch record. The final tranche (Batch 5) closed the last open items:
+inline person-form validation, birth<death / no-future date checks, name-or-name_hi,
+Essentials/More-details grouping, labelled/conditional date-precision, kebab &
+hamburger `aria-expanded`/focus/arrow-keys, debounced header search + phone Search
+row, kebab Add-person, timeline pinch-to-zoom, and the "Focus bloodline" ancestor walk.
 
-## Header, navigation & information architecture
+---
 
-- **[M] Global search yanks you to People on every keystroke** and disappears on
-  phone with no kebab fallback. Debounce/soften the auto-switch; add a "Search
-  people" kebab row on phone. `lib/app.js:139-144`; `styles/base.css:208`.
+## Follow-up review (2026-08-12)
 
-## Onboarding & empty states
+*A fresh deep UX + usability review (multi-agent) is running now that the original
+audit is cleared. Net-new findings — anything not already covered above — will be
+consolidated here, ranked by impact, each with a `file:line` anchor and an effort
+tag. Nothing below is committed to yet; this is a fresh triage surface.*
 
-*(All findings in this area have shipped — see [✅ Shipped](#-shipped).)*
-
-## Person form
-
-- **[S] A Latin-script name is mandatory — you cannot save a person with only a
-  Hindi name.** Accept the record when *either* `name` or `name_hi` is non-empty;
-  if `name` is blank, store `name_hi` as the resolving name. `people-view.js:598-608,
-  1083-1087, 999-1009`.
-- **[S] No sanity check that birth precedes death** (or that dates aren't in the
-  future); `calcAge` goes negative. Add `form.dateOrderInvalid`. `people-view.js:1089-1100`,
-  `data-store.js:918-927`.
-- **[M] Validation errors are transient toasts, not inline field errors,** with no
-  aria wiring. Render into a `.field__error` span, set `aria-invalid` +
-  `aria-describedby`, add an `.input.is-invalid` rule. `people-view.js:1084-1099`.
-- **[M] The form is a flat wall of ~15 field groups** with no grouping and no
-  "only name is required" cue. Keep an always-visible Essentials block and move
-  the rest into a collapsible "More details". `people-view.js:1013-1042`.
-- **[S] Date-precision dropdown always shows,** even beside a blank/"living" death
-  date, and is unlabeled.
-
-## Tree canvas
-
-*(All findings in this area have shipped — see [✅ Shipped](#-shipped). The
-"Focus this lineage" fix relabelled to "Focus descendants" — the deeper option
-of also walking ancestors is still open if desired.)*
-
-## Sharing, collaboration & account
-
-*(All findings in this area have shipped — see [✅ Shipped](#-shipped).)*
-
-## Mobile & responsive
-
-- **[S] Kebab overflow menu omits Add person,** the core creation action. Add a
-  row inside the `canEdit` block. `lib/app.js:299-306`.
-- **[M] Timeline has no pinch-to-zoom on touch.** (The hardcoded English TODAY
-  label has shipped — see [✅ Shipped](#-shipped).)
-
-## Timeline & people
-
-*(All findings in this area have shipped — see [✅ Shipped](#-shipped).)*
+_(Pending — findings will be appended when the review agents report.)_
 
 ---
 
@@ -83,6 +48,42 @@ of also walking ancestors is still open if desired.)*
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). **CACHE_VERSION deliberately not yet bumped** — held until
 the rest of the queued cloud work lands.
+
+### Batch 5 — final backlog clear (2026-08-12)
+
+- **[a3538bd] Person form — inline validation + aria.** Save errors are no longer
+  a transient polite toast: each renders into a `role="alert"` `.field__error`
+  span tied to its control via `aria-describedby`, with `aria-invalid` +
+  `.is-invalid` styling that clears as you edit. `people-view.js`, `components.css`.
+- **[a3538bd] Person form — accept a Hindi-only name.** A record saves when
+  *either* `name` or `name_hi` is set; a blank Latin field resolves `name_hi` into
+  the stored name, so Hindi-only recorders aren't forced to romanise. `people-view.js`.
+- **[a3538bd] Person form — date sanity checks.** Birth can't follow death, and
+  neither can be in the future (compared by year so a bare "YYYY" isn't
+  falsely flagged); new `form.dateOrderInvalid` / `dateFutureInvalid`. `people-view.js`.
+- **[a3538bd] Person form — Essentials vs More details.** The ~15 fields split into
+  an always-visible Essentials block (photo, name, dates, gender) and a collapsible
+  `<details>` "More details" (auto-open on edit when it holds data); a death-date
+  error opens it before focusing. `people-view.js`.
+- **[a3538bd] Person form — labelled + conditional date precision.** The precision
+  dropdowns carry `aria-label`s (`form.datePrecisionLabel`) and the death-precision
+  control hides beside a blank/"living" death date. `people-view.js`.
+- **[a3538bd] Kebab & hamburger a11y.** Both toggle `aria-expanded` on every
+  open/close route; the kebab moves focus to the first item on open, restores to
+  the anchor on Escape, and has ArrowUp/Down/Home/End roving focus, all funnelled
+  through one `closeKebabMenu()`. `lib/app.js`.
+- **[a3538bd] Softer header search + phone fallbacks.** The auto-switch to People
+  is debounced 400 ms and re-checks text still remains (a stray keystroke no
+  longer yanks you off your view; filtering stays live); the phone kebab gains
+  the two actions that vanish on small screens — **Add person** (edit-gated) and
+  **Search people** (switches to People and focuses its searchbar). `lib/app.js`.
+- **[225692a] Timeline pinch-to-zoom.** Two fingers scale px/year like the +/-
+  buttons, anchored on the gesture midpoint so the year under your fingers stays
+  put; rAF-throttled, persisted on release; `touch-action:pan-x pan-y` keeps
+  one-finger scroll native. `timeline-view.js`, `views.css`.
+- **[803b00a] Tree "Focus bloodline".** A second node-menu focus item that walks
+  *up* the direct ancestor line as well as down (descendants-only stays the
+  default for taps + transient selection). `tree-view.js`, `i18n.js`.
 
 ### Batch 1–2 (2026-08-11 → 08-12)
 
