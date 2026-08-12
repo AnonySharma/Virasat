@@ -182,25 +182,6 @@
 }
 .tree-pan-hint i { color: var(--accent); font-size: 11px; }
 
-/* Generation labels along left edge */
-.tree-gen-label {
-  position: absolute; left: 24px;
-  font-family: var(--font-display);
-  font-size: 18px; font-weight: 500; font-style: italic;
-  color: var(--text-3);
-  letter-spacing: .02em;
-  pointer-events: none;
-  white-space: nowrap;
-}
-.tree-gen-label::after {
-  content: ""; display: inline-block;
-  width: 28px; height: 1px;
-  background: var(--gold);
-  vertical-align: middle;
-  margin-left: 10px;
-  opacity: .55;
-}
-
 /* SVG — photographic node (no rect; the photo IS the card) */
 .t-node-photo-bg { fill: var(--bone); }
 .t-node-photo-ring { fill: none; stroke: var(--olive); stroke-width: 2.5; }
@@ -1137,8 +1118,6 @@
   }
   .tree-controls .btn { width: 32px; height: 32px; }
   .tree-controls__pct { padding: 0 6px; font-size: 11px; min-width: 36px; }
-  .tree-gen-label { left: 12px; font-size: 14px; }
-  .tree-gen-label::after { width: 18px; }
 }
 
 /* === iOS safe-area for floating elements that sit at the bottom ===

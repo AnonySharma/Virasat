@@ -88,27 +88,17 @@ and net-new items from it will be appended here as they report.*
 
 ### Wayfinding & tree orientation
 
-- **[M] Nothing you click *outside* the tree reveals that person *in* the tree.**
-  Inspector family chips, People cards, Timeline rows, empty-state highlight cards,
-  and every PathFinder hop all call `Inspector.show(id)` only — never
-  `activate("tree")` + `TreeView.revealPerson(id)` (whose sole caller is the
-  post-add flow, `people-view.js:1324`). On a 100+-person tree there's no "show me
-  where this person sits". Add an "Open in tree" action to the Inspector action row
-  (`inspector.js:267-289`) and PathFinder hops (`path-finder.js:69-79`).
-- **[S] PathFinder gives a text-only answer with no tie-back to the canvas.** A hop
-  click just does `Inspector.show` (`path-finder.js:73`) — it doesn't close the
-  modal, switch to the tree, or highlight the discovered chain. Reuse the
-  lineage-highlight machinery to light up just the path's node set.
-- **[S] The node context menu has no touch-discovery affordance.** The 500 ms
-  long-press that opens it (`tree-view.js:961-967`) is unhinted; `.tree-pan-hint`
-  is suppressed on phone (`views.css:1122-1124`) and never mentioned the menu even
-  on desktop. Add "Right-click a person for more actions" to the desktop hint and a
-  one-time localStorage-gated "Long-press anyone for more actions" toast on phone.
-- **[S] Dead `.tree-gen-label` CSS for a never-wired generation-labels feature.**
-  Fully styled at `views.css:186-199` (+ phone override `1137-1138`) but no JS ever
-  creates the element, even though `computeLayout()` already buckets people by
-  generation (`tree-view.js:453-465`). Either stamp a per-row label during
-  `render()` (the orientation cue a big tree wants) or delete the dead CSS.
+- **[M design] Generation rows have no on-canvas orientation label.** The dead
+  `.tree-gen-label` CSS has been deleted (it was an HTML overlay pinned to the
+  stage's left edge — it could never have tracked the SVG `viewBox` pan/zoom, so it
+  would have drifted off its rows the moment you panned). A *correct* version is an
+  SVG `<text>` placed in tree coordinates per generation row (`computeLayout()`
+  already buckets by generation, `tree-view.js`), so it pans/zooms with the nodes.
+  Open question that makes this a design call, not a mechanical fix: **what does the
+  label say?** We have no semantic generation names — "Generation 1/2/3" is noise,
+  and the root generation isn't necessarily the eldest. Options: a subtle left-edge
+  "◆" tick per row, or a decade/era hint derived from each row's median birth year.
+  Deferred pending a copy decision.
 - **[S] Header/People search has no explicit clear button.** Both use bare
   `<input type="search">` (`app.js:137-157`, `people-view.js:45-56`) with no custom
   clear and no `::-webkit-search-cancel-button` styling, so on several browsers the
@@ -212,6 +202,50 @@ and net-new items from it will be appended here as they report.*
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). **CACHE_VERSION deliberately not yet bumped** — held until
 the rest of the queued cloud work lands.
+
+### Batch 6 — follow-up review, round 1 (2026-08-12)
+
+- **[c4aed6d] Sole female/ungendered parent dropped from the person form.** Slotted
+  by actual gender; each slot's filter always keeps its current occupant.
+  `people-view.js`.
+- **[c4cabb6] Boot / first-run / sample strings routed through I18n.** The
+  persistence-denied + cloud-unreachable toasts, the whole "Try sample family"
+  confirm + its toasts, and the first-run sample error were raw English; all now
+  bilingual (new `sync.*`, `rail.sample*`, `firstRun.sampleNotLoaded`).
+  `app.js`, `first-run.js`, `i18n.js`.
+- **[c4cabb6] Timeline empty state gained the "Add first person" CTA** (only when
+  truly empty; the add-dates nudge stays otherwise). `timeline-view.js`.
+- **[b574759] Viewers no longer get fake "Saved"/"Removed" feedback.** Every edit
+  path (person-form save, tree node-menu Edit/Add/Marriage/Delete) is role-gated;
+  the inspector contact block is fully i18n'd. `people-view.js`, `tree-view.js`,
+  `inspector.js`.
+- **[e075b47] "Open in tree" wayfinding.** New all-roles inspector action + every
+  PathFinder hop now fire a `virasat:reveal-in-tree` event → `activate("tree")` +
+  `TreeView.revealPerson`, so a name found anywhere can be located on the canvas.
+  PathFinder is also fully i18n'd (was hardcoded English). `inspector.js`,
+  `path-finder.js`, `app.js`, `i18n.js`.
+- **[33c9905] Person form: Enter submits** from any single-line input (not
+  textareas / popovers / the date picker), via a new `openModal({onEnter})` hook;
+  the empty death-date precision gutter now collapses instead of leaving a blank
+  column. `dom.js`, `people-view.js`.
+- **[a53426a] Heritage date picker i18n'd** — was 100% hardcoded English (month /
+  weekday names, all labels, the title, day aria-labels); now driven by a
+  `datePicker.*` namespace with EN + HI, incl. localized MONTHS/WEEKDAYS arrays.
+  `heritage-datepicker.js`, `i18n.js`.
+- **[4e06bf3] Sign-in recovery cross-link + cloud-aware rail CTA.** A wrong password
+  now points at the magic-link button (message append + a one-time pulse on that
+  button); the "Preserve your legacy" rail CTA swaps to a "synced & backed up"
+  message for signed-in cloud users instead of the local-only pitch. `sign-in.js`,
+  `app.js`, `index.html`, `components.css`, `i18n.js`.
+- **[7bda118] Person form: "Save & add another."** A third footer button commits the
+  current person and reopens a blank form (shared `commitDraft()` so it can't drift
+  from Save), for fast bulk entry. `people-view.js`, `i18n.js`.
+- **[8678481] Long-press node-menu touch cue.** A coarse-pointer-only,
+  localStorage-gated one-time toast tells phone users press-and-hold opens the node
+  menu; the desktop pan-hint already mentions right-click. `tree-view.js`, `i18n.js`.
+- **[this batch] Dead `.tree-gen-label` CSS deleted** — a never-wired HTML overlay
+  that could never have tracked the SVG viewBox. A correct SVG-space version is
+  logged as a design item above. `views.css`.
 
 ### Batch 5 — final backlog clear (2026-08-12)
 
