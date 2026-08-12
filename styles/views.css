@@ -395,7 +395,8 @@
   50%      { transform: scale(1.18); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .t-couple-knot:hover { animation: none; }
+  .t-couple-knot:hover,
+  .t-couple-knot:focus-visible { animation: none; }
   /* Lineage banner slide-in: vestibular-sensitive users see the change
      instantly instead of an animated reveal. */
   .lineage-banner { transition: none !important; }
