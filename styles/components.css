@@ -1439,13 +1439,21 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   align-items: center;
   gap: var(--s-8);
 }
+/* Hero: two columns on a wide screen (copy + decorative tree mock); stacks to
+   a single centred column on phones (see the query at the end of this block). */
 .landing__hero {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  align-items: center;
+  gap: var(--s-8);
+  width: 100%;
+}
+.landing__hero-copy {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: flex-start;
+  text-align: left;
   gap: var(--s-3);
-  max-width: 620px;
 }
 .landing__logo { width: 72px; height: 72px; margin-bottom: var(--s-1); }
 .landing__title {
@@ -1467,7 +1475,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .landing__actions {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--s-3);
   margin-top: var(--s-4);
 }
@@ -1477,6 +1485,112 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   font-size: 16px;
   border-radius: var(--r-xl);
 }
+
+/* Decorative hero tree mock — a small SVG diagram of a couple linked down to
+   three children. Nodes reuse the avatar pastel tokens so it themes light/dark;
+   aria-hidden in the DOM, so it's purely visual. */
+.landing__mock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.landing__tree-svg {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  overflow: visible;
+}
+.landing__tree-link {
+  stroke: var(--line-strong, var(--line));
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.landing__tree-disc {
+  stroke: var(--surface);
+  stroke-width: 3;
+  filter: drop-shadow(0 2px 4px rgba(34, 31, 26, 0.12));
+}
+.landing__tree-fig { fill: currentColor; opacity: 0.85; }
+.landing__tree-node--peach    { color: var(--av-peach-ink);    }
+.landing__tree-node--peach    .landing__tree-disc { fill: var(--av-peach);    }
+.landing__tree-node--sage     { color: var(--av-sage-ink);     }
+.landing__tree-node--sage     .landing__tree-disc { fill: var(--av-sage);     }
+.landing__tree-node--sky      { color: var(--av-sky-ink);      }
+.landing__tree-node--sky      .landing__tree-disc { fill: var(--av-sky);      }
+.landing__tree-node--rose     { color: var(--av-rose-ink);     }
+.landing__tree-node--rose     .landing__tree-disc { fill: var(--av-rose);     }
+.landing__tree-node--lavender { color: var(--av-lavender-ink); }
+.landing__tree-node--lavender .landing__tree-disc { fill: var(--av-lavender); }
+
+/* Section headings shared by the "How it works" and "capture" bands. */
+.landing__section-title {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 var(--s-5);
+  text-align: center;
+}
+.landing__how, .landing__capture { width: 100%; }
+
+/* How it works — three numbered steps, side-by-side then stacked on phones. */
+.landing__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-6);
+  counter-reset: none;
+}
+.landing__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-2);
+}
+.landing__step-num {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: var(--s-1);
+}
+.landing__step-title { font-size: 16px; font-weight: 600; color: var(--text); margin: 0; }
+.landing__step-body { font-size: 13.5px; line-height: 1.55; color: var(--text-3); margin: 0; max-width: 30ch; }
+
+/* What you can capture — a centred row of icon+label chips that wraps. */
+.landing__chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-3);
+}
+.landing__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill, 999px);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-2);
+  box-shadow: var(--shadow-sm);
+}
+.landing__chip > i { color: var(--accent-deep); font-size: 14px; }
 /* Three feature tiles side-by-side on a wide screen; they wrap to a single
    column on phones (see the query below). */
 .landing__features {
@@ -1528,6 +1642,17 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   margin: 0;
   text-align: center;
   max-width: 520px;
+}
+@media (max-width: 860px) {
+  /* Hero stacks: copy centred on top, tree mock below (and smaller). */
+  .landing__hero { grid-template-columns: 1fr; gap: var(--s-5); justify-items: center; }
+  .landing__hero-copy { align-items: center; text-align: center; max-width: 560px; }
+  .landing__actions { align-items: center; }
+  .landing__mock { order: -1; }
+  .landing__tree-svg { max-width: 300px; }
+  /* Steps stack to a single column. */
+  .landing__steps { grid-template-columns: 1fr; gap: var(--s-5); max-width: 420px; margin-inline: auto; }
+  .landing__step-body { max-width: none; }
 }
 @media (max-width: 720px) {
   .landing { padding: var(--s-7) var(--s-5); }
