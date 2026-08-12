@@ -150,11 +150,12 @@ and net-new items from it will be appended here as they report.*
   owner-independent `leave_tree()` SQL RPC + a button in the account/tree UI.
   **⚠ Requires a new SQL RPC — do NOT action without explicit user direction.**
   `sharing.js:202-218`, `tree-list.js`.
-- **[S] A pending invite can't be re-sent or its link re-copied per-row.** The
-  member list shows pending invites with only role-change + cancel; the app-link
-  copy is a single global control at the top of the dialog, not attached to the
-  specific pending invitee. Add a per-row "copy invite link" on pending rows (reuse
-  `copyLink()` + `appLink()`; no backend change). `sharing.js:79-118,162-178`.
+- **✅ [FIXED — Batch 6] A pending invite couldn't have its link re-copied per-row.**
+  Pending rows now carry an owner-only "copy invite link" button (reuses
+  `copyLink()` + `appLink()`, with the same `.is-copied` feedback as the global one);
+  no backend change. New `share.copyInviteLink` (EN+HI). *(Automatic re-send of the
+  invite email would need a Supabase call and is out of scope for this no-backend
+  pass.)* `sharing.js`, `components.css`, `i18n.js`.
 - **[M] An invitee who signs up with the wrong email lands on the blank create-tree
   screen with no clue an invite exists.** `claim_invites` matches by `auth.email()`
   (citext); a mismatch claims nothing, `resolveTree` finds no owned/shared tree and
@@ -254,6 +255,10 @@ the rest of the queued cloud work lands.
   entry no longer pays the padded two-column card cost on every twinned field; the
   Hindi half expands in place, and starts open when it has a value or the UI is
   Hindi. `people-view.js`, `components.css`, `i18n.js`.
+- **[this batch] Per-row copy-invite-link on pending invites.** Owner-only, pending-
+  only link button on each invited-but-not-signed-in row, so the owner can nudge that
+  specific invitee; reuses `copyLink()`+`appLink()`. `sharing.js`, `components.css`,
+  `i18n.js`.
 
 ### Batch 5 — final backlog clear (2026-08-12)
 
