@@ -262,16 +262,26 @@ date picker / PathFinder / person form.
   their interpolated footers (Born {year} / Added {when} / {n} story/stories / today/tomorrow/
   in {n} days), "Family archive" + its 3 legend counts. This is the **default first-paint panel**
   and what reappears after every deselect. New `highlights.*` namespace.
-- **[Med] Crop / reframe modal chrome — 0 `I18n.t`.** `crop-editor.js`: "Avatar (round)",
-  "Hero (wide)", the instructional hint, "Reset both", "Save crops", "Reframe photo" title.
-  (The button that opens it is already i18n'd via `form.reframe`.) New `crop.*`.
-- **[Med] PrintBook — 0 `I18n.t`.** `print-book.js`: guard toast, cover eyebrow, "Printed
-  {date}", per-person section headers (About/Achievements/Education/Stories/Notes), and the
-  "Born in {place}" / "Died in {place}" lifespan lines. This is the literal "heirloom" export.
-- **[Med] Collect-via-form questionnaire — English-only.** `collect-form.js:98-115`: of 13
-  reference questions handed to (often Hindi-primary) relatives, only the Hindi-name one is
-  bilingual; Death date/place etc. are English-only. Plus two file-local toasts. This is the
-  only artifact that leaves the app.
+- **✅ [FIXED 19f2461] Crop / reframe modal chrome — 0 `I18n.t`.** `crop-editor.js`: "Avatar
+  (round)", "Hero (wide)" (each built twice — initial + reset-rebuild — now via one `I18n.t`),
+  the instructional hint, per-frame zoom aria-label, "Reset both", "Save crops", "Reframe photo"
+  title, Cancel. New `crop.*` namespace.
+- **✅ [FIXED 19f2461] PrintBook — 0 `I18n.t`.** `print-book.js`: guard toast, cover eyebrow,
+  "Printed {date}", per-person section headers (About/Achievements/Education/Stories/Notes), and
+  the "Born in {place}" / "Died in {place}" lifespan lines. New `print.*` (kept independent of
+  `inspector.sec*` so the heirloom export can be worded/styled on its own). *(The photo-`await`
+  race the cloud plan flagged for this file was already fixed — `open()` preloads every
+  `getUrl` before `window.print()`.)*
+- **⚠ [PARTIAL 19f2461] Collect-via-form questionnaire — English-only.** `collect-form.js`: the
+  two file-local error toasts ("Copy failed" / "Read failed") are now i18n'd (`collect.copyFailed`
+  / `readFailed`). **Deferred:** the 13 `formQuestions()` titles (`:98-115`). They double as the
+  Google-Form question titles **and** the CSV column headers `importCsvText` matches on
+  (`row["birth date"]`, `row["father's name"]`, …, exact-match after `normalizeHeader`).
+  Localizing the titles without expanding the importer's header-alias sets in lockstep would
+  break the CSV round-trip — a data-contract change, **not** a mechanical i18n sweep. Needs a
+  design decision: either (a) keep the machine-facing headers English + add a separate localized
+  *display* label per question, or (b) add HI aliases to every `row[...]` lookup. Logged for the
+  user to decide.
 - **✅ [FIXED 2633348] Inspector date-precision reimplemented in English + hardcoded " yrs".**
   `buildPersonalInfo`'s local `withPrecision()` now routes the c./before/after prefixes through
   the existing `date.circa/before/after` keys (passing the formatted date as `{year}`); the
@@ -503,6 +513,13 @@ the rest of the queued cloud work lands.
   bare "Contact" section title (`inspector.secContact`). Also routed the save-image catch's raw-
   error `"Failed"` fallback through `inspector.imageFailed` + `console.warn`. `inspector.js`,
   `i18n.js`.
+- **[19f2461] Crop editor + print book + collect toasts i18n'd.** Crop/reframe modal chrome
+  (frame labels, hint, zoom aria, Reset/Save/title/Cancel → new `crop.*`); the print "family
+  book" export (guard, cover eyebrow, "Printed {date}", Born/Died-in lines, 5 section headers →
+  new `print.*`); and collect-form's two file-local error toasts (`collect.copyFailed/readFailed`).
+  Collect's `formQuestions()` titles were left English — they double as CSV headers the importer
+  matches on; localizing needs a data-contract decision (logged above). `crop-editor.js`,
+  `print-book.js`, `collect-form.js`, `i18n.js`.
 
 ### Batch 6 — follow-up review, round 1 (2026-08-12)
 
