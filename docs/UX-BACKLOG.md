@@ -328,91 +328,110 @@ mechanical sweep.
 
 ### Accessibility (mostly no-backend; a couple need a design nod)
 
-- **[High] Tree per-node menu is keyboard-inoperable.** `showNodeMenu`/`dismissMenu`
-  (`tree-view.js`) never `.focus()` into the `role="menu"`, has no Arrow/Home/End roving, and
-  doesn't restore focus on close; menu items sit in DOM *after* the whole SVG, so Tab must
-  cross every node/knot to reach them. The header kebab (`app.js:454-465,488`) already does
-  this correctly — port that pattern. **(2 agents.)**
+- **✅ [FIXED a426446] Tree per-node menu is keyboard-inoperable.** `showNodeMenu`/`dismissMenu`
+  (`tree-view.js`) never `.focus()` into the `role="menu"`, had no Arrow/Home/End roving, and
+  didn't restore focus on close; menu items sit in DOM *after* the whole SVG, so Tab had to
+  cross every node/knot to reach them. Ported the header-kebab pattern: `dismissMenu(restoreFocus)`
+  tracks `menuReturnFocus`, `showNodeMenu` focuses the first item on open, `onDocKey` roves
+  Arrow/Home/End over `.tree-node-menu__item`, and Escape closes + restores focus to the trigger.
+  **(2 agents.)**
 - **[M] Mobile `#rail` / `#inspector` drawers bypass `openModal`.** Plain `<aside>`s toggled by
   class (`index.html:118,185`, `app.js`): no Escape-to-close, no `role="dialog"`/`aria-modal`,
   no focus move-in when opened from a tree-node tap — breaking the pattern every other overlay
   follows. **(use-mobile-a11y.)**
-- **[M] SVG viewBox never follows keyboard focus.** Tabbing to an off-screen `.t-node`
-  (focusable in DOM order) moves focus outside the visible viewBox with no pan and no cue;
-  `revealPerson()` proves the pan-to-node logic exists but is never called from a focus event.
-  **(use-mobile-a11y, ux-wayfinding.)**
-- **[S] `revealPerson()` pans/selects but never focuses the node** (`tree-view.js`) — a
-  keyboard user bounced to Tree via reveal-in-tree lands with DOM focus elsewhere. One-line
-  `g.focus()`; infra already there.
-- **[M] Crop drag surface is a keyboard dead-end.** `.crop-frame__inner`
-  (`crop-editor.js:140-166`) has no `tabindex`/`role`/`keydown` — zoom slider works, but the
-  focal point can never be moved by keyboard. Add `tabindex=0` + arrow-nudge into the existing
-  `apply()`/`onChange()` pipeline.
+- **✅ [FIXED 167e2d7] SVG viewBox never follows keyboard focus.** Tabbing to an off-screen
+  `.t-node` (focusable in DOM order, not screen order) moved focus outside the visible viewBox
+  with no pan and no cue. New `panIntoView(personId)` on the node's `onfocus` scrolls the viewBox
+  minimally to bring an out-of-view node in while preserving the current zoom; no-ops when the
+  node is already visible or a pointer gesture is active. Reuses `lastPositions` (the same map
+  `revealPerson` pans from). **(use-mobile-a11y, ux-wayfinding.)**
+- **✅ [FIXED a426446] `revealPerson()` pans/selects but never focuses the node**
+  (`tree-view.js`) — a keyboard user bounced to Tree via reveal-in-tree landed with DOM focus
+  elsewhere. `revealPerson` now `.focus()`es the node `g` at the end; infra was already there.
+- **✅ [FIXED 3bc6b32] Crop drag surface is a keyboard dead-end.** `.crop-frame__inner`
+  (`crop-editor.js`) had no `tabindex`/`role`/`keydown` — the zoom slider worked, but the
+  focal point could never be moved by keyboard. Now `tabindex=0` + `role="application"` +
+  `aria-label` (new `crop.dragAria`, EN+HI), with an arrow-key nudge (2%, ×5 on Shift) wired
+  into the existing `apply()`/`onChange()` pipeline.
 - **[S/M] SVG hit targets under 44px on coarse pointers.** `.t-couple-knot__hit` (r14≈28px) and
   `.t-node-add-bg` (r11≈22px) — the two most-common tree-editing gestures — never enter the
   `@media (pointer: coarse)` 44px bump (which only covers `.tree-controls .btn`). Can't be a
   CSS fix (r is an inline SVG attr); needs a `matchMedia("(pointer: coarse)")` check in the
   draw code to draw a larger invisible hit-circle. **(ux-tree, use-mobile-a11y.)**
-- **[S] Marriage-knot `:focus-visible` pulse ignores `prefers-reduced-motion`.** The
-  reduced-motion block (`views.css:397-405`) silences only `:hover`, not `:focus-visible`
-  (`:390-392`) — a keyboard user with reduced-motion gets an infinite scale-pulse.
-- **[S] Date-picker year strip has no roving tabindex** (`heritage-datepicker.js:156-189`) —
-  ~155 sequential Tab stops to reach a distant birth year; the adjacent day-grid already does
-  roving-tabindex correctly (`:224`). Apply the same pattern.
-- **[S] Onboarding secondary copy still on `--text-3`** (~3.95:1, below AA 4.5). Batch 4 moved
-  `.field__label/hint` to `--text-2` but missed the pre-auth screens: `.signin__tagline`,
-  `.app-splash__msg`, `.firstrun__subtitle`, `.signin__back`, `.firstrun__greeting/__signout/
-  __alt-body`. Mechanical swap to `--text-2` (matches the precedent). *Verify the token
-  actually clears AA before shipping.*
+- **✅ [FIXED a426446] Marriage-knot `:focus-visible` pulse ignores `prefers-reduced-motion`.**
+  The reduced-motion block (`views.css`) silenced only `:hover`, not `:focus-visible` — a
+  keyboard user with reduced-motion got an infinite scale-pulse. The block now silences both.
+- **✅ [FIXED a426446] Date-picker year strip has no roving tabindex** (`heritage-datepicker.js`)
+  — ~155 sequential Tab stops to reach a distant birth year; the adjacent day-grid already did
+  roving-tabindex. Year buttons now carry `tabindex="-1"` with one `tabindex="0"` tab-stop, and
+  `onDocKey` handles year-strip Arrow/Home/End nav (before the grid early-return) mirroring the
+  grid pattern.
+- **✅ [FIXED 3bc6b32] Onboarding secondary copy still on `--text-3`** (~3.95:1, below AA 4.5).
+  Batch 4 moved `.field__label/hint` to `--text-2` but missed the pre-auth screens. Swapped all
+  seven (`.signin__tagline`, `.app-splash__msg`, `.firstrun__subtitle`, `.signin__back`,
+  `.firstrun__greeting/__signout/__alt-body`) to `--text-2`. Verified in node before shipping:
+  light-theme `--ink-3` was 3.68–4.16:1 (below AA); `--ink-2` clears at 8.1–9.2:1; dark theme
+  both clear.
 
 ### Wayfinding & navigation (mix of fix-now and design)
 
-- **[M] "Reveal in tree" reached only 2 of 6 open-a-person paths.** `e075b47` wired the
-  Inspector action-row button + PathFinder hops; the far more common Family-block relationship
-  chips (`inspector.js:456`), Family-Highlights cards (`:107`), People cards
-  (`people-view.js:463`), and Timeline rows (`timeline-view.js:405`) still call bare `show()`
-  and never touch the canvas. The *pattern* shipped; 4 call sites weren't migrated. (Also
-  covers ux-tree's "expose revealPerson as a general action.")
-- **[M] Switching trees carries stale People search/filter into the new tree.** `tree-list.js`
-  `switchTo` never touches `PeopleView`'s module-level `searchTerm`/`filterMode`/`missingFilter`;
-  no `PeopleView.reset()` exists. User lands in Tree B filtered by Tree A's leftover "Kamala"
-  with no explanation. Add a reset + call it on switch.
+- **✅ [FIXED 5007f40] "Reveal in tree" reached only 2 of 6 open-a-person paths.** `e075b47`
+  wired the Inspector action-row button + PathFinder hops; the far more common Family-block
+  relationship chips + Family-Highlights cards (`inspector.js`, via a new `revealInTree()` helper),
+  People cards (`people-view.js` `openProfile`), and Timeline rows (`timeline-view.js` `openPerson`)
+  still called bare `show()`. All four now dispatch `virasat:reveal-in-tree` first with a `show()`
+  fallback. (Also covers ux-tree's "expose revealPerson as a general action.")
+- **✅ [FIXED 3bc6b32] Switching trees carries stale People search/filter into the new tree.**
+  `tree-list.js` `switchTo` never touched `PeopleView`'s module-level filters; no
+  `PeopleView.reset()` existed. Added `reset()` (clears `searchTerm`/`filterMode`/`missingFilter`
+  + the input + card cache, no render) and call it in `switchTo` **before** `switchTree()` so the
+  hydrate's `notifyAll`→render paints once with cleared filters.
 - **[M design] Lineage-focus mode has no representation outside Tree view.** `lineageFocusId`
   is local to `tree-view.js`; switching to People/Timeline silently drops the mental model with
   no banner/cue. Design call (how should other views reflect an active lineage focus?).
 - **[S copy] "Fit view" vs "Reset view" name-collide** (worse in Hindi: "पूरा वृक्ष" vs "पूरा
   दिखाएँ") though they do different things (viewport reset vs. clear lineage-focus dim). Rename
   the lineage one ("Clear focus" / "Show everyone"). Copy decision.
-- **[S] People grid shows no "currently open in Inspector" indicator** — Tree toggles
-  `is-selected` via `Inspector.getSelected()` (`tree-view.js:2185`) but `personCard`
-  (`people-view.js:388`) has no equivalent. Carry the pattern over.
-- **[S] PathFinder From/To pickers have no substring search** — `HeritageSelect` only does
-  leading-character typeahead, so finding "Sunita" among a dozen S-names means repeated "s"
-  presses. Component-level change (would benefit the parent/spouse pickers too).
+- **✅ [FIXED e3d8583] People grid shows no "currently open in Inspector" indicator** — Tree
+  toggles `is-selected` via `Inspector.getSelected()` but `personCard` (`people-view.js`) had no
+  equivalent. Cards now carry `data-person-id`; a new `applySelection()` toggles `.is-selected`
+  off `Inspector.getSelected()`, wired to run after each render and (once) on `Inspector.onSelect`.
+- **✅ [FIXED e3d8583] PathFinder From/To pickers have no substring search** — `HeritageSelect`
+  only did leading-character typeahead, so finding "Sunita" among a dozen S-names meant repeated
+  "s" presses. Replaced with native-`<select>`-style buffered typeahead (800 ms window; prefix
+  match then substring, both wrap-around; same-char repeat still cycles) + `scrollIntoView` on the
+  hovered option (which was missing entirely, also affecting existing arrow nav). Benefits the
+  parent/spouse pickers too.
 
 ### Data entry (mix of fix-now and design)
 
-- **[M] Picking a spouse loses keyboard focus every time.** `HeritageSelect.pick()` focuses the
-  control then fires `onChange` → `rebuildSpouseRows()` (`people-view.js:1049-1110`) whose first
-  act is `clear(spouseRowsHost)`, destroying the just-focused select; focus falls to `<body>`.
-  Fires on every spouse pick / add / remove.
-- **[M] A person can be set as both spouse and parent with no warning.** `fatherFilter`/
-  `motherFilter` (`people-view.js:1021-1022`) and the spouse filter don't exclude each other's
-  picks; `data-store.js` does no cross-field validation. Yields a structurally nonsensical
-  record silently.
-- **[S] "Save & add another" from the addParent path can add an orphan 3rd parent.** The button
-  reopens with the same `__addAsParentOf` seed; a 2nd/3rd "parent" is pushed onto the same
-  child's `parents` (dedupe-only, no length cap at `people-view.js:1408-1414`) while the child's
-  form has no 3rd slot — an invisible, orphaned link. Cap at 2 / clear the seed for that path.
+- **✅ [FIXED 5cccd60] Picking a spouse loses keyboard focus every time.** `HeritageSelect.pick()`
+  focused the control then fired `onChange` → `rebuildSpouseRows()` whose first act is
+  `clear(spouseRowsHost)`, destroying the just-focused select; focus fell to `<body>`.
+  `rebuildSpouseRows(focusRow)` now collects the rebuilt pickers and refocuses the one at the
+  passed index (clamped) on the next tick; every caller (pick / add / remove) passes its row index.
+- **✅ [FIXED 5cccd60] A person can be set as both spouse and parent with no warning.**
+  `fatherFilter`/`motherFilter` and the spouse filter didn't exclude each other's picks;
+  `data-store.js` does no cross-field validation. Parent filters now exclude current spouses
+  (via a live `spouseIdsNow()` to avoid a TDZ on `spouseList`) and the spouse filter excludes
+  current parents; each side keeps its own current occupant, and cross-refresh helpers re-run the
+  opposite side's `setOptions` on change.
+- **✅ [FIXED 5cccd60] "Save & add another" from the addParent path can add an orphan 3rd parent.**
+  The button reopened with the same `__addAsParentOf` seed; a 2nd/3rd "parent" was pushed onto the
+  same child's `parents` (dedupe-only, no length cap) while the child's form had no 3rd slot — an
+  invisible, orphaned link. `commitDraft` now caps at 2 (toasts new `form.parentsFull`, EN+HI, and
+  adds without the link) and "Save & add another" drops `__addAsParentOf` from the next seed once
+  the child has ≥2 parents.
 - **[M design] No "create new person" from inside a relation picker.** Every parent/spouse must
   pre-exist; entering a branch "as remembered" forces abandoning the current form. Feature/design.
 - **[S design] Removing a spouse / clearing a parent has no confirm and no undo** (unlike
   `deletePerson`), and the whole-form discard guard doesn't cover a single stray `×`. Design call
   (confirm vs. undo affordance).
-- **[S] Tab-trap popover exemption references a non-existent class.** `dom.js:189` checks
-  `.hdp__pop` but the real class is `.hdp__popover`. Currently a **no-op** (the popover's buttons
-  are in-modal so the fallback scan still finds them) — but a latent trap if either popover is
-  ever portaled to `body` as the comment intends. One-line fix while intent is fresh.
+- **✅ [FIXED a426446] Tab-trap popover exemption references a non-existent class.** `dom.js`
+  checked `.hdp__pop` but the real class is `.hdp__popover`. Was a no-op (the popover's buttons
+  are in-modal so the fallback scan still found them) — but a latent trap if either popover is
+  ever portaled to `body` as the comment intends. Fixed the selector to the real class (also
+  covers `.hsel__menu` and a `.modal-portal-exempt` escape hatch).
 
 ### Design / product calls (log, don't action — user decides)
 
@@ -496,6 +515,51 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). **CACHE_VERSION deliberately not yet bumped** — held until
 the rest of the queued cloud work lands.
+
+### Batch 8 — round-2 a11y / wayfinding / data-entry (2026-08-12)
+
+- **[a426446] Tree node-menu keyboard nav + two more a11y fixes.** The per-node menu now
+  follows the header-kebab pattern: `dismissMenu(restoreFocus)` tracks the trigger, `showNodeMenu`
+  focuses the first item on open, `onDocKey` roves Arrow/Home/End over `.tree-node-menu__item`,
+  Escape closes + restores focus. Same commit: `revealPerson()` now focuses the node `g`;
+  the date-picker **year strip** gets roving-tabindex (year-strip Arrow/Home/End nav added to
+  `onDocKey` before the grid early-return); the reduced-motion block silences the marriage-knot
+  `:focus-visible` pulse (not just `:hover`); and `dom.js`'s tab-trap exemption points at the real
+  `.hdp__popover` class (was `.hdp__pop`, a latent trap). `tree-view.js`, `heritage-datepicker.js`,
+  `views.css`, `dom.js`.
+- **[3bc6b32] Crop keyboard nudge + onboarding contrast + People reset-on-switch.** The crop
+  focal point is now keyboard-movable — `.crop-frame__inner` gets `tabindex=0`/`role=application`/
+  `aria-label` (new `crop.dragAria`, EN+HI) and arrow-key nudge (2%, ×5 on Shift) into the existing
+  `apply()`/`onChange()`. Seven pre-auth onboarding selectors moved from `--text-3` (3.68–4.16:1,
+  below AA) to `--text-2` (8.1–9.2:1) — ratios verified in node first. And `PeopleView.reset()`
+  (new) is called on tree switch **before** `switchTree()`, so stale search/filter don't leak into
+  the next tree. `crop-editor.js`, `styles/components.css`, `people-view.js`, `tree-list.js`,
+  `i18n.js`.
+- **[5cccd60] Person-form relation integrity — three fixes.** Picking/adding/removing a spouse no
+  longer drops keyboard focus (`rebuildSpouseRows(focusRow)` refocuses the rebuilt picker at the
+  passed index). A person can no longer be silently set as both spouse and parent — parent filters
+  exclude current spouses (live `spouseIdsNow()` dodges a TDZ), the spouse filter excludes current
+  parents, each keeps its own occupant, and cross-refresh helpers re-`setOptions` the opposite side.
+  And "Save & add another" from the add-parent path can't add an orphan 3rd parent — `commitDraft`
+  caps `parents` at 2 (toasts new `form.parentsFull`, EN+HI) and drops the `__addAsParentOf` seed
+  once the child has two. `people-view.js`, `i18n.js`.
+- **[5007f40] "Reveal in tree" wired into all four remaining person-open paths.** The Inspector
+  relationship chips + Family-Highlights cards (new `revealInTree()` helper), People cards
+  (`openProfile`), and Timeline rows (`openPerson`) now dispatch `virasat:reveal-in-tree` (with a
+  `show()` fallback) instead of bare `show()`, so a name opened anywhere can land on the canvas.
+  `inspector.js`, `people-view.js`, `timeline-view.js`.
+- **[e3d8583] People "open in Inspector" indicator + substring typeahead in every picker.** People
+  cards carry `data-person-id` and a new `applySelection()` toggles `.is-selected` off
+  `Inspector.getSelected()` (after render + once on `Inspector.onSelect`), matching Tree. And
+  `HeritageSelect` gains native-`<select>`-style buffered typeahead (800 ms window; prefix then
+  substring, wrap-around; same-char repeat still cycles) plus `scrollIntoView` on the hovered
+  option (previously missing, also fixing arrow nav) — benefiting the PathFinder, parent, and
+  spouse pickers alike. `people-view.js`, `heritage-select.js`.
+- **[167e2d7] SVG viewBox follows keyboard focus.** Tabbing to an off-screen node (focusable in
+  DOM order, not screen order) moved focus off-screen with no pan and no cue. New
+  `panIntoView(personId)` on node `onfocus` scrolls the viewBox minimally to reveal an out-of-view
+  node while preserving zoom; no-ops when already visible or during a pointer gesture. Reuses
+  `lastPositions`. `tree-view.js`.
 
 ### Batch 7 — round-2 10-agent review, i18n defect cluster (2026-08-12)
 
