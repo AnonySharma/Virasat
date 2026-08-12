@@ -1436,34 +1436,51 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
      offset). Instead .landing__inner uses margin-block:auto, which centres it
      when there's slack but collapses to the top and stays fully scrollable
      when it overflows. */
-  padding: var(--s-8) var(--s-6);
+  /* No horizontal padding here: the hero band is a full-bleed direct child and
+     must reach both edges. The section stack (.landing__inner) supplies its own
+     side padding below. Keep only vertical breathing room. */
+  padding-block: 0 var(--s-8);
 }
 .landing__inner {
   width: 100%;
   max-width: 940px;
-  margin-block: auto;
+  margin: var(--s-8) auto 0;
+  padding-inline: var(--s-6);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--s-8);
 }
-/* Hero: two columns on a wide screen (copy + decorative tree mock); stacks to
-   a single centred column on phones (see the query at the end of this block). */
+/* Full-bleed hero band: the coloured/animated surface spans the whole width;
+   .landing__hero-inner re-constrains the content to a centred column that lines
+   up with the sections below. Two columns on a wide screen (copy + decorative
+   tree mock); stacks on phones (see the query at the end of this block). */
 .landing__hero {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  /* .landing is a flex column stretched to the viewport by .signin (a flex row),
+     so its children are under shrink pressure when the page overflows. A flex
+     item with overflow:hidden has an automatic min-size of 0 (not min-content),
+     so this band — the only clipped child — would collapse to its 1px border and
+     vanish. Pin it: the hero must never shrink below its content height. */
+  flex-shrink: 0;
+  /* A hairline bottom border marks where the band ends against the ivory page;
+     no side/top border or radius — it runs to the edges. */
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(120% 130% at 8% 0%, var(--gold-soft) 0%, transparent 48%),
+    linear-gradient(158deg, var(--bone) 0%, var(--parchment) 100%);
+}
+.landing__hero-inner {
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
   align-items: center;
   gap: var(--s-8);
   width: 100%;
-  position: relative;
-  overflow: hidden;
-  padding: var(--s-8) var(--s-8);
-  background:
-    radial-gradient(120% 130% at 8% 0%, var(--gold-soft) 0%, transparent 48%),
-    linear-gradient(158deg, var(--bone) 0%, var(--parchment) 100%);
-  border: 1px solid var(--line);
-  border-radius: var(--r-2xl);
-  box-shadow: var(--shadow-md);
+  max-width: 1040px;
+  margin-inline: auto;
+  padding: var(--s-9) var(--s-6);
 }
 /* The hero as a dark heritage "stage": deep forest-green depth with an
    animated aurora glow and drifting golden dust motes (built in sign-in.js,
@@ -1473,11 +1490,13 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
    themes, exactly like .landing__band. */
 .landing__hero--stage {
   background:
-    radial-gradient(110% 120% at 100% 0%, rgba(184, 154, 90, 0.20) 0%, transparent 50%),
-    radial-gradient(120% 130% at 0% 100%, rgba(94, 125, 99, 0.35) 0%, transparent 55%),
+    radial-gradient(90% 120% at 100% 0%, rgba(184, 154, 90, 0.20) 0%, transparent 50%),
+    radial-gradient(90% 130% at 0% 100%, rgba(94, 125, 99, 0.35) 0%, transparent 55%),
     linear-gradient(155deg, #24352A 0%, #1C2A22 55%, #2A2620 100%);
-  border-color: rgba(184, 154, 90, 0.28);
-  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(248, 244, 236, 0.06);
+  /* Full-bleed: gold hairline only at the base, a soft drop shadow to separate
+     the band from the ivory page below, and an inset top highlight. */
+  border-bottom-color: rgba(184, 154, 90, 0.35);
+  box-shadow: 0 18px 40px rgba(28, 42, 34, 0.28), inset 0 1px 0 rgba(248, 244, 236, 0.06);
   isolation: isolate;
 }
 .landing__hero--stage .landing__pitch { color: rgba(244, 239, 227, 0.82); }
@@ -1495,8 +1514,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   overflow: hidden;
   border-radius: inherit;
 }
-.landing__hero > .landing__hero-copy,
-.landing__hero > .landing__mock { position: relative; z-index: 1; }
+.landing__hero-inner { position: relative; z-index: 1; }
 /* Slow aurora — two soft radial washes that breathe and drift, so the dark
    backdrop is never static. */
 .landing__hero-glow {
@@ -2293,7 +2311,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 
 @media (max-width: 860px) {
   /* Hero stacks: copy centred on top, tree mock below (and smaller). */
-  .landing__hero { grid-template-columns: 1fr; gap: var(--s-5); justify-items: center; padding: var(--s-7) var(--s-6); }
+  .landing__hero-inner { grid-template-columns: 1fr; gap: var(--s-5); justify-items: center; padding: var(--s-8) var(--s-6); }
   .landing__hero-copy { align-items: center; text-align: center; max-width: 560px; }
   .landing__actions { align-items: center; }
   .landing__mock { order: -1; }
@@ -2310,8 +2328,8 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   .landing__aud-body { max-width: none; }
 }
 @media (max-width: 720px) {
-  .landing { padding: var(--s-7) var(--s-5); }
-  .landing__inner { gap: var(--s-7); }
+  .landing { padding-block: 0 var(--s-7); }
+  .landing__inner { gap: var(--s-7); padding-inline: var(--s-5); }
   .landing__features { grid-template-columns: 1fr; gap: var(--s-4); max-width: 460px; }
   .landing__feature { padding: var(--s-5); }
   /* Deep-dive items stack to one column and narrow so they read as a list. */
