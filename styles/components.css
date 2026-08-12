@@ -1622,6 +1622,13 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .firstrun__alt-text { display: flex; flex-direction: column; gap: 1px; }
 .firstrun__alt-title { font-size: 14px; font-weight: 600; }
 .firstrun__alt-body { font-size: 12.5px; color: var(--text-3); line-height: 1.4; }
+/* The "tree already on this device" path is the highest-trust option when it
+   appears — a returning local user's own data, one tap from their account. A
+   quiet accent border (not a loud filled button) marks it as recommended
+   without shouting over the neutral import/sample siblings below it. */
+.firstrun__alt--device { border-color: var(--accent); background: var(--accent-soft); }
+.firstrun__alt--device > i { color: var(--accent-deep); }
+.firstrun__alt--device:hover { border-color: var(--accent-deep); }
 /* Invite footnote — quiet, below the create/import/sample paths. For a
    wrong-email invitee who'd otherwise see no clue their invite exists. */
 .firstrun__invite-hint {

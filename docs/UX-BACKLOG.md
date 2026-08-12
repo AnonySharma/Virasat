@@ -65,13 +65,15 @@ and net-new items from it will be appended here as they report.*
   Timeline's empty state offered no CTA. Now shows the same "Add first person" button
   — but only when the tree is truly empty; with people-but-no-dates it keeps the "add
   birth dates" nudge. `timeline-view.js:328`.
-- **[M] First-run never detects the local tree already in this browser.** An existing
-  local user signing up for cloud gets a generic "import a Virasat export" file picker
-  with no awareness that a `familyTree.v1` blob may sit in this very localStorage — so
-  the user most likely to have pre-existing data is the one most likely to lose track
-  of it. *Note: the cloud plan deliberately scoped out a migration script, so this is a
-  product call — but the one-tap "We found a tree on this device — bring it in?" is a
-  cheap, high-trust win.* `first-run.js:164-181`, `data-store.js:16,52`.
+- **✅ [FIXED — Batch 6] First-run now detects the local tree already in this browser.**
+  When `familyTree.v1` holds a non-empty tree, the create-your-first-tree screen shows a
+  recommended "We found a tree on this device — bring the N-person tree in" button as the
+  first alt (above Import / Sample). One tap runs the existing import path (`commit` →
+  `createTree` → `replaceAll` → push) with the local blob as the seed, so a returning
+  local user's data becomes their first cloud tree without any file shuffling; the local
+  blob is left untouched as a fallback. Reads the legacy key directly — no new
+  Supabase/migration surface. `first-run.js`, `components.css`, `i18n.js`.
+  *Photo backfill for imported trees is logged as a separate follow-up below.*
 - **[S] Password sign-in has no recovery path.** No "Forgot password?" link; a wrong
   password just says "doesn't match. Try again." with no next step, even though the
   magic-link ("Email me a sign-in link") button right there IS the recovery path. No
@@ -142,6 +144,17 @@ and net-new items from it will be appended here as they report.*
   no sync cue. Options: a compact dot in the phone header (next to the kebab), or a
   "will sync when you reconnect" line in the kebab menu. No new backend — reuses
   `CloudStore.syncState()` + the `virasat:sync-state` event.
+- **[M] Imported-tree photos aren't backfilled to the cloud bucket.** Surfaced while
+  shipping the Batch-6 "found a tree on this device" import (and true of the existing
+  file-Import path too): `commit(seed)` runs `replaceAll` + a JSON push, so the tree's
+  text crosses to other devices, but the photos live only in this device's IDB. Nothing
+  walks the imported `photoId`s and calls `PhotoStore.uploadPhoto()`, so a second device
+  paints initials for every face until each photo is re-saved. Photos uploaded *after*
+  import (via `fileToPhotoId`) sync fine — it's only the pre-existing blobs that strand.
+  Fix = after a seed import, iterate `people[].photoId` (+ marriage `photoId`s), `getBlob`
+  each from IDB, `uploadPhoto` any that resolve (best-effort, mirrors `fileToPhotoId`).
+  **⚠ Touches Supabase Storage (the deferred Phase-4 migration surface) — do NOT action
+  without explicit user direction.** `first-run.js` (commit), `photo-store.js:312,264`.
 - **[M] A revoked / demoted member keeps their old access until a full reload.**
   Role is fetched once by `loadRole()` at tree load and pushed into the read-only
   guard via `applyRole()`; the realtime handler `onRemoteChange()` only ever
@@ -276,6 +289,15 @@ the rest of the queued cloud work lands.
   create-your-first-tree screen stating that invites open only for the exact invited
   email and showing which address the user is on — so a mismatched invitee has a clue
   instead of an invisible shared tree. `first-run.js`, `components.css`, `i18n.js`.
+- **[this batch] First-run detects a tree already on this device.** A returning
+  local-only user (used Virasat before making an account) now sees a recommended
+  "We found a tree on this device — bring the N-person tree in" button on the
+  create-your-first-tree screen, placed first among the alts. It reuses the exact
+  file-import path (`commit` → `createTree` → `replaceAll` → push) reading the legacy
+  `familyTree.v1` key directly, and leaves the local blob in place as a fallback. No
+  new Supabase/migration surface — it's the shipped import path with a local seed.
+  `first-run.js`, `components.css`, `i18n.js`. *(Photo backfill for imported trees is
+  a separate follow-up — see below.)*
 
 ### Batch 5 — final backlog clear (2026-08-12)
 
