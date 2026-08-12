@@ -52,6 +52,19 @@
   text-transform: uppercase; letter-spacing: .08em;
 }
 .field__hint { font-size: 12px; color: var(--text-2); }
+/* Inline validation error, tied to the input via aria-describedby. Hidden
+   until the save handler sets a message; danger-toned and slightly emphasised
+   so it reads as a correction, not a hint. */
+.field__error {
+  font-size: 12px; font-weight: 600; color: var(--danger);
+  display: none;
+}
+.field__error.is-shown { display: flex; align-items: center; gap: 6px; }
+.field__error .fa-circle-exclamation { font-size: 11px; }
+.input.is-invalid, .input[aria-invalid="true"] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px var(--danger-soft);
+}
 /* Account > Edit profile dialog: stack the name/email fields with breathing
    room (the wrapper isn't itself a flex column like .signin__form is). */
 .profile-edit { display: flex; flex-direction: column; gap: 16px; }
@@ -479,6 +492,24 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
 @media (max-width: 520px) { .form-grid { grid-template-columns: 1fr; } }
 .form-stack { display: flex; flex-direction: column; gap: var(--s-3); }
+
+/* "More details" disclosure — a native <details> so it's keyboard-accessible
+   with zero JS. The summary reads as a quiet section divider; its chevron
+   rotates when open. Essentials sit above it, always visible. */
+.form-more { border-top: 1px solid var(--line); padding-top: var(--s-3); }
+.form-more__summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; color: var(--text-2);
+  padding: 6px 2px; user-select: none;
+  border-radius: var(--r-sm);
+}
+.form-more__summary::-webkit-details-marker { display: none; }
+.form-more__summary:hover { color: var(--text); }
+.form-more__summary:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--olive); }
+.form-more__chev { font-size: 11px; transition: transform var(--t-fast); }
+.form-more[open] .form-more__chev { transform: rotate(90deg); }
+.form-more > .form-stack { margin-top: var(--s-3); }
 
 .photo-uploader { display: flex; align-items: center; gap: var(--s-4); padding: var(--s-4); background: var(--surface-2); border-radius: var(--r-md); }
 .photo-uploader__buttons { display: flex; flex-direction: column; gap: 6px; }
