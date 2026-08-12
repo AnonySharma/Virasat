@@ -252,14 +252,16 @@ date picker / PathFinder / person form.
   Cancel/Save, the "Forget this marriage record?" delete-confirm, and both toasts. Confirmed
   0 matches. The node-menu entry that opens it *is* translated, so the mismatch is jarring.
   **Most-cited finding (4 agents).** New `marriage.*` keys (EN+HI, incl. interpolated title).
-- **[Med] Story editor — 0 `I18n.t`.** `openStoryEditor` (`inspector.js:609-681`): titles,
-  placeholders, Title/Story/Tags labels+hints, the delete-confirm (which splices a person's
-  name into a raw English sentence), validation + success toasts. New `inspector.story*`.
-- **[Med] Inspector "Family highlights" empty panel — hardcoded.** `renderHighlights`
+- **✅ [FIXED 2633348] Story editor — 0 `I18n.t`.** `openStoryEditor` (`inspector.js:609-681`):
+  titles, placeholders, Title/Story/Tags labels+hints, the delete-confirm (which splices a
+  person's name into a raw English sentence), validation + success toasts. New `inspector.story*`
+  (Cancel/Save/Delete reuse `actions.*`).
+- **✅ [FIXED 2633348] Inspector "Family highlights" empty panel — hardcoded.** `renderHighlights`
   (`inspector.js:88-199`): "Welcome", the add-first-relative copy, "Family highlights",
   the 4 card labels (Oldest ancestor / Latest addition / Most stories / Next memorial),
-  their footers, "Family archive" + its legend. This is the **default first-paint panel**
-  and what reappears after every deselect — emotional copy, not chrome. New `highlights.*`.
+  their interpolated footers (Born {year} / Added {when} / {n} story/stories / today/tomorrow/
+  in {n} days), "Family archive" + its 3 legend counts. This is the **default first-paint panel**
+  and what reappears after every deselect. New `highlights.*` namespace.
 - **[Med] Crop / reframe modal chrome — 0 `I18n.t`.** `crop-editor.js`: "Avatar (round)",
   "Hero (wide)", the instructional hint, "Reset both", "Save crops", "Reframe photo" title.
   (The button that opens it is already i18n'd via `form.reframe`.) New `crop.*`.
@@ -270,13 +272,12 @@ date picker / PathFinder / person form.
   reference questions handed to (often Hindi-primary) relatives, only the Hindi-name one is
   bilingual; Death date/place etc. are English-only. Plus two file-local toasts. This is the
   only artifact that leaves the app.
-- **[S] Inspector date-precision reimplemented in English + hardcoded " yrs".**
-  `buildPersonalInfo`'s local `withPrecision()` (`inspector.js:401-407`) returns `"c. "/"before
-  "/"after "` literals instead of reusing `FamilyStore.formatDateRange` (which already routes
-  through `date.circa/before/after`); lifespan hardcodes `" yrs"` (`:416`). Same function
-  correctly calls `I18n.t` on adjacent lines — an internal inconsistency.
-- **[S] Inspector "Contact" section title is a bare literal** (`inspector.js:324`) while every
-  sibling section uses `I18n.t("inspector.secXxx")`; no `inspector.secContact` key exists.
+- **✅ [FIXED 2633348] Inspector date-precision reimplemented in English + hardcoded " yrs".**
+  `buildPersonalInfo`'s local `withPrecision()` now routes the c./before/after prefixes through
+  the existing `date.circa/before/after` keys (passing the formatted date as `{year}`); the
+  hardcoded `" yrs"` lifespan suffix became `inspector.years` "{n} yrs".
+- **✅ [FIXED 2633348] Inspector "Contact" section title was a bare literal** (`inspector.js:324`)
+  while every sibling section uses `I18n.t("inspector.secXxx")`. Added `inspector.secContact`.
 - **✅ [FIXED 319cb76] Tree-rename dialog hardcoded** (`tree-view.js:149-177`) — title, body,
   "Tree title" label, placeholder, Cancel/Save (with explicit English overrides), "Renamed"
   toast. Reused the tree-switcher's existing `tree.renameTitle/nameLabel/namePlaceholder/renamed`
@@ -494,6 +495,14 @@ the rest of the queued cloud work lands.
   tree-rename dialog, which duplicated the tree-switcher's flow but hardcoded its copy, reuses
   the existing `tree.renameTitle/nameLabel/namePlaceholder/renamed` + `actions.cancel/save`,
   adding only `tree.renameBody`. `tree-view.js`, `i18n.js`.
+- **[2633348] Inspector i18n sweep — 4 leaks.** The story editor (`openStoryEditor`: titles,
+  placeholders, labels+hints, the name-splicing delete-confirm, validation + toasts → new
+  `inspector.story*`); the "Family highlights" default empty panel (`renderHighlights`: Welcome,
+  eyebrow, the 4 interpolated cards + Family-archive legend → new `highlights.*`); date-precision
+  `withPrecision()` (reused `date.circa/before/after`; `" yrs"` → `inspector.years`); and the
+  bare "Contact" section title (`inspector.secContact`). Also routed the save-image catch's raw-
+  error `"Failed"` fallback through `inspector.imageFailed` + `console.warn`. `inspector.js`,
+  `i18n.js`.
 
 ### Batch 6 — follow-up review, round 1 (2026-08-12)
 
