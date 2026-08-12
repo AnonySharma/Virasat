@@ -1288,6 +1288,36 @@
 .people-missing-banner i { color: var(--gold-deep); }
 .people-missing-banner span { flex: 1; }
 
+/* === People-view facet bar (place / occupation / decade) === */
+/* Rides between the header and the grid; aligns to the grid's 32px gutter so
+   the dropdowns line up with the card columns below. */
+.people-facets {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  padding: 0 32px 14px;
+  flex-shrink: 0;
+}
+.people-facets[hidden] { display: none; }
+.people-facet {
+  position: relative;
+  display: flex; align-items: center;
+  min-width: 190px; flex: 0 1 220px;
+}
+.people-facet__icon {
+  position: absolute; left: 14px; z-index: 1;
+  font-size: 12px; color: var(--text-3);
+  pointer-events: none;
+}
+/* Indent the select's label past the leading icon. */
+.people-facet .hsel { padding-left: 36px; height: 38px; }
+.people-facet .hsel__value { font-size: 13px; }
+.people-facets__clear { flex: none; margin-left: auto; }
+.people-facets__clear[hidden] { display: none; }
+@media (max-width: 640px) {
+  .people-facets { padding: 0 16px 12px; gap: 8px; }
+  .people-facet { flex: 1 1 100%; min-width: 0; }
+  .people-facets__clear { margin-left: 0; }
+}
+
 /* === Inspector contact block === */
 .contact-block {
   display: flex; flex-direction: column; gap: 8px;
