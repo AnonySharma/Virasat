@@ -38,7 +38,9 @@ row, kebab Add-person, timeline pinch-to-zoom, and the "Focus bloodline" ancesto
 audit is cleared. Net-new findings — anything not already covered above — are
 consolidated here, ranked by impact, each with a `file:line` anchor and an effort
 tag. Except where marked ✅, nothing below is committed to yet; this is a triage
-surface. Reviewers still reporting — this list grows as agents land.*
+surface. A first round (data-integrity, onboarding, wayfinding, person-form,
+sharing) has landed; a second round of deep UX + usability agents is running now,
+and net-new items from it will be appended here as they report.*
 
 ### Data integrity (fix-now, not triage)
 
@@ -112,6 +114,65 @@ surface. Reviewers still reporting — this list grows as agents land.*
   clear and no `::-webkit-search-cancel-button` styling, so on several browsers the
   only way to clear is backspacing. Add an `×` inside `.searchbar`/`.header-search`.
   *(Low priority.)*
+
+### Sharing, roles & account
+
+- **✅ [FIXED b574759] A viewer got fake "Saved" / "Removed" feedback for writes
+  that never happened.** Under read-only, `FamilyStore.add/updatePerson` return
+  `null` and `deletePerson` no-ops, but the person-form save handler set
+  `committed=true` + toasted "Saved" unconditionally, and the tree node-menu
+  offered Edit / Add-relative / Marriage / Delete with no role check — so a viewer
+  (or an editor whose role was revoked mid-form) believed a write landed when
+  nothing persisted. Now: hard read-only guards at the top of `openForm()` and
+  `deletePerson()`; the save handler bails with a view-only toast on a `null`
+  return; the node-menu hides every mutating item behind a `canEdit` check (Focus
+  actions stay for all roles); person-card Edit/Delete carry `.js-edit-only`.
+  `people-view.js:467-473,1327-1334,1370-1376`, `tree-view.js:1561-1687`.
+- **[S] The "Private" contact chip hides a field from *exports* but still shows it
+  to in-app viewers — and its scope was implied, not stated.** With whole-blob LWW,
+  viewers receive the full `data` JSONB, so a field marked private is redacted from
+  JSON/PNG/poster exports yet remains visible to every member in the inspector. The
+  chip's i18n leak is ✅ fixed (b574759 — title now reads "Hidden from exports (still
+  visible to people with access)", EN+HI), which makes the export-only scope
+  explicit. *Open product call (not a defect): whether "private" should also redact
+  the value in the in-app inspector for non-owner/non-self viewers — that needs the
+  viewer-redaction RPC the cloud plan deferred as a fast-follow, so it stays a
+  decision, not a fix.* `inspector.js:535-547`.
+- **[M] No visible offline / syncing indicator.** `cloud-store.js` already tracks
+  the full sync lifecycle — `pendingPush`, the `online` event, the 60 s heartbeat,
+  and conflict — but none of it surfaces in the chrome. A user editing on a flaky
+  connection has no "saved to cloud ✓" / "offline — will sync" affordance, so they
+  can't tell whether their 30-relative session is safe. Add a small header sync
+  pip driven off the existing dirty/push state (no new backend).
+  `cloud-store.js:60-62,165-166,329,368`.
+- **[M] A revoked / demoted member keeps their old access until a full reload.**
+  Role is fetched once by `loadRole()` at tree load and pushed into the read-only
+  guard via `applyRole()`; the realtime handler `onRemoteChange()` only ever
+  re-loads the tree *data*, never the caller's role. So an editor demoted to viewer
+  (or removed) mid-session keeps editing — and only hits the RLS wall on their next
+  push, landing in the conflict path. Fix = re-run `loadRole()`+`applyRole()` on the
+  realtime tick / poll, or subscribe to `tree_members`. **⚠ Touches Supabase realtime
+  wiring — do NOT action without explicit user direction.** `cloud-store.js:140-150,
+  85-93,260-268`.
+- **[S] No "leave this tree" for a shared-in member.** A viewer/editor can't remove
+  themselves from someone else's tree — only the owner can revoke (`revoke_access`
+  is owner-checked). A relative who no longer wants access is stuck. Needs a new
+  owner-independent `leave_tree()` SQL RPC + a button in the account/tree UI.
+  **⚠ Requires a new SQL RPC — do NOT action without explicit user direction.**
+  `sharing.js:202-218`, `tree-list.js`.
+- **[S] A pending invite can't be re-sent or its link re-copied per-row.** The
+  member list shows pending invites with only role-change + cancel; the app-link
+  copy is a single global control at the top of the dialog, not attached to the
+  specific pending invitee. Add a per-row "copy invite link" on pending rows (reuse
+  `copyLink()` + `appLink()`; no backend change). `sharing.js:79-118,162-178`.
+- **[M] An invitee who signs up with the wrong email lands on the blank create-tree
+  screen with no clue an invite exists.** `claim_invites` matches by `auth.email()`
+  (citext); a mismatch claims nothing, `resolveTree` finds no owned/shared tree and
+  returns `null`, and first-run shows "Create your first family tree" — the shared
+  tree is invisible with no "we couldn't find an invite for this address; the owner
+  invited <x>?" hint. Surface a first-run note when the account has zero trees but
+  arrived via an invite flow. `cloud-store.js:100-135`, `auth-store.js:223-224`,
+  `first-run.js:207-217`.
 
 ### Person form (net-new, post-rework)
 
