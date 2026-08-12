@@ -35,11 +35,80 @@ row, kebab Add-person, timeline pinch-to-zoom, and the "Focus bloodline" ancesto
 ## Follow-up review (2026-08-12)
 
 *A fresh deep UX + usability review (multi-agent) is running now that the original
-audit is cleared. Net-new findings — anything not already covered above — will be
+audit is cleared. Net-new findings — anything not already covered above — are
 consolidated here, ranked by impact, each with a `file:line` anchor and an effort
-tag. Nothing below is committed to yet; this is a fresh triage surface.*
+tag. Except where marked ✅, nothing below is committed to yet; this is a triage
+surface. Reviewers still reporting — this list grows as agents land.*
 
-_(Pending — findings will be appended when the review agents report.)_
+### Data integrity (fix-now, not triage)
+
+- **✅ [FIXED c4aed6d] A sole female/ungendered parent was silently dropped from
+  the person form.** Editing someone whose only recorded parent was a mother (or an
+  ungendered parent) mis-slotted her into Father positionally; the male-only Father
+  filter then hid her from her own picker and the Mother filter excluded her too, so
+  she showed in neither dropdown and any later edit dropped her from `parents`. Now
+  slotted by actual gender, and each slot's filter always keeps its current
+  occupant. `people-view.js:940-974`.
+
+### Wayfinding & tree orientation
+
+- **[M] Nothing you click *outside* the tree reveals that person *in* the tree.**
+  Inspector family chips, People cards, Timeline rows, empty-state highlight cards,
+  and every PathFinder hop all call `Inspector.show(id)` only — never
+  `activate("tree")` + `TreeView.revealPerson(id)` (whose sole caller is the
+  post-add flow, `people-view.js:1324`). On a 100+-person tree there's no "show me
+  where this person sits". Add an "Open in tree" action to the Inspector action row
+  (`inspector.js:267-289`) and PathFinder hops (`path-finder.js:69-79`).
+- **[S] PathFinder gives a text-only answer with no tie-back to the canvas.** A hop
+  click just does `Inspector.show` (`path-finder.js:73`) — it doesn't close the
+  modal, switch to the tree, or highlight the discovered chain. Reuse the
+  lineage-highlight machinery to light up just the path's node set.
+- **[S] The node context menu has no touch-discovery affordance.** The 500 ms
+  long-press that opens it (`tree-view.js:961-967`) is unhinted; `.tree-pan-hint`
+  is suppressed on phone (`views.css:1122-1124`) and never mentioned the menu even
+  on desktop. Add "Right-click a person for more actions" to the desktop hint and a
+  one-time localStorage-gated "Long-press anyone for more actions" toast on phone.
+- **[S] Dead `.tree-gen-label` CSS for a never-wired generation-labels feature.**
+  Fully styled at `views.css:186-199` (+ phone override `1137-1138`) but no JS ever
+  creates the element, even though `computeLayout()` already buckets people by
+  generation (`tree-view.js:453-465`). Either stamp a per-row label during
+  `render()` (the orientation cue a big tree wants) or delete the dead CSS.
+- **[S] Header/People search has no explicit clear button.** Both use bare
+  `<input type="search">` (`app.js:137-157`, `people-view.js:45-56`) with no custom
+  clear and no `::-webkit-search-cancel-button` styling, so on several browsers the
+  only way to clear is backspacing. Add an `×` inside `.searchbar`/`.header-search`.
+  *(Low priority.)*
+
+### Person form (net-new, post-rework)
+
+- **[M] The date picker is 100% hardcoded English — never routed through I18n.**
+  Every string in `HeritagePicker` is a literal: input/trigger/dialog aria-labels
+  (`heritage-datepicker.js:81,89,92`), prev/next month (`97-98`), the MONTHS /
+  WEEKDAYS arrays (`15-16`, which drive the calendar title *and* each day's
+  aria-label at `205`), "Year only" (`109`), "Today" (`113`), "Clear" (`117`). A
+  Hindi user opens this 2×/person and sees English chrome + month names. Route all
+  nine literals + localized month/weekday names through I18n (`heritagePicker.*`).
+- **[M] No "Save & add another".** After each add the modal closes and the tree
+  pans / Inspector opens (`people-view.js:1323-1326`), forcing a full context
+  switch per person — painful for the 30-relatives-in-one-sitting persona. Add a
+  footer "Save & add another" that saves then reopens a blank form, skipping the
+  reveal/pan for that path.
+- **[M] Every twin (EN+HI) field pays the two-column card cost even when Hindi is
+  never used.** `pair()` wraps all 8 twinned fields in a padded dashed card
+  (`people-view.js:1074-1087`, `components.css:458-467`), doubling each field's
+  height on phone for English-only entry. Default the Hindi half to a collapsed
+  "+ हिन्दी" toggle unless it already has a value (mirror the `moreDetails.open`
+  progressive-disclosure keyed off `hasMoreData`).
+- **[S] Enter never submits the form.** The modal body is a plain `<div>`, not a
+  `<form>` (`dom.js:189-198`), and `openModal` only handles Escape/Tab (`157-186`);
+  single-line inputs have only `oninput` (the `required` on `nameInput` is inert).
+  Add a modal-level Enter handler that clicks Save when focus is in a single-line
+  input (excluding textareas and the date popover's own Enter-commit).
+- **[S] Hidden death-precision picker leaves a dead 130 px gutter.** The row is a
+  fixed `grid-template-columns: 1fr 130px` (`people-view.js:742`); hiding the
+  precision child via `display:none` (`734-738`) doesn't collapse the track, so
+  every living person shows an empty 130 px hole beside the death-date input.
+  Collapse the row to a single column when the picker is hidden.
 
 ---
 
