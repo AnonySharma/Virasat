@@ -20,7 +20,6 @@ Use the priority tier as the order to work through; within a tier, ordered by im
 - 🟡 **Inspector mobile close polish.** The `.inspector-close` exists at `≤ 1100 px` and works; the small × in the top corner could be more obvious.
 - 🟡 **Photo migration first-load re-renders.** `migrateLegacy` runs N updates; each fires a notification (now muted, but the legacy code path could still cascade in some edge cases). Verify and tighten.
 - 🟡 **`zoomBy` doesn't clamp the anchor.** Wheeling over canvas padding lets the tree slide off-screen.
-- 🟡 **Crop editor — no keyboard reframe.** Drag is mouse/touch only. Arrow keys = ±2 % focal shift, +/− = scale ±0.1.
 - 🟡 **Butter pastel + small text fails AA.** `--av-butter` (`#ECE0AE`) on ivory is 1.15:1 contrast.
 - 🟡 **`buildGenerations` spouse-pull is symmetric.** Two orphan partners both at gen 0 stay at gen 0. No observed bug; gate the pull on `Math.max > 0`.
 - 🟡 **`gapBefore` indexing fragile when `indexOfRight === 0`.** Defensive only.
@@ -48,7 +47,7 @@ Use the priority tier as the order to work through; within a tier, ordered by im
 
 **Verdict: stack is right-sized. Stay vanilla, stay on a static host.**
 
-The whole codebase is ~10 k JS lines spread across 25 modules, all attached to `window`. Right at the ceiling before the lack of an explicit dependency graph starts to bite, but it's not biting yet — and the *no-build, just-open-index.html* property is a feature for a 30-year-lifespan family heirloom app.
+The whole codebase is ~17 k JS lines spread across 26 modules, all attached to `window`. Right at the ceiling before the lack of an explicit dependency graph starts to bite, but it's not biting yet — and the *no-build, just-open-index.html* property is a feature for a 30-year-lifespan family heirloom app.
 
 **Hosting — top pick: stay on GitHub Pages.** Free HTTPS, free custom domain, automatic deploys on push. The 100 GB/month bandwidth cap is unreachable.
 
@@ -126,6 +125,7 @@ Fixed items (✅) tagged with the resolving commit hash. Verified-false / closed
 - ✅ **Inspector accordion focus halo touches the icon.** Inset gold outline on `:focus-visible`. (`6625fba`)
 - ✅ **Section body glued to header on hover.** 8 px top padding on the open body. (`6625fba`)
 - ✅ **Reframe modal overflowed horizontally; one shared zoom slider for both frames.** Manual layout that fits inside the modal max-width; per-frame zoom slider; the avatar shrinks to 180 px so both fit on one row. (`c548494`)
+- ✅ **Crop editor — no keyboard reframe.** The focal-point surface is now `tabindex=0` + `role`/`aria-label`; a `keydown` handler nudges the focal point (arrows, Shift = larger step) and each frame's zoom slider is keyboard-operable, so reframing no longer requires a pointer.
 - ✅ **People grid stretched single result to full height.** `align-content: start` + per-card `align-self: start`. (`07516dd`)
 - ✅ **Search returned people-only when matching stories.** Story-result cards now appear above person-result cards; clicking opens the inspector + scrolls to the matched story + flashes a gold halo. (`07516dd`)
 - ✅ **Emojis everywhere instead of icons.** Sweep replaced 📍 / ⏳ / ❓ / ✦ / ↗ / ✕ / − / ＋ / { } / 🌳 / 🌱 / 🔎 / ← / ✎ / 🗑 with FA equivalents. (`07516dd`, plus a follow-up sweep across modal-button labels.)

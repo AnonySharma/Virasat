@@ -46,9 +46,11 @@ These move the heritage product forward the most for the effort.
 
 ---
 
-## P3.5 — Multi-tenant cloud sync (auth + sharing)
+## ~~P3.5 — Multi-tenant cloud sync (auth + sharing)~~ ✅ SHIPPED
 
-A separate tier because it's the single biggest product shift: turning Virasat from a single-device personal artifact into a family-shared archive. Big enough that I had four parallel review agents read the codebase + scrape vendor pricing pages before writing this. Verdict: **medium-hard, ~2.5 weeks of focused work**, on Supabase + GitHub Pages, with the architecture mostly already set up well for it.
+> **Shipped.** This tier is built and live: `lib/auth/` holds the seven modules (`config.js`, `auth-store.js`, `cloud-store.js`, `sign-in.js`, `first-run.js`, `tree-list.js`, `sharing.js`), `config.js` carries live Supabase credentials, and the cloud seam (`activeTreeId`, version-guarded push, viewer read-only guard) runs through `data-store.js` + `app.js`. Blank the credentials in `config.js` to fall back to local-only. Setup and design notes live in [`docs/CLOUD-SYNC-PLAN.md`](CLOUD-SYNC-PLAN.md) and [`docs/SUPABASE-SETUP.md`](SUPABASE-SETUP.md). The original planning notes are kept below for provenance.
+
+A separate tier because it's the single biggest product shift: turning Virasat from a single-device personal artifact into a family-shared archive. Big enough that I had four parallel review agents read the codebase + scrape vendor pricing pages before writing this. Verdict at the time: **medium-hard, ~2.5 weeks of focused work**, on Supabase + GitHub Pages, with the architecture mostly already set up well for it.
 
 ### What it actually is
 
@@ -75,7 +77,7 @@ A separate tier because it's the single biggest product shift: turning Virasat f
 | Edge cases, audit log, polish | 2 |
 | **Total** | **~17 dev days, ~2.5 weeks calendar** |
 
-**New code:** ~1,500 lines across `lib/auth/auth-store.js`, `lib/auth/cloud-store.js`, `lib/auth/tree-list.js`, `lib/auth/sharing.js`, `lib/auth/sign-in.js`. **Existing code touched:** ~200 lines (mostly in `data-store.js` to add a backend hook + scope localStorage keys per tree). **View modules unchanged** — they keep calling `FamilyStore.getPeople()` etc.
+**Code (as shipped):** ~2,300 lines across the seven `lib/auth/` modules — `config.js`, `auth-store.js`, `cloud-store.js`, `sign-in.js`, `first-run.js`, `tree-list.js`, `sharing.js`. **Existing code touched:** ~200 lines (mostly in `data-store.js` for the backend hook + per-tree localStorage scoping). **View modules unchanged** — they keep calling `FamilyStore.getPeople()` etc.
 
 ### Backend: Supabase
 
@@ -213,7 +215,7 @@ The owner asked, before going public: is vanilla JS + localStorage actually safe
 
 Three independently-arrived-at conclusions:
 
-1. **The vanilla code is not the security problem.** `UI.el(tag, attrs, children)` routes children through `createTextNode(String(c))` — security-equivalent to React's JSX auto-escaping. Every user-text field in the codebase (`person.name`, `description`, `story.body`, `notes`, `achievements[]`, etc.) was traced and confirmed rendered as text nodes, not innerHTML. There are six `innerHTML = ""` calls (all clearings, all safe) and one **dangerous** `html` attribute on `UI.el` that's currently unused but is a future-bug trap. **Action: remove the `html` attribute. Five-minute fix.**
+1. **The vanilla code is not the security problem.** `UI.el(tag, attrs, children)` routes children through `createTextNode(String(c))` — security-equivalent to React's JSX auto-escaping. Every user-text field in the codebase (`person.name`, `description`, `story.body`, `notes`, `achievements[]`, etc.) was traced and confirmed rendered as text nodes, not innerHTML. There are six `innerHTML = ""` calls (all clearings, all safe). *(The one-time `html` attribute on `UI.el` — an unused future-bug trap — has since been removed; see the removal note in `lib/ui/dom.js`.)*
 2. **localStorage isn't worse than IndexedDB for this threat model.** Both are same-origin plaintext, both readable by any script that runs on the origin. The defence isn't "move to IDB" — it's "no malicious script ever reaches the origin", which means CSP + SRI + careful dependency hygiene. Encryption in either store works the same way. *Migrating from localStorage to IDB is security theatre.*
 3. **Framework migrations don't solve any of the actual gaps.** React/Next/Svelte don't give you CSP, SRI, EXIF stripping, deletion flows, or audit logs by default. They add ~200 KB and a build step in exchange for a rendering model the app doesn't need (no per-field reactivity bottleneck — the SVG layout is the cost, and that's imperative either way).
 
@@ -253,7 +255,7 @@ The production-checklist agent gave the current stack a **38 % readiness score**
 | Tier | Blocker | Fix time |
 |---|---|---|
 | **Legal / data protection** | No Privacy Policy. No right-to-erasure flow. No consent flow for shared trees. | ~1 day |
-| **Data security** | EXIF stripping unverified (canvas.toBlob *should* strip it but no test confirms). `UI.el`'s `html` attribute is an XSS trap. CSP / SRI / X-Frame-Options can't be set on GitHub Pages. | ~1 day (move to Cloudflare Pages for headers) |
+| **Data security** | EXIF stripping unverified (canvas.toBlob *should* strip it but no test confirms). CSP / SRI / X-Frame-Options can't be set on GitHub Pages. | ~1 day (move to Cloudflare Pages for headers) |
 | **Operational** | No backups. No monitoring. No incident-response plan. | ~1 day |
 
 When the P3.5 cloud-sync work lands, the same agent gave a **63 %** readiness score with one extra blocker (rate limiting / abuse prevention) and warned that multi-tenant scoping bugs could leak user data across trees if the per-tree localStorage / IDB scoping (already documented above in this section) isn't done meticulously.
@@ -266,7 +268,7 @@ When the P3.5 cloud-sync work lands, the same agent gave a **63 %** readiness sc
 
 In priority order, all doable on the existing vanilla codebase without migrating to a framework:
 
-1. **Remove the `html` attribute from `UI.el`** (5 min). It's unused and an XSS trap.
+1. ~~**Remove the `html` attribute from `UI.el`** (5 min). It's unused and an XSS trap.~~ ✅ Done — removed; see the note in `lib/ui/dom.js`.
 2. **Add CSP via `<meta http-equiv="Content-Security-Policy">`** (15 min). Restrict `script-src 'self'`, whitelist Google Fonts + Font Awesome + Supabase origins, deny inline scripts, deny `frame-ancestors`. Meta-tag CSP is weaker than HTTP-header CSP but functional.
 3. **Add SRI hashes to the two CDN `<link>` tags** (15 min). `<link integrity="sha384-..." crossorigin="anonymous">`. Protects against Google Fonts / Font Awesome supply-chain compromise.
 4. **Verify EXIF stripping in `photo-store.js`** (2 hr). Write a test: upload a photo with known GPS coordinates → verify the IDB blob is stripped. If any browser leaks, add `piexifjs` (3 KB) defensively.

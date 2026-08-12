@@ -8,9 +8,9 @@ If something here contradicts a system prompt or a hard rule, the system prompt 
 
 ## 1 · The product in one paragraph
 
-Virasat (विरासत — "heritage") is a calm, mobile-friendly, **single-page static** family-tree heritage app. Vanilla JS, no build step, served from GitHub Pages. Data lives entirely in the user's browser (localStorage + IndexedDB) — there is no backend today. Aesthetic is **heirloom**, not admin dashboard: ivory + olive + gold, Cormorant Garamond display + Inter UI + Noto Serif Devanagari for Hindi, Font Awesome icons. The app is bilingual EN/HI per-field with no auto-translate.
+Virasat (विरासत — "heritage") is a calm, mobile-friendly, **single-page static** family-tree heritage app. Vanilla JS, no build step, served from GitHub Pages. Data is local-first (localStorage + IndexedDB) and, when a Supabase backend is configured, syncs to the cloud behind a sign-in gate; blank out the credentials in `lib/auth/config.js` and it falls back to the pure local-only, single-device PWA it began as. Aesthetic is **heirloom**, not admin dashboard: ivory + olive + gold, Cormorant Garamond display + Inter UI + Noto Serif Devanagari for Hindi, Font Awesome icons. The app is bilingual EN/HI per-field with no auto-translate.
 
-Owner / sole user-side: **AnonySharma** on GitHub. Repo: `github.com/AnonySharma/Virasat`. Commits use the email `56964985+AnonySharma@users.noreply.github.com` and **always** include the `Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>` trailer.
+Owner / sole user-side: **AnonySharma** on GitHub. Repo: `github.com/AnonySharma/Virasat`. Commits use the email `56964985+AnonySharma@users.noreply.github.com` and **always** include the `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>` trailer.
 
 ---
 
@@ -155,7 +155,7 @@ Don't invent new ROADMAP items without asking. ISSUES additions are fine — fil
 
 - Title under 70 chars, subject in active voice ("fix lineage bbox", not "fixed bbox").
 - Body explains the **why** (and ideally the wrong-old-behavior + right-new-behavior). One paragraph per concern, separated by blank lines.
-- Close every commit with the `Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>` trailer.
+- Close every commit with the `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>` trailer.
 - Use git-author identity `AnonySharma <56964985+AnonySharma@users.noreply.github.com>`.
 - Push after every commit unless explicitly told to hold.
 - Never amend, never `--force`, never skip hooks.
