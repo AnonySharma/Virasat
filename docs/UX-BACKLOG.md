@@ -246,12 +246,12 @@ bilingual-first app. All confirmed by direct `grep`/read. This is a mechanical s
 (route literals → `I18n.t`, add EN+HI keys), the same treatment already applied to the
 date picker / PathFinder / person form.
 
-- **[High] Marriage / wedding-details modal — 0 `I18n.t` calls across ~325 lines.**
+- **✅ [FIXED 319cb76] Marriage / wedding-details modal — 0 `I18n.t` calls across ~325 lines.**
   `showMarriageModal` (`tree-view.js:1215-1539`): title, empty-state copy, Date/Place/Story
   labels + placeholders, Edit/Add-details/Close, edit-mode labels, Add/Replace/Remove photo,
   Cancel/Save, the "Forget this marriage record?" delete-confirm, and both toasts. Confirmed
   0 matches. The node-menu entry that opens it *is* translated, so the mismatch is jarring.
-  **Most-cited finding (4 agents).** New `marriage.*` keys.
+  **Most-cited finding (4 agents).** New `marriage.*` keys (EN+HI, incl. interpolated title).
 - **[Med] Story editor — 0 `I18n.t`.** `openStoryEditor` (`inspector.js:609-681`): titles,
   placeholders, Title/Story/Tags labels+hints, the delete-confirm (which splices a person's
   name into a raw English sentence), validation + success toasts. New `inspector.story*`.
@@ -277,30 +277,34 @@ date picker / PathFinder / person form.
   correctly calls `I18n.t` on adjacent lines — an internal inconsistency.
 - **[S] Inspector "Contact" section title is a bare literal** (`inspector.js:324`) while every
   sibling section uses `I18n.t("inspector.secXxx")`; no `inspector.secContact` key exists.
-- **[S] Tree-rename dialog hardcoded** (`tree-view.js:149-177`) — title, body, "Tree title"
-  label, placeholder, Cancel/Save (with explicit English overrides), "Renamed" toast. It
-  **duplicates** the tree-switcher's rename flow (`tree-list.js`), which already uses
-  `tree.renameTitle/renamed/namePlaceholder` — so reuse those existing keys, don't mint new.
-- **[S] Kebab menu mixes hardcoded rows** (`app.js:443,468,470,473`): "Light/Dark mode",
-  "Collect via form", "Import", "Export" sit among already-i18n'd rows; matching keys already
-  exist (`actions.collectVia/import/export`).
-- **[S] Rail "Needs attention" nudges hardcoded** (`app.js:930-932`): Missing birth date /
-  photo / description — the identical concept is already localized in People
-  (`people.missingBirth/Photo/Desc`); reuse those keys.
+- **✅ [FIXED 319cb76] Tree-rename dialog hardcoded** (`tree-view.js:149-177`) — title, body,
+  "Tree title" label, placeholder, Cancel/Save (with explicit English overrides), "Renamed"
+  toast. Reused the tree-switcher's existing `tree.renameTitle/nameLabel/namePlaceholder/renamed`
+  + `actions.cancel/save`; added only `tree.renameBody` for the explanatory paragraph the
+  switcher's compact prompt lacks.
+- **✅ [FIXED 5762bab] Kebab menu mixes hardcoded rows** (`app.js:443,468,470,473`): "Light/Dark
+  mode", "Collect via form", "Import", "Export" sat among already-i18n'd rows. Routed through
+  `actions.*` — reused `collectVia/import/export`; added `actions.lightMode/darkMode`.
+- **✅ [FIXED 5762bab] Rail "Needs attention" nudges hardcoded** (`app.js:930-932`): Missing
+  birth date / photo / description. The `people.missing*` keys turned out to be sentence
+  fragments ("a birth date") built for the People banner, so they read wrong as standalone
+  labels — added dedicated `rail.needsBirth/needsPhoto/needsDescription` instead.
 - **[S] `relationLabel` returns hardcoded English** (`data-store.js:821-845`) — father/wife/
   daughter etc.; surfaces in PathFinder hops. Needs a `relation.*` namespace (this is the
   real, deduped remainder of the rejected "PathFinder i18n" claim).
 - **[S] Generic "X failed: {raw error}" toasts** at 5 sites (`app.js:253,524`;
   `export-import.js:507,531,562,657`) route no I18n and surface raw network-lib strings with
   no next step.
-- **[S/High] `friendly()` leaks raw Supabase strings.** `sign-in.js:327` — the fall-through
-  `return msg || t("auth.errGeneric", …)` shows the **raw** error for anything not matching its
-  4 substrings (e.g. "For security purposes, you can only request this after 46 seconds",
-  "Password should be at least 6 characters") to a non-technical relative. One-line inversion:
-  always prefer the friendly generic; `console.warn` the raw. **(Confirmed at source.)**
-- **[S] No "email not confirmed" branch in `friendly()`** (`sign-in.js:311-319`) — signing in
-  before confirming funnels into the generic catch-all with no "check your inbox" hint. Add a
-  branch mirroring the existing invalid-login/rate-limit/network ones.
+- **✅ [FIXED 5762bab] `friendly()` leaks raw Supabase strings.** `sign-in.js:327` — the
+  fall-through `return msg || t("auth.errGeneric", …)` showed the **raw** error for anything not
+  matching its 4 substrings (e.g. "For security purposes, you can only request this after 46
+  seconds", "Password should be at least 6 characters") to a non-technical relative. Inverted:
+  always prefer the friendly generic; `console.warn` the raw. Also matched the "for security
+  purposes" rate-limit phrasing.
+- **✅ [FIXED 5762bab] No "email not confirmed" branch in `friendly()`** (`sign-in.js:311-319`) —
+  signing in before confirming funnelled into the generic catch-all with no "check your inbox"
+  hint. Added a branch (new `auth.errUnconfirmed`) mirroring the invalid-login/rate-limit/network
+  ones.
 
 ### Accessibility (mostly no-backend; a couple need a design nod)
 
@@ -472,6 +476,24 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). **CACHE_VERSION deliberately not yet bumped** — held until
 the rest of the queued cloud work lands.
+
+### Batch 7 — round-2 10-agent review, i18n defect cluster (2026-08-12)
+
+- **[5762bab] Auth-error hardening + kebab/rail localization.** `sign-in.js`'s `friendly()`
+  no longer surfaces raw Supabase English (inverted fall-through → friendly generic +
+  `console.warn` the raw); added an "email not confirmed" branch (`auth.errUnconfirmed`) and
+  the "for security purposes" rate-limit phrasing. Phone kebab rows (Light/Dark mode, Collect
+  via form, Import, Export) routed through `actions.*` (reused `collectVia/import/export`;
+  added `lightMode/darkMode`). Rail "Needs attention" rows got dedicated
+  `rail.needsBirth/needsPhoto/needsDescription` (the `people.missing*` keys are sentence
+  fragments, not reusable as labels). `sign-in.js`, `app.js`, `i18n.js`.
+- **[319cb76] Marriage/wedding-details modal + tree-rename dialog i18n'd.** The round-2
+  most-cited leak (4 agents): `showMarriageModal` ran ~325 lines with 0 `I18n.t` calls — every
+  string (interpolated title, empty state, field labels + placeholders, photo alt, all buttons,
+  the delete-confirm, both toasts) now routes through a new `marriage.*` namespace (EN+HI). The
+  tree-rename dialog, which duplicated the tree-switcher's flow but hardcoded its copy, reuses
+  the existing `tree.renameTitle/nameLabel/namePlaceholder/renamed` + `actions.cancel/save`,
+  adding only `tree.renameBody`. `tree-view.js`, `i18n.js`.
 
 ### Batch 6 — follow-up review, round 1 (2026-08-12)
 
