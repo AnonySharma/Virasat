@@ -246,6 +246,11 @@ bilingual-first app. All confirmed by direct `grep`/read. This is a mechanical s
 (route literals → `I18n.t`, add EN+HI keys), the same treatment already applied to the
 date picker / PathFinder / person form.
 
+**✅ CLUSTER CLEARED (Batch 7).** Every confirmed leak below is shipped. The one
+remaining sub-item is the collect-form questionnaire *titles* (⚠ PARTIAL) — deferred
+because they double as CSV import headers, so it's a data-contract decision, not a
+mechanical sweep.
+
 - **✅ [FIXED 319cb76] Marriage / wedding-details modal — 0 `I18n.t` calls across ~325 lines.**
   `showMarriageModal` (`tree-view.js:1215-1539`): title, empty-state copy, Date/Place/Story
   labels + placeholders, Edit/Add-details/Close, edit-mode labels, Add/Replace/Remove photo,
@@ -300,12 +305,16 @@ date picker / PathFinder / person form.
   birth date / photo / description. The `people.missing*` keys turned out to be sentence
   fragments ("a birth date") built for the People banner, so they read wrong as standalone
   labels — added dedicated `rail.needsBirth/needsPhoto/needsDescription` instead.
-- **[S] `relationLabel` returns hardcoded English** (`data-store.js:821-845`) — father/wife/
-  daughter etc.; surfaces in PathFinder hops. Needs a `relation.*` namespace (this is the
-  real, deduped remainder of the rejected "PathFinder i18n" claim).
-- **[S] Generic "X failed: {raw error}" toasts** at 5 sites (`app.js:253,524`;
-  `export-import.js:507,531,562,657`) route no I18n and surface raw network-lib strings with
-  no next step.
+- **✅ [FIXED e5a586c] `relationLabel` returns hardcoded English** (`data-store.js:821-845`) —
+  father/wife/daughter etc.; surfaces in PathFinder hops. New `relation.*` namespace (EN+HI)
+  with an English fallback if I18n hasn't loaded (matches the adjacent `dateT()` idiom). The
+  hop chips are standalone (avatar → word → avatar), so bare HI nouns fit without grammar. (The
+  real, deduped remainder of the rejected "PathFinder i18n" claim.)
+- **✅ [FIXED e5a586c] Generic "X failed: {raw error}" toasts** at 5 sites (`app.js` reset +
+  sign-out; `export-import.js` PNG/JSON/backup/import) spliced the raw network-/lib error into a
+  relative's toast — same defect class as the `friendly()` leak. Each now shows a localized
+  friendly message (`exp.exportFailed/backupFailed`, `imp.importFailed`, `rail.resetFailed`,
+  `auth.signOutFailed`) and `console.warn`s the raw error.
 - **✅ [FIXED 5762bab] `friendly()` leaks raw Supabase strings.** `sign-in.js:327` — the
   fall-through `return msg || t("auth.errGeneric", …)` showed the **raw** error for anything not
   matching its 4 substrings (e.g. "For security purposes, you can only request this after 46
@@ -520,6 +529,12 @@ the rest of the queued cloud work lands.
   Collect's `formQuestions()` titles were left English — they double as CSV headers the importer
   matches on; localizing needs a data-contract decision (logged above). `crop-editor.js`,
   `print-book.js`, `collect-form.js`, `i18n.js`.
+- **[e5a586c] Relation labels + failure-toast raw-error leaks.** `FamilyStore.relationLabel`'s
+  10 hardcoded relation words (PathFinder hop chips) → new `relation.*` (EN+HI, English
+  fallback). The five "X failed: {raw}" toasts (export PNG/JSON/backup, import, reset, sign-out)
+  now show localized friendly messages + `console.warn` the raw — closing the same leak class as
+  the sign-in `friendly()` fix. This clears the **entire round-2 i18n defect cluster.**
+  `data-store.js`, `export-import.js`, `app.js`, `i18n.js`.
 
 ### Batch 6 — follow-up review, round 1 (2026-08-12)
 
