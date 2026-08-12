@@ -1455,10 +1455,6 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   align-items: center;
   gap: var(--s-8);
   width: 100%;
-  /* The hero opens on a warm "plate": a parchment gradient lifted with a low
-     gold glow at the top-left, a hairline border, and a soft shadow — so the
-     landing leads with a crafted panel and lets the jali backdrop breathe
-     around it, rather than text floating on the lattice. */
   position: relative;
   overflow: hidden;
   padding: var(--s-8) var(--s-8);
@@ -1469,6 +1465,82 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   border-radius: var(--r-2xl);
   box-shadow: var(--shadow-md);
 }
+/* The hero as a dark heritage "stage": deep forest-green depth with an
+   animated aurora glow and drifting golden dust motes (built in sign-in.js,
+   styled below). Copy flips to cream. This is the page's focal moment — the
+   one place that leads with atmosphere rather than a light plate. Fixed dark
+   colours (not tokens) so it reads identically on the light and dark app
+   themes, exactly like .landing__band. */
+.landing__hero--stage {
+  background:
+    radial-gradient(110% 120% at 100% 0%, rgba(184, 154, 90, 0.20) 0%, transparent 50%),
+    radial-gradient(120% 130% at 0% 100%, rgba(94, 125, 99, 0.35) 0%, transparent 55%),
+    linear-gradient(155deg, #24352A 0%, #1C2A22 55%, #2A2620 100%);
+  border-color: rgba(184, 154, 90, 0.28);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(248, 244, 236, 0.06);
+  isolation: isolate;
+}
+.landing__hero--stage .landing__pitch { color: rgba(244, 239, 227, 0.82); }
+.landing__hero--stage .landing__eyebrow { color: var(--gold); }
+.landing__hero--stage .landing__eyebrow::before { background: linear-gradient(90deg, var(--gold), transparent); }
+.landing__hero--stage .signin__link { color: rgba(244, 239, 227, 0.78); }
+.landing__hero--stage .signin__link:hover { color: #F8F4EC; }
+
+/* ── Hero atmosphere layers (aria-hidden, all motion reduced-motion-gated) ── */
+.landing__hero-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.landing__hero > .landing__hero-copy,
+.landing__hero > .landing__mock { position: relative; z-index: 1; }
+/* Slow aurora — two soft radial washes that breathe and drift, so the dark
+   backdrop is never static. */
+.landing__hero-glow {
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(38% 44% at 26% 30%, rgba(94, 125, 99, 0.55), transparent 60%),
+    radial-gradient(34% 40% at 74% 68%, rgba(184, 154, 90, 0.28), transparent 60%);
+  filter: blur(6px);
+}
+/* Golden dust motes — small blurred gold dots that rise and gently drift, like
+   sunlight catching dust over an old album. Each mote's position/size/speed/
+   drift/opacity are seeded as CSS vars in sign-in.js. */
+.landing__motes { position: absolute; inset: 0; }
+.landing__mote {
+  position: absolute;
+  bottom: -6%;
+  width: var(--size, 3px);
+  height: var(--size, 3px);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(233, 214, 160, 0.95), rgba(184, 154, 90, 0.35) 60%, transparent 70%);
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .landing__hero-glow {
+    animation: landing-aurora 16s ease-in-out infinite alternate;
+    will-change: transform, opacity;
+  }
+  .landing__mote {
+    animation: landing-mote-rise var(--dur, 12s) linear infinite;
+    animation-delay: var(--delay, 0s);
+    will-change: transform, opacity;
+  }
+}
+@keyframes landing-aurora {
+  0%   { transform: translate3d(-4%, 2%, 0) scale(1);    opacity: 0.85; }
+  100% { transform: translate3d(5%, -3%, 0) scale(1.12); opacity: 1; }
+}
+@keyframes landing-mote-rise {
+  0%   { transform: translate3d(0, 0, 0);                       opacity: 0; }
+  12%  { opacity: var(--o, 0.6); }
+  88%  { opacity: var(--o, 0.6); }
+  100% { transform: translate3d(var(--drift, 0), -560px, 0);   opacity: 0; }
+}
 .landing__hero-copy {
   display: flex;
   flex-direction: column;
@@ -1477,6 +1549,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   gap: var(--s-3);
 }
 .landing__logo { width: 72px; height: 72px; margin-bottom: var(--s-1); }
+.landing__hero--stage .landing__logo { filter: drop-shadow(0 4px 16px rgba(184, 154, 90, 0.45)); }
 /* Gold small-caps kicker under the wordmark — an editorial lede that carries
    the heritage highlight colour into the hero. A short gold rule leads into
    it, like a magazine standfirst. */
@@ -1514,12 +1587,30 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
    remap in dark mode. */
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   .landing__title {
-    background-image: linear-gradient(118deg, var(--gold-deep) 0%, var(--gold) 50%, var(--gold-deep) 100%);
+    /* A bright band travels through the gold via an oversized, animated
+       background-position — a slow shimmer, like light moving across gilt
+       lettering. Solid ink `color` above stays the fallback. */
+    background-image: linear-gradient(105deg,
+      var(--gold-deep) 0%, var(--gold) 38%, #F1E4BE 50%, var(--gold) 62%, var(--gold-deep) 100%);
+    background-size: 260% 100%;
+    background-position: 0% 50%;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
   }
+  /* On the dark stage the deep-gold stops would muddy — brighten the ramp. */
+  .landing__hero--stage .landing__title {
+    background-image: linear-gradient(105deg,
+      var(--gold) 0%, #E9D6A0 40%, #FBF3D8 50%, #E9D6A0 60%, var(--gold) 100%);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .landing__title { animation: landing-shimmer 7s ease-in-out infinite; }
+  }
+}
+@keyframes landing-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
 }
 .landing__pitch {
   font-size: clamp(16px, 2.2vw, 20px);
@@ -1536,15 +1627,42 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   margin-top: var(--s-4);
 }
 .landing__cta {
-  height: 50px;
+  position: relative;
+  overflow: hidden;
+  height: 52px;
   padding-inline: var(--s-8);
   font-size: 16px;
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-glow-gold);
 }
+/* A diagonal light-sweep crosses the primary CTA on a slow loop, drawing the
+   eye to the one action that matters. Reduced-motion hides it (opacity 0). */
+.landing__cta::after {
+  content: "";
+  position: absolute;
+  top: -60%;
+  left: -30%;
+  width: 40%;
+  height: 220%;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 252, 245, 0.45), transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .landing__cta::after {
+    opacity: 1;
+    animation: landing-cta-sweep 4.5s ease-in-out 1.2s infinite;
+  }
+}
 @media (prefers-reduced-motion: no-preference) and (hover: hover) {
   .landing__cta { transition: transform var(--t-fast), box-shadow var(--t-fast); }
   .landing__cta:hover { transform: translateY(-1px); box-shadow: var(--shadow-md), var(--shadow-glow-gold); }
+}
+@keyframes landing-cta-sweep {
+  0%   { left: -40%; }
+  55%  { left: 130%; }
+  100% { left: 130%; }
 }
 
 /* Decorative hero tree mock — a small SVG diagram of a couple linked down to
@@ -1557,8 +1675,8 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   position: relative;
 }
 /* Soft radial spotlight behind the tree mock — a warm halo that anchors the
-   decorative diagram on the hero plate. Sits behind the SVG (z-index) and is
-   purely atmospheric. */
+   decorative diagram and slowly breathes, so the tree feels alive on the dark
+   stage. Sits behind the SVG (z-index) and is purely atmospheric. */
 .landing__mock::before {
   content: "";
   position: absolute;
@@ -1567,7 +1685,24 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   z-index: 0;
   pointer-events: none;
 }
+@media (prefers-reduced-motion: no-preference) {
+  .landing__mock::before { animation: landing-breathe 6.5s ease-in-out infinite; will-change: transform, opacity; }
+}
+@keyframes landing-breathe {
+  0%, 100% { transform: scale(0.94); opacity: 0.7; }
+  50%      { transform: scale(1.06); opacity: 1; }
+}
 .landing__mock > * { position: relative; z-index: 1; }
+/* On the dark stage the halo brightens to gold and the connecting lines glow
+   gold so the little tree reads against the deep-green backdrop. */
+.landing__hero--stage .landing__mock::before {
+  background: radial-gradient(58% 58% at 50% 45%, rgba(184, 154, 90, 0.42) 0%, transparent 70%);
+}
+.landing__hero--stage .landing__tree-link {
+  stroke: rgba(233, 214, 160, 0.85);
+  filter: drop-shadow(0 0 3px rgba(184, 154, 90, 0.55));
+}
+.landing__hero--stage .landing__tree-disc { stroke: rgba(28, 42, 34, 0.9); }
 .landing__tree-svg {
   width: 100%;
   max-width: 360px;
