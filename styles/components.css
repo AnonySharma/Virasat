@@ -1455,6 +1455,19 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   align-items: center;
   gap: var(--s-8);
   width: 100%;
+  /* The hero opens on a warm "plate": a parchment gradient lifted with a low
+     gold glow at the top-left, a hairline border, and a soft shadow — so the
+     landing leads with a crafted panel and lets the jali backdrop breathe
+     around it, rather than text floating on the lattice. */
+  position: relative;
+  overflow: hidden;
+  padding: var(--s-8) var(--s-8);
+  background:
+    radial-gradient(120% 130% at 8% 0%, var(--gold-soft) 0%, transparent 48%),
+    linear-gradient(158deg, var(--bone) 0%, var(--parchment) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2xl);
+  box-shadow: var(--shadow-md);
 }
 .landing__hero-copy {
   display: flex;
@@ -1464,14 +1477,49 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   gap: var(--s-3);
 }
 .landing__logo { width: 72px; height: 72px; margin-bottom: var(--s-1); }
+/* Gold small-caps kicker under the wordmark — an editorial lede that carries
+   the heritage highlight colour into the hero. A short gold rule leads into
+   it, like a magazine standfirst. */
+.landing__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+}
+.landing__eyebrow::before {
+  content: "";
+  width: 24px;
+  height: 2px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--gold), transparent);
+}
 .landing__title {
   font-family: var(--font-display);
-  font-size: clamp(40px, 6vw, 60px);
+  font-size: clamp(44px, 6.6vw, 66px);
   font-weight: 600;
   color: var(--text);
   margin: 0;
   letter-spacing: -0.02em;
-  line-height: 1.05;
+  line-height: 1.02;
+}
+/* Gold-foil wordmark: a warm deep→bright→deep gold sheen clipped to the
+   letters. The solid ink `color` above is the fallback, so on any browser
+   without background-clip:text the brand name is still fully legible (never
+   an invisible transparent title). Themes automatically — the gold tokens
+   remap in dark mode. */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .landing__title {
+    background-image: linear-gradient(118deg, var(--gold-deep) 0%, var(--gold) 50%, var(--gold-deep) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
 }
 .landing__pitch {
   font-size: clamp(16px, 2.2vw, 20px);
@@ -1492,6 +1540,11 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   padding-inline: var(--s-8);
   font-size: 16px;
   border-radius: var(--r-xl);
+  box-shadow: var(--shadow-glow-gold);
+}
+@media (prefers-reduced-motion: no-preference) and (hover: hover) {
+  .landing__cta { transition: transform var(--t-fast), box-shadow var(--t-fast); }
+  .landing__cta:hover { transform: translateY(-1px); box-shadow: var(--shadow-md), var(--shadow-glow-gold); }
 }
 
 /* Decorative hero tree mock — a small SVG diagram of a couple linked down to
@@ -1501,7 +1554,20 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
+/* Soft radial spotlight behind the tree mock — a warm halo that anchors the
+   decorative diagram on the hero plate. Sits behind the SVG (z-index) and is
+   purely atmospheric. */
+.landing__mock::before {
+  content: "";
+  position: absolute;
+  inset: -12% -6%;
+  background: radial-gradient(60% 60% at 50% 45%, var(--gold-soft) 0%, transparent 70%);
+  z-index: 0;
+  pointer-events: none;
+}
+.landing__mock > * { position: relative; z-index: 1; }
 .landing__tree-svg {
   width: 100%;
   max-width: 360px;
@@ -1555,18 +1621,32 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .landing__tree-node--lavender { color: var(--av-lavender-ink); }
 .landing__tree-node--lavender .landing__tree-disc { fill: var(--av-lavender); }
 
-/* Section headings shared by the "How it works" and "capture" bands. */
+/* Section headings shared by the "How it works" and "capture" bands. A short
+   gold rule under each title gives every section a small editorial flourish —
+   the one detail that repeats across the page and ties the sections together
+   with the heritage highlight colour. */
 .landing__section-title {
   font-family: var(--font-display);
   font-size: clamp(22px, 3vw, 28px);
   font-weight: 600;
   color: var(--text);
-  margin: 0 0 var(--s-5);
+  margin: 0 0 var(--s-6);
   text-align: center;
+}
+.landing__section-title::after {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 2px;
+  margin: var(--s-3) auto 0;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
 }
 .landing__how, .landing__capture { width: 100%; }
 
-/* How it works — three numbered steps, side-by-side then stacked on phones. */
+/* How it works — three numbered steps, side-by-side then stacked on phones. A
+   dashed gold "journey" line threads across behind the numbered medallions
+   (they punch through it), tying the three steps into one path. */
 .landing__steps {
   list-style: none;
   margin: 0;
@@ -1575,6 +1655,17 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   grid-template-columns: repeat(3, 1fr);
   gap: var(--s-6);
   counter-reset: none;
+  position: relative;
+}
+.landing__steps::before {
+  content: "";
+  position: absolute;
+  top: 22px;                /* centre of the 44px medallion row */
+  left: 16.67%;             /* first medallion centre (1 of 6 columns) … */
+  right: 16.67%;            /* … to the last medallion centre */
+  border-top: 2px dashed var(--gold);
+  opacity: 0.5;
+  z-index: 0;
 }
 .landing__step {
   display: flex;
@@ -1582,18 +1673,23 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   align-items: center;
   text-align: center;
   gap: var(--s-2);
+  position: relative;
+  z-index: 1;
 }
 .landing__step-num {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent-soft);
+  /* Warm parchment medallion with a hairline gold ring — carries the highlight
+     colour through the steps without the flat olive-disc look. */
+  background: linear-gradient(160deg, var(--gold-soft), var(--accent-soft));
+  box-shadow: inset 0 0 0 1px rgba(184, 154, 90, 0.35);
   color: var(--accent-deep);
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   margin-bottom: var(--s-1);
 }
@@ -1651,13 +1747,28 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-sm);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  /* A thin gold ribbon rides the top edge of each tile (via a gradient border
+     drawn on the top only); it brightens on hover for a crafted, tactile feel
+     without adding an element. */
+  position: relative;
+  overflow: hidden;
+}
+.landing__feature::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold-soft), var(--gold) 50%, var(--gold-soft));
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
 }
 @media (prefers-reduced-motion: no-preference) and (hover: hover) {
   .landing__feature:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-md);
-    border-color: var(--accent-soft);
+    border-color: var(--gold-soft);
   }
+  .landing__feature:hover::before { opacity: 1; }
 }
 .landing__feature-icon {
   flex: none;
@@ -1667,7 +1778,8 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent-soft);
+  background: linear-gradient(160deg, var(--gold-soft), var(--accent-soft));
+  box-shadow: inset 0 0 0 1px rgba(184, 154, 90, 0.35);
   color: var(--accent-deep);
   font-size: 18px;
   margin-bottom: var(--s-1);
@@ -1719,7 +1831,8 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent-soft);
+  background: linear-gradient(160deg, var(--gold-soft), var(--accent-soft));
+  box-shadow: inset 0 0 0 1px rgba(184, 154, 90, 0.35);
   color: var(--accent-deep);
   font-size: 18px;
 }
@@ -1740,9 +1853,16 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   gap: var(--s-3);
 }
 .landing__ethos-icon {
-  font-size: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(160deg, var(--gold-soft), var(--accent-soft));
+  box-shadow: inset 0 0 0 1px rgba(184, 154, 90, 0.35);
+  font-size: 24px;
   color: var(--accent-deep);
-  opacity: 0.9;
 }
 .landing__ethos-title {
   font-family: var(--font-display);
@@ -1814,9 +1934,16 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   align-items: center;
   text-align: center;
   gap: var(--s-3);
-  padding: var(--s-7) var(--s-6);
-  background: var(--accent-soft);
-  border-radius: var(--r-xl);
+  padding: var(--s-8) var(--s-6);
+  /* The finale mirrors the hero plate — a warm parchment→olive wash with a low
+     gold glow and a hairline gold ring — so the page opens and closes on the
+     same crafted panel language. */
+  background:
+    radial-gradient(120% 130% at 50% 0%, var(--gold-soft) 0%, transparent 55%),
+    linear-gradient(158deg, var(--parchment) 0%, var(--accent-soft) 100%);
+  border: 1px solid var(--gold-soft);
+  border-radius: var(--r-2xl);
+  box-shadow: var(--shadow-md);
 }
 .landing__cta-title {
   font-family: var(--font-display);
@@ -1855,13 +1982,15 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 
 @media (max-width: 860px) {
   /* Hero stacks: copy centred on top, tree mock below (and smaller). */
-  .landing__hero { grid-template-columns: 1fr; gap: var(--s-5); justify-items: center; }
+  .landing__hero { grid-template-columns: 1fr; gap: var(--s-5); justify-items: center; padding: var(--s-7) var(--s-6); }
   .landing__hero-copy { align-items: center; text-align: center; max-width: 560px; }
   .landing__actions { align-items: center; }
   .landing__mock { order: -1; }
   .landing__tree-svg { max-width: 300px; }
-  /* Steps stack to a single column. */
+  /* Steps stack to a single column; the horizontal journey line no longer
+     applies to a vertical stack, so hide it. */
   .landing__steps { grid-template-columns: 1fr; gap: var(--s-5); max-width: 420px; margin-inline: auto; }
+  .landing__steps::before { display: none; }
   .landing__step-body { max-width: none; }
 }
 @media (max-width: 720px) {
