@@ -109,7 +109,7 @@ This is the load-bearing module. Every view, every feature, every export reads o
 
 Categorised by what they do:
 
-**Pure helpers (no state, no IO)** — `parseDate`, `getYear`, `isAlive`, `isDeceased`, `calcAge`, `formatDateRange`, `formatDateWithPrecision`, `fileToDataURL`, `initials`, `getField`, `isMissingHindi`, `marriageKey`, `relationLabel`. Move these between modules freely; they're functions of their args.
+**Pure helpers (no state, no IO)** — `parseDate`, `getYear`, `isAlive`, `isDeceased`, `calcAge`, `formatDateRange`, `fileToDataURL`, `initials`, `getField`, `marriageKey`, `relationLabel`. Move these between modules freely; they're functions of their args.
 
 **Reads (sync, over local snapshot)** — `getState`, `getPeople`, `getPerson`, `getChildrenOf`, `getSiblingsOf`, `buildGenerations`, `getMarriage`, `getFamilyName`, `getFamilyTitle`, `searchStories`, `upcomingAnniversaries`, `maintenanceStats`, `peopleMissing`, `findRelationPath`. These will stay sync after a cloud-sync migration; the local snapshot is the cache.
 
@@ -149,12 +149,11 @@ Sample data ships with photos already inlined as base64 (`tests/inline-sample-ph
 
 - `PhotoStore.getUrl(person)` — async, returns the resolved URL or null. Caches the Object URL.
 - `PhotoStore.getUrlSync(person)` — sync, returns whatever's already cached or null. Used for first paint; the caller swaps in async result on `getUrl(...).then`.
-- `PhotoStore.bindImg(imgEl, person, fallback)` — sets `imgEl.src` from sync source, falls back to async.
 
 ### Write API
 
 - `PhotoStore.put(blob)` — async, returns a promise of `photoId`. Picks a random key inside the IDB transaction (with retry on collision), so concurrent puts can't collide.
-- `PhotoStore.putWithKey(id, blob)` — async, writes at a specific id. Used by the JSON importer to preserve photoIds across round-trip.
+- `PhotoStore.putWithKey(id, blob)` — async, writes at a specific id. Used by the cloud-download path to repopulate the IDB cache under a photo's original id.
 - `PhotoStore.fileToPhotoId(file)` — pipeline: read → resize to 512 px JPEG @ 0.85 → put → return id.
 - `PhotoStore.delete(id)` — drops the blob and revokes the cached Object URL.
 
