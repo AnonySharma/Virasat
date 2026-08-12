@@ -498,6 +498,23 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   padding: 2px 7px; border-radius: var(--r-pill);
   text-transform: uppercase; letter-spacing: .1em;
 }
+/* Hindi collapsed — drop the two-up card chrome so an English-only field
+   reads as a plain field, not a padded dashed box with an empty second half.
+   Placed AFTER the @media two-column rule so it wins the ≥600px tie. */
+.field-pair--solo {
+  display: block;
+  padding: 0; background: transparent; border: 0; border-radius: 0;
+}
+.field-pair__add-hi {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 6px; padding: 4px 10px;
+  border: 1px dashed var(--line-2); border-radius: var(--r-pill);
+  background: transparent; color: var(--olive-deep);
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+.field-pair__add-hi:hover { background: var(--olive-soft); border-color: var(--olive); }
+.field-pair__add-hi i { font-size: 10px; }
 
 /* Form helpers */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
