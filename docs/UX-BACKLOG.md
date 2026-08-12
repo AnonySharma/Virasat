@@ -74,18 +74,18 @@ and net-new items from it will be appended here as they report.*
   blob is left untouched as a fallback. Reads the legacy key directly — no new
   Supabase/migration surface. `first-run.js`, `components.css`, `i18n.js`.
   *Photo backfill for imported trees is logged as a separate follow-up below.*
-- **[S] Password sign-in has no recovery path.** No "Forgot password?" link; a wrong
-  password just says "doesn't match. Try again." with no next step, even though the
+- **✅ [FIXED 4e06bf3] Password sign-in had no recovery path.** No "Forgot password?" link; a wrong
+  password just said "doesn't match. Try again." with no next step, even though the
   magic-link ("Email me a sign-in link") button right there IS the recovery path. No
   new Supabase call needed — just cross-link them (append "…or use 'Email me a sign-in
   link' below" to the invalid-login message, or highlight that button on that error).
   `sign-in.js:136-146, 311-319, 96-99`.
-- **[S] Rail "Preserve your legacy" CTA always says data is "saved on your device"** —
+- **✅ [FIXED 4e06bf3] Rail "Preserve your legacy" CTA always said data is "saved on your device"** —
   even for signed-in cloud users whose data is synced to Supabase. Unlike its siblings
-  `#rail-trees-block` / `#share-btn` (gated by `CloudStore.isActive()`), this block has
-  no visibility/copy gating, so a cloud user permanently sees a local-only pitch + a
-  "Get started" button that just opens Export. Gate it like `refreshTreesRail()` and
-  swap to a "synced & backed up" message when signed in. `index.html:169-172`,
+  `#rail-trees-block` / `#share-btn` (gated by `CloudStore.isActive()`), this block had
+  no visibility/copy gating, so a cloud user permanently saw a local-only pitch + a
+  "Get started" button that just opened Export. Now gated like `refreshTreesRail()` and
+  swaps to a "synced & backed up" message when signed in. `index.html:169-172`,
   `app.js:261-278`.
 
 ### Wayfinding & tree orientation
@@ -189,17 +189,17 @@ and net-new items from it will be appended here as they report.*
 
 ### Person form (net-new, post-rework)
 
-- **[M] The date picker is 100% hardcoded English — never routed through I18n.**
-  Every string in `HeritagePicker` is a literal: input/trigger/dialog aria-labels
+- **✅ [FIXED a53426a] The date picker was 100% hardcoded English — never routed through I18n.**
+  Every string in `HeritagePicker` was a literal: input/trigger/dialog aria-labels
   (`heritage-datepicker.js:81,89,92`), prev/next month (`97-98`), the MONTHS /
   WEEKDAYS arrays (`15-16`, which drive the calendar title *and* each day's
   aria-label at `205`), "Year only" (`109`), "Today" (`113`), "Clear" (`117`). A
-  Hindi user opens this 2×/person and sees English chrome + month names. Route all
-  nine literals + localized month/weekday names through I18n (`heritagePicker.*`).
-- **[M] No "Save & add another".** After each add the modal closes and the tree
-  pans / Inspector opens (`people-view.js:1323-1326`), forcing a full context
-  switch per person — painful for the 30-relatives-in-one-sitting persona. Add a
-  footer "Save & add another" that saves then reopens a blank form, skipping the
+  Hindi user opened this 2×/person and saw English chrome + month names. Now all
+  nine literals + localized month/weekday names route through I18n (`datePicker.*`).
+- **✅ [FIXED 7bda118] No "Save & add another".** After each add the modal closed and the tree
+  panned / Inspector opened (`people-view.js:1323-1326`), forcing a full context
+  switch per person — painful for the 30-relatives-in-one-sitting persona. A
+  footer "Save & add another" now saves then reopens a blank form, skipping the
   reveal/pan for that path.
 - **✅ [FIXED — Batch 6] Every twin (EN+HI) field paid the two-column card cost even
   when Hindi was never used.** `pair()` now starts the Hindi half collapsed behind a
@@ -207,16 +207,16 @@ and net-new items from it will be appended here as they report.*
   or the UI is in Hindi — mirroring `moreDetails`' content-keyed disclosure. Solo
   mode drops the dashed-card chrome so an English-only field reads as a plain field.
   `people-view.js`, `components.css`, `i18n.js`.
-- **[S] Enter never submits the form.** The modal body is a plain `<div>`, not a
-  `<form>` (`dom.js:189-198`), and `openModal` only handles Escape/Tab (`157-186`);
-  single-line inputs have only `oninput` (the `required` on `nameInput` is inert).
-  Add a modal-level Enter handler that clicks Save when focus is in a single-line
+- **✅ [FIXED 33c9905] Enter never submitted the form.** The modal body is a plain `<div>`, not a
+  `<form>` (`dom.js:189-198`), and `openModal` only handled Escape/Tab (`157-186`);
+  single-line inputs had only `oninput` (the `required` on `nameInput` was inert).
+  A new `openModal({onEnter})` hook now clicks Save when focus is in a single-line
   input (excluding textareas and the date popover's own Enter-commit).
-- **[S] Hidden death-precision picker leaves a dead 130 px gutter.** The row is a
+- **✅ [FIXED 33c9905] Hidden death-precision picker left a dead 130 px gutter.** The row was a
   fixed `grid-template-columns: 1fr 130px` (`people-view.js:742`); hiding the
-  precision child via `display:none` (`734-738`) doesn't collapse the track, so
-  every living person shows an empty 130 px hole beside the death-date input.
-  Collapse the row to a single column when the picker is hidden.
+  precision child via `display:none` (`734-738`) didn't collapse the track, so
+  every living person showed an empty 130 px hole beside the death-date input.
+  The row now collapses to a single column when the picker is hidden.
 
 ---
 
