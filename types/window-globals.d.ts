@@ -29,6 +29,7 @@ declare const Inspector: any;
 declare const PeopleView: any;
 declare const TreeView: any;
 declare const TimelineView: any;
+declare const InsightsView: any;
 declare const ProfileView: any;
 declare const ImageExport: any;
 declare const ExportImport: any;
@@ -64,6 +65,7 @@ interface Window {
   PeopleView: any;
   TreeView: any;
   TimelineView: any;
+  InsightsView: any;
   ProfileView: any;
   ImageExport: any;
   ExportImport: any;

@@ -89,6 +89,10 @@
         <i class="nav-btn__icon fa-solid fa-stream" aria-hidden="true"></i>
         <span class="nav-btn__label" data-i18n="nav.timeline">Timeline</span>
       </button>
+      <button class="nav-btn" data-view="insights" type="button">
+        <i class="nav-btn__icon fa-solid fa-chart-simple" aria-hidden="true"></i>
+        <span class="nav-btn__label" data-i18n="nav.insights">Insights</span>
+      </button>
     </nav>
 
     <label class="header-search">
@@ -154,6 +158,7 @@
           <li><button class="rail-item is-active" data-view="tree" type="button"><i class="fa-solid fa-sitemap"></i><span data-i18n="nav.tree">Tree</span></button></li>
           <li><button class="rail-item" data-view="people" type="button"><i class="fa-solid fa-user-group"></i><span data-i18n="nav.people">People</span></button></li>
           <li><button class="rail-item" data-view="timeline" type="button"><i class="fa-solid fa-stream"></i><span data-i18n="nav.timeline">Timeline</span></button></li>
+          <li><button class="rail-item" data-view="insights" type="button"><i class="fa-solid fa-chart-simple"></i><span data-i18n="nav.insights">Insights</span></button></li>
         </ul>
       </section>
 
@@ -211,6 +216,7 @@
       <section class="view view--tree is-active" id="view-tree" aria-label="Family tree"></section>
       <section class="view view--people" id="view-people" aria-label="People"></section>
       <section class="view view--timeline" id="view-timeline" aria-label="Timeline"></section>
+      <section class="view view--insights" id="view-insights" aria-label="Insights"></section>
     </main>
 
     <!-- Right inspector -->
@@ -252,6 +258,7 @@
   <script src="lib/views/people-view.js"></script>
   <script src="lib/views/tree-view.js"></script>
   <script src="lib/views/timeline-view.js"></script>
+  <script src="lib/views/insights-view.js"></script>
   <script src="lib/views/profile-view.js"></script>
 
   <!-- features -->

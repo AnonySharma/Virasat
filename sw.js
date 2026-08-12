@@ -41,6 +41,7 @@ const SHELL = [
   "./lib/views/people-view.js",
   "./lib/views/tree-view.js",
   "./lib/views/timeline-view.js",
+  "./lib/views/insights-view.js",
   "./lib/views/profile-view.js",
   "./lib/features/image-export.js",
   "./lib/features/export-import.js",
