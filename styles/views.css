@@ -747,6 +747,33 @@
   font-size: 14px;
 }
 .inspector-action:hover { background: var(--olive-soft); color: var(--olive-deep); border-color: transparent; transform: translateY(-1px); }
+/* Read-aloud: tint while actively narrating so the stop state reads clearly. */
+.inspector-action[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-deep); border-color: var(--accent-deep); }
+
+/* === In Memoriam ===
+   A quiet, dignified treatment once a death date is set: a soft top rule and
+   parchment wash on the hero, plus an "In loving memory" eyebrow. Deliberately
+   restrained — the tone carries the meaning, not a loud rust chip. */
+.inspector-hero--memoriam {
+  background:
+    radial-gradient(ellipse at 50% 0%, var(--deceased-soft) 0%, transparent 72%),
+    var(--bg-elev);
+  border-top: 3px solid var(--deceased);
+}
+.inspector-hero__memoriam {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-display);
+  font-size: 11.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--deceased);
+}
+.inspector-hero__memoriam i { font-size: 10.5px; opacity: .85; }
+@media (prefers-reduced-motion: no-preference) {
+  .inspector-hero__memoriam { animation: memoriamFade 900ms ease-out both; }
+}
+@keyframes memoriamFade {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: none; }
+}
 
 /* Collapsible biographical sections */
 .inspector-section {
