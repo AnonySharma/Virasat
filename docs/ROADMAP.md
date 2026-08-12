@@ -296,6 +296,37 @@ The single biggest win to actually unlock public production is **moving hosting 
 
 ---
 
+## P3.9 — Declutter the workspace chrome (header / rail / inspector)
+
+The three-pane workspace has accreted controls over many audit rounds, and on a wide desktop screen it now reads as *busy*: three competing control zones framing a canvas that, on a small tree, sits nearly empty in the middle. This tier is about **subtraction and hierarchy**, not new features — every item below removes or demotes something already shipped. Nothing here changes the data model; it's all layout and affordance work in `index.html`, `styles/base.css`, `styles/components.css`, and `lib/app.js`.
+
+Guiding principle: **one primary action per zone, everything else one level down.** A heritage archive should feel calm — closer to a museum wall label than a dashboard.
+
+### Header
+
+- **Kill the duplicated view nav.** Tree / People / Timeline appear **twice** — once as the header `.app-nav` (`index.html` ~L79) and again in the rail's "Overview" group (~L154). Pick one home. Recommendation: keep the header tabs (they're the primary wayfinding) and drop "Overview" from the rail entirely, reclaiming the top of the rail.
+- **Collapse Collect / Import / Export into one "Data" menu.** Three text+icon buttons sit between the language switch and the primary Share button (`index.html` ~L109–120), all secondary, all competing with Share for attention. Fold them into a single overflow/kebab or a "Data ▾" split-button. Share stays as the one primary (`btn--primary`) action; everything else demotes to icon-only or menu items.
+- **Let the header breathe on the primary view.** Search, theme, language, four action buttons, and the account avatar is a lot of surface for a first-time visitor. Consider showing only Share + account + a single overflow by default, and revealing the rest on focus/hover or under a settings affordance.
+
+### Left rail
+
+- **Fold "Filter" into the view it acts on.** All / Living / Deceased with live counts (`index.html` ~L169–173) is really a property of the People and Tree views, not a global navigation concern. Moving it into each view's own toolbar (the People view already has a search toolbar) removes a whole rail section and puts the control where its effect is visible.
+- **Split destructive + sample tools out of the everyday Tools list.** *Try sample family* and *Reset everything* (~L189–190) are rare, high-consequence actions living in the same visual weight as *Add person* and *Manage people*. Move them to the bottom under a subtle divider (or into the account/settings menu), so the common tools read first and the danger action isn't one slip away.
+- **De-emphasise "Tree statistics."** The Members / Generations tiles duplicate the count already in the Tree view subtitle ("15 members · 4 generations · 12 memories"). Either drop the rail tiles or make them a single quiet line — right now two big number tiles compete with the actual tree.
+- **Consider a collapsible rail on wide screens.** A hamburger/collapse toggle (the mobile rail is already a slide-in) would let power users reclaim the whole left third for the canvas.
+
+### Right sidebar (inspector)
+
+- **Give the empty state a single focal point.** The empty inspector currently stacks four "Family highlights" cards (Oldest ancestor / Latest addition / Most stories / Next birthday) plus a Family-archive completion bar (`lib/components/inspector.js` ~L112+). On a small tree these are often the *same person* four times over (as in the Sharma sample: Mohan Lal Sharma fills three of four cards), which reads as repetitive rather than rich. Show one hero highlight + a compact "more" row, or rotate them, so the panel doesn't feel padded.
+- **Reserve the right pane for selection, not ambient stats.** The archive-completion bar and highlights are ambient dashboard content; the pane's real job is showing the selected person. Consider moving ambient stats into the (de-emphasised) statistics area or a dedicated **Generational statistics** view (see P2/P3 ideas), leaving the inspector calm and single-purpose until someone is selected.
+
+### Cross-cutting
+
+- **Audit for triplicated "Add person."** It exists as a rail tool (`#tool-add`), an on-canvas button in the Tree view, and the People-view CTA. That's fine as long as they don't all shout at once — pick one primary per view and let the rest be quiet or contextual.
+- **Establish a visual weight ladder.** Today many controls share the same `btn` treatment. A clear three-tier ladder — primary (filled) / secondary (outline) / tertiary (ghost or icon-only) — applied consistently across all three zones would do more for perceived calm than any single removal.
+
+---
+
 ## P4 — Nice polish, no rush
 
 - **Layered canvas background.** Subtle paper texture + faded family motifs (letters, stamps, seals, temple carvings) at 3–5% opacity + faint generation rings emanating from the oldest ancestor. The current ivory + olive radial is fine but generic.
