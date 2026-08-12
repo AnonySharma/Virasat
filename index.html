@@ -37,6 +37,31 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Virasat" />
   <link rel="apple-touch-icon" href="assets/icon.svg" />
+
+  <!-- Anti-FOUC boot guard. Boot is gated on an async Auth.ready() (app.js),
+       but the app shell below is static HTML that would otherwise paint on the
+       first frame — so a returning/cloud user briefly sees the bare tree-builder
+       before the sign-in/landing overlay mounts on top. Hide the shell until
+       app.js decides what to show and calls bootApp() (which drops .is-booting).
+       Done as inline critical CSS + a class set on <html> from an inline script
+       so it applies BEFORE first paint, with no dependency on external CSS load
+       order. The sign-in gate, landing, and boot splash are separate overlays
+       appended to <body>, so they remain visible throughout. A <noscript>-safe
+       fallback isn't needed: the whole app requires JS, and if the inline script
+       runs, the class is guaranteed set before paint. -->
+  <style>
+    html.is-booting .app-header,
+    html.is-booting .app-body { visibility: hidden; }
+  </style>
+  <script>
+    document.documentElement.classList.add("is-booting");
+    // Failsafe: if app.js fails to load or throws before it can call bootApp()
+    // (which clears this class), reveal the shell anyway after a few seconds so
+    // a broken boot degrades to a visible (if inert) app rather than a blank
+    // page. Harmless on a slow-but-healthy boot: the opaque splash/landing
+    // overlay still covers the shell until boot truly completes.
+    setTimeout(function () { document.documentElement.classList.remove("is-booting"); }, 8000);
+  </script>
 </head>
 <body>
 
