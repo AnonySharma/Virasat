@@ -128,13 +128,20 @@ and net-new items from it will be appended here as they report.*
   the value in the in-app inspector for non-owner/non-self viewers — that needs the
   viewer-redaction RPC the cloud plan deferred as a fast-follow, so it stays a
   decision, not a fix.* `inspector.js:535-547`.
-- **[M] No visible offline / syncing indicator.** `cloud-store.js` already tracks
-  the full sync lifecycle — `pendingPush`, the `online` event, the 60 s heartbeat,
-  and conflict — but none of it surfaces in the chrome. A user editing on a flaky
-  connection has no "saved to cloud ✓" / "offline — will sync" affordance, so they
-  can't tell whether their 30-relative session is safe. Add a small header sync
-  pip driven off the existing dirty/push state (no new backend).
-  `cloud-store.js:60-62,165-166,329,368`.
+- **✅ [FIXED — Batch 6, desktop] No visible offline / syncing indicator.**
+  `cloud-store.js` tracked the full sync lifecycle but none of it surfaced. Added a
+  derived `CloudStore.syncState()` ("synced" | "pending" | "offline") + a
+  `virasat:sync-state` event (reads existing `pendingPush`/`pushing`/`navigator.onLine`
+  — no new network) and a header pip that repaints off it: green *Saved*, pulsing
+  gold *Saving…*, red *Offline*, `aria-live`. `cloud-store.js`, `app.js`, `index.html`,
+  `components.css`, `i18n.js`. *Remaining: the pip lives in `.app-header__actions`,
+  which collapses into the kebab on phone (`base.css:240`), so there's no phone
+  affordance yet — see follow-up below.*
+- **[S] Sync pip has no phone surface.** The Batch-6 pip is desktop-only because the
+  header action row is hidden ≤768px. Phone users (the flaky-connection persona) get
+  no sync cue. Options: a compact dot in the phone header (next to the kebab), or a
+  "will sync when you reconnect" line in the kebab menu. No new backend — reuses
+  `CloudStore.syncState()` + the `virasat:sync-state` event.
 - **[M] A revoked / demoted member keeps their old access until a full reload.**
   Role is fetched once by `loadRole()` at tree load and pushed into the read-only
   guard via `applyRole()`; the realtime handler `onRemoteChange()` only ever
@@ -259,6 +266,10 @@ the rest of the queued cloud work lands.
   only link button on each invited-but-not-signed-in row, so the owner can nudge that
   specific invitee; reuses `copyLink()`+`appLink()`. `sharing.js`, `components.css`,
   `i18n.js`.
+- **[this batch] Header sync pip (desktop).** `CloudStore.syncState()` +
+  `virasat:sync-state` event drive a Saved / Saving… / Offline chip in the header —
+  reads existing dirty/push/online flags, no new backend. Phone surface logged as a
+  follow-up. `cloud-store.js`, `app.js`, `index.html`, `components.css`, `i18n.js`.
 
 ### Batch 5 — final backlog clear (2026-08-12)
 
