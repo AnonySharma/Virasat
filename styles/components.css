@@ -1427,13 +1427,21 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   flex: 1;
   min-height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* Deliberately NO justify-content:center. When the content is taller than
+     the viewport (short window, browser zoom, or the longer "Full" landing),
+     vertical centering pushes the top — logo + title — ABOVE the scroll
+     container's reachable area and clips it (you can't scroll to a negative
+     offset). Instead .landing__inner uses margin-block:auto, which centres it
+     when there's slack but collapses to the top and stays fully scrollable
+     when it overflows. */
   padding: var(--s-8) var(--s-6);
 }
 .landing__inner {
   width: 100%;
   max-width: 940px;
+  margin-block: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
