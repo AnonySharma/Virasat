@@ -99,11 +99,11 @@ and net-new items from it will be appended here as they report.*
   and the root generation isn't necessarily the eldest. Options: a subtle left-edge
   "◆" tick per row, or a decade/era hint derived from each row's median birth year.
   Deferred pending a copy decision.
-- **[S] Header/People search has no explicit clear button.** Both use bare
-  `<input type="search">` (`app.js:137-157`, `people-view.js:45-56`) with no custom
-  clear and no `::-webkit-search-cancel-button` styling, so on several browsers the
-  only way to clear is backspacing. Add an `×` inside `.searchbar`/`.header-search`.
-  *(Low priority.)*
+- **✅ [FIXED — Batch 6] Header/People search now has an explicit clear button.**
+  Both search boxes gained a `×` button (hidden until there's text), the native
+  WebKit cancel affordance is suppressed to avoid a double ×, and the People one
+  stays in sync with programmatic `setSearch`/`setMissingFilter` via `syncClearBtn()`.
+  `app.js`, `people-view.js`, `index.html`, `base.css`, `components.css`, `i18n.js`.
 
 ### Sharing, roles & account
 
@@ -246,6 +246,10 @@ the rest of the queued cloud work lands.
 - **[this batch] Dead `.tree-gen-label` CSS deleted** — a never-wired HTML overlay
   that could never have tracked the SVG viewBox. A correct SVG-space version is
   logged as a design item above. `views.css`.
+- **[this batch] Search clear (×) button** on both the header search and the People
+  searchbar — hidden until there's text, suppresses the native WebKit cancel to
+  avoid a double ×, stays in sync with programmatic `setSearch`. `app.js`,
+  `people-view.js`, `index.html`, `base.css`, `components.css`, `i18n.js`.
 
 ### Batch 5 — final backlog clear (2026-08-12)
 

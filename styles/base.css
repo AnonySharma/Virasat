@@ -139,7 +139,18 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   flex: 1; color: inherit; font-size: 13px;
 }
 .header-search input::placeholder { color: var(--text-3); }
+.header-search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
 .header-search__icon { color: var(--text-3); font-size: 13px; }
+.header-search__clear {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; padding: 0; margin: 0;
+  border: 0; border-radius: 50%; cursor: pointer;
+  background: var(--surface-3); color: var(--text-2);
+  font-size: 11px; line-height: 1;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.header-search__clear[hidden] { display: none; }
+.header-search__clear:hover { background: var(--olive-soft); color: var(--text); }
 
 /* — 3-column body — */
 .app-body {
