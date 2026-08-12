@@ -1622,6 +1622,16 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .firstrun__alt-text { display: flex; flex-direction: column; gap: 1px; }
 .firstrun__alt-title { font-size: 14px; font-weight: 600; }
 .firstrun__alt-body { font-size: 12.5px; color: var(--text-3); line-height: 1.4; }
+/* Invite footnote — quiet, below the create/import/sample paths. For a
+   wrong-email invitee who'd otherwise see no clue their invite exists. */
+.firstrun__invite-hint {
+  display: flex; gap: var(--s-3); align-items: flex-start;
+  margin: var(--s-4) 0 0;
+  padding: var(--s-3) var(--s-4);
+  background: var(--surface-2); border-radius: var(--r-md);
+  font-size: 12px; line-height: 1.5; color: var(--text-3);
+}
+.firstrun__invite-hint > i { flex: none; margin-top: 2px; color: var(--accent-deep); }
 
 /* ── Onboarding chrome (lang + theme on landing / sign-in / first-run) ──────
    These screens render as a full-viewport overlay ABOVE the app header, so the
