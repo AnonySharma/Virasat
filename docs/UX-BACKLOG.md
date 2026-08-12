@@ -220,6 +220,253 @@ and net-new items from it will be appended here as they report.*
 
 ---
 
+## Round 2 review (2026-08-12) — 10-agent deep sweep, triaged
+
+A second, larger review pass (10 agents: onboarding/auth, tree canvas, sync/trust,
+mobile-a11y, data-entry, content/tone, wayfinding, first-run journey, person-form,
+nav-sharing). Every item below was **re-verified against current source** before
+logging; a few agent claims were **rejected** (noted inline) as already-shipped or
+factually wrong. Grouped by actionability. Nothing here is committed yet except where
+marked ✅.
+
+**Rejected on verification (logged so they aren't re-raised):**
+- *"PathFinder is 100% hardcoded English / zero I18n calls"* (ux-forms, ux-content-tone)
+  — **false.** `path-finder.js` has 11 `I18n.t` calls; every string routes through the
+  `path.*` namespace (shipped in `e075b47`). Only the *distinct* valid part —
+  `FamilyStore.relationLabel` returning hardcoded English relation words
+  (`data-store.js:821-845`) — is logged below.
+- *"Password sign-in has no recovery path"* re-raised — already ✅ `4e06bf3` (magic-link
+  cross-link). The **separate** net-new ask (an actual `resetPasswordForEmail` flow) is
+  logged under Supabase below.
+
+### i18n leaks (confirmed defects — no backend, no design judgment)
+
+Several agents independently found large untranslated surfaces in an otherwise
+bilingual-first app. All confirmed by direct `grep`/read. This is a mechanical sweep
+(route literals → `I18n.t`, add EN+HI keys), the same treatment already applied to the
+date picker / PathFinder / person form.
+
+- **[High] Marriage / wedding-details modal — 0 `I18n.t` calls across ~325 lines.**
+  `showMarriageModal` (`tree-view.js:1215-1539`): title, empty-state copy, Date/Place/Story
+  labels + placeholders, Edit/Add-details/Close, edit-mode labels, Add/Replace/Remove photo,
+  Cancel/Save, the "Forget this marriage record?" delete-confirm, and both toasts. Confirmed
+  0 matches. The node-menu entry that opens it *is* translated, so the mismatch is jarring.
+  **Most-cited finding (4 agents).** New `marriage.*` keys.
+- **[Med] Story editor — 0 `I18n.t`.** `openStoryEditor` (`inspector.js:609-681`): titles,
+  placeholders, Title/Story/Tags labels+hints, the delete-confirm (which splices a person's
+  name into a raw English sentence), validation + success toasts. New `inspector.story*`.
+- **[Med] Inspector "Family highlights" empty panel — hardcoded.** `renderHighlights`
+  (`inspector.js:88-199`): "Welcome", the add-first-relative copy, "Family highlights",
+  the 4 card labels (Oldest ancestor / Latest addition / Most stories / Next memorial),
+  their footers, "Family archive" + its legend. This is the **default first-paint panel**
+  and what reappears after every deselect — emotional copy, not chrome. New `highlights.*`.
+- **[Med] Crop / reframe modal chrome — 0 `I18n.t`.** `crop-editor.js`: "Avatar (round)",
+  "Hero (wide)", the instructional hint, "Reset both", "Save crops", "Reframe photo" title.
+  (The button that opens it is already i18n'd via `form.reframe`.) New `crop.*`.
+- **[Med] PrintBook — 0 `I18n.t`.** `print-book.js`: guard toast, cover eyebrow, "Printed
+  {date}", per-person section headers (About/Achievements/Education/Stories/Notes), and the
+  "Born in {place}" / "Died in {place}" lifespan lines. This is the literal "heirloom" export.
+- **[Med] Collect-via-form questionnaire — English-only.** `collect-form.js:98-115`: of 13
+  reference questions handed to (often Hindi-primary) relatives, only the Hindi-name one is
+  bilingual; Death date/place etc. are English-only. Plus two file-local toasts. This is the
+  only artifact that leaves the app.
+- **[S] Inspector date-precision reimplemented in English + hardcoded " yrs".**
+  `buildPersonalInfo`'s local `withPrecision()` (`inspector.js:401-407`) returns `"c. "/"before
+  "/"after "` literals instead of reusing `FamilyStore.formatDateRange` (which already routes
+  through `date.circa/before/after`); lifespan hardcodes `" yrs"` (`:416`). Same function
+  correctly calls `I18n.t` on adjacent lines — an internal inconsistency.
+- **[S] Inspector "Contact" section title is a bare literal** (`inspector.js:324`) while every
+  sibling section uses `I18n.t("inspector.secXxx")`; no `inspector.secContact` key exists.
+- **[S] Tree-rename dialog hardcoded** (`tree-view.js:149-177`) — title, body, "Tree title"
+  label, placeholder, Cancel/Save (with explicit English overrides), "Renamed" toast. It
+  **duplicates** the tree-switcher's rename flow (`tree-list.js`), which already uses
+  `tree.renameTitle/renamed/namePlaceholder` — so reuse those existing keys, don't mint new.
+- **[S] Kebab menu mixes hardcoded rows** (`app.js:443,468,470,473`): "Light/Dark mode",
+  "Collect via form", "Import", "Export" sit among already-i18n'd rows; matching keys already
+  exist (`actions.collectVia/import/export`).
+- **[S] Rail "Needs attention" nudges hardcoded** (`app.js:930-932`): Missing birth date /
+  photo / description — the identical concept is already localized in People
+  (`people.missingBirth/Photo/Desc`); reuse those keys.
+- **[S] `relationLabel` returns hardcoded English** (`data-store.js:821-845`) — father/wife/
+  daughter etc.; surfaces in PathFinder hops. Needs a `relation.*` namespace (this is the
+  real, deduped remainder of the rejected "PathFinder i18n" claim).
+- **[S] Generic "X failed: {raw error}" toasts** at 5 sites (`app.js:253,524`;
+  `export-import.js:507,531,562,657`) route no I18n and surface raw network-lib strings with
+  no next step.
+- **[S/High] `friendly()` leaks raw Supabase strings.** `sign-in.js:327` — the fall-through
+  `return msg || t("auth.errGeneric", …)` shows the **raw** error for anything not matching its
+  4 substrings (e.g. "For security purposes, you can only request this after 46 seconds",
+  "Password should be at least 6 characters") to a non-technical relative. One-line inversion:
+  always prefer the friendly generic; `console.warn` the raw. **(Confirmed at source.)**
+- **[S] No "email not confirmed" branch in `friendly()`** (`sign-in.js:311-319`) — signing in
+  before confirming funnels into the generic catch-all with no "check your inbox" hint. Add a
+  branch mirroring the existing invalid-login/rate-limit/network ones.
+
+### Accessibility (mostly no-backend; a couple need a design nod)
+
+- **[High] Tree per-node menu is keyboard-inoperable.** `showNodeMenu`/`dismissMenu`
+  (`tree-view.js`) never `.focus()` into the `role="menu"`, has no Arrow/Home/End roving, and
+  doesn't restore focus on close; menu items sit in DOM *after* the whole SVG, so Tab must
+  cross every node/knot to reach them. The header kebab (`app.js:454-465,488`) already does
+  this correctly — port that pattern. **(2 agents.)**
+- **[M] Mobile `#rail` / `#inspector` drawers bypass `openModal`.** Plain `<aside>`s toggled by
+  class (`index.html:118,185`, `app.js`): no Escape-to-close, no `role="dialog"`/`aria-modal`,
+  no focus move-in when opened from a tree-node tap — breaking the pattern every other overlay
+  follows. **(use-mobile-a11y.)**
+- **[M] SVG viewBox never follows keyboard focus.** Tabbing to an off-screen `.t-node`
+  (focusable in DOM order) moves focus outside the visible viewBox with no pan and no cue;
+  `revealPerson()` proves the pan-to-node logic exists but is never called from a focus event.
+  **(use-mobile-a11y, ux-wayfinding.)**
+- **[S] `revealPerson()` pans/selects but never focuses the node** (`tree-view.js`) — a
+  keyboard user bounced to Tree via reveal-in-tree lands with DOM focus elsewhere. One-line
+  `g.focus()`; infra already there.
+- **[M] Crop drag surface is a keyboard dead-end.** `.crop-frame__inner`
+  (`crop-editor.js:140-166`) has no `tabindex`/`role`/`keydown` — zoom slider works, but the
+  focal point can never be moved by keyboard. Add `tabindex=0` + arrow-nudge into the existing
+  `apply()`/`onChange()` pipeline.
+- **[S/M] SVG hit targets under 44px on coarse pointers.** `.t-couple-knot__hit` (r14≈28px) and
+  `.t-node-add-bg` (r11≈22px) — the two most-common tree-editing gestures — never enter the
+  `@media (pointer: coarse)` 44px bump (which only covers `.tree-controls .btn`). Can't be a
+  CSS fix (r is an inline SVG attr); needs a `matchMedia("(pointer: coarse)")` check in the
+  draw code to draw a larger invisible hit-circle. **(ux-tree, use-mobile-a11y.)**
+- **[S] Marriage-knot `:focus-visible` pulse ignores `prefers-reduced-motion`.** The
+  reduced-motion block (`views.css:397-405`) silences only `:hover`, not `:focus-visible`
+  (`:390-392`) — a keyboard user with reduced-motion gets an infinite scale-pulse.
+- **[S] Date-picker year strip has no roving tabindex** (`heritage-datepicker.js:156-189`) —
+  ~155 sequential Tab stops to reach a distant birth year; the adjacent day-grid already does
+  roving-tabindex correctly (`:224`). Apply the same pattern.
+- **[S] Onboarding secondary copy still on `--text-3`** (~3.95:1, below AA 4.5). Batch 4 moved
+  `.field__label/hint` to `--text-2` but missed the pre-auth screens: `.signin__tagline`,
+  `.app-splash__msg`, `.firstrun__subtitle`, `.signin__back`, `.firstrun__greeting/__signout/
+  __alt-body`. Mechanical swap to `--text-2` (matches the precedent). *Verify the token
+  actually clears AA before shipping.*
+
+### Wayfinding & navigation (mix of fix-now and design)
+
+- **[M] "Reveal in tree" reached only 2 of 6 open-a-person paths.** `e075b47` wired the
+  Inspector action-row button + PathFinder hops; the far more common Family-block relationship
+  chips (`inspector.js:456`), Family-Highlights cards (`:107`), People cards
+  (`people-view.js:463`), and Timeline rows (`timeline-view.js:405`) still call bare `show()`
+  and never touch the canvas. The *pattern* shipped; 4 call sites weren't migrated. (Also
+  covers ux-tree's "expose revealPerson as a general action.")
+- **[M] Switching trees carries stale People search/filter into the new tree.** `tree-list.js`
+  `switchTo` never touches `PeopleView`'s module-level `searchTerm`/`filterMode`/`missingFilter`;
+  no `PeopleView.reset()` exists. User lands in Tree B filtered by Tree A's leftover "Kamala"
+  with no explanation. Add a reset + call it on switch.
+- **[M design] Lineage-focus mode has no representation outside Tree view.** `lineageFocusId`
+  is local to `tree-view.js`; switching to People/Timeline silently drops the mental model with
+  no banner/cue. Design call (how should other views reflect an active lineage focus?).
+- **[S copy] "Fit view" vs "Reset view" name-collide** (worse in Hindi: "पूरा वृक्ष" vs "पूरा
+  दिखाएँ") though they do different things (viewport reset vs. clear lineage-focus dim). Rename
+  the lineage one ("Clear focus" / "Show everyone"). Copy decision.
+- **[S] People grid shows no "currently open in Inspector" indicator** — Tree toggles
+  `is-selected` via `Inspector.getSelected()` (`tree-view.js:2185`) but `personCard`
+  (`people-view.js:388`) has no equivalent. Carry the pattern over.
+- **[S] PathFinder From/To pickers have no substring search** — `HeritageSelect` only does
+  leading-character typeahead, so finding "Sunita" among a dozen S-names means repeated "s"
+  presses. Component-level change (would benefit the parent/spouse pickers too).
+
+### Data entry (mix of fix-now and design)
+
+- **[M] Picking a spouse loses keyboard focus every time.** `HeritageSelect.pick()` focuses the
+  control then fires `onChange` → `rebuildSpouseRows()` (`people-view.js:1049-1110`) whose first
+  act is `clear(spouseRowsHost)`, destroying the just-focused select; focus falls to `<body>`.
+  Fires on every spouse pick / add / remove.
+- **[M] A person can be set as both spouse and parent with no warning.** `fatherFilter`/
+  `motherFilter` (`people-view.js:1021-1022`) and the spouse filter don't exclude each other's
+  picks; `data-store.js` does no cross-field validation. Yields a structurally nonsensical
+  record silently.
+- **[S] "Save & add another" from the addParent path can add an orphan 3rd parent.** The button
+  reopens with the same `__addAsParentOf` seed; a 2nd/3rd "parent" is pushed onto the same
+  child's `parents` (dedupe-only, no length cap at `people-view.js:1408-1414`) while the child's
+  form has no 3rd slot — an invisible, orphaned link. Cap at 2 / clear the seed for that path.
+- **[M design] No "create new person" from inside a relation picker.** Every parent/spouse must
+  pre-exist; entering a branch "as remembered" forces abandoning the current form. Feature/design.
+- **[S design] Removing a spouse / clearing a parent has no confirm and no undo** (unlike
+  `deletePerson`), and the whole-form discard guard doesn't cover a single stray `×`. Design call
+  (confirm vs. undo affordance).
+- **[S] Tab-trap popover exemption references a non-existent class.** `dom.js:189` checks
+  `.hdp__pop` but the real class is `.hdp__popover`. Currently a **no-op** (the popover's buttons
+  are in-modal so the fallback scan still finds them) — but a latent trap if either popover is
+  ever portaled to `body` as the comment intends. One-line fix while intent is fresh.
+
+### Design / product calls (log, don't action — user decides)
+
+- **[L] Landing page has zero product visuals** for a fundamentally visual product — three
+  generic FA icon tiles, no tree/photo imagery. Needs new assets. (ux-onboarding-2.)
+- **[M] Magic-link is buried last** below the full password form — arguably the lowest-friction
+  path for the elder audience should have equal-or-higher weight. (ux-onboarding-2.)
+- **[S] No password-visibility (eye) toggle** on the sign-in password field; the icon-swap idiom
+  already exists (`themeBtn`). Standard affordance but a UI choice.
+- **[S] First-run tree-name placeholder hardcodes "Sharma"** (`first-run.js:82`,
+  `i18n.js:143`) — a single-family-origins artifact now that it's multi-tenant. Neutralize
+  ("e.g. Our Family Tree") or derive from the user's name. Copy call.
+- **[S] Crop tool is invisible until after upload** — auto-open `CropEditor` right after a fresh
+  upload (still cancel-able) instead of requiring the easy-to-miss "Reframe" tap. (usability-newuser.)
+- **[S copy] "Focus descendants" vs "Focus bloodline"** offered with no inline explanation for a
+  non-technical audience — add a one-line hint under each, or collapse to one with a sub-choice.
+- **[S] Default a new person's name to `Auth.getFirstName()`** when the tree is empty and the
+  draft is unseeded — the user just typed it at sign-up. Small, friendly. (usability-newuser.)
+- **[S maintenance] `profile-view.js` (261 lines) is unreachable dead code** — both call sites are
+  `else if` after an always-mounted `Inspector`; the registry never references it. It also has a
+  latent date-formatting bug. Delete, or wire it up as a distinct full-page profile. (ux-forms.)
+- **[S maintenance] Dead `.crop-frame__hint` CSS** (`views.css:1081-1094`) — styled, never
+  instantiated (same pattern as the deleted `.tree-gen-label`). Wire the hint element or delete.
+
+### ⚠ Supabase / SQL / realtime / boot-gate — do NOT action without explicit user direction
+
+Per standing rule: these touch the live backend, auth sequencing, or the boot/sync
+semantics and are logged for a decision, not fixed in this no-backend pass.
+
+- **[High] Offline sign-out falsely promises "your tree stays saved in the cloud."**
+  `signOutFlow` (`app.js:477-493`) `await`s `CloudStore.flush()`, but `push()`'s offline path
+  (`cloud-store.js:190-197`) *returns* on transport failure (never rejects), so `flush()`
+  resolves as if it succeeded; `stop()` then clears `pendingPush`/`treeId`, discarding all
+  memory the edit was unsynced — while the confirm dialog (`i18n.js:288`) says the opposite.
+  Fix needs `flush`/`push` to report whether the push actually **landed**, then block/double-warn
+  sign-out when `pendingPush` persists. **Touches push/flush semantics.** (usability-collab.)
+- **[High] `claim_invites` race can drop a freshly-invited relative on "create your first tree."**
+  `auth-store.js`'s `onAuthStateChange` fires `notify()` (→ resolves `SignIn.show()` → boots →
+  `resolveTree`) **before** the fire-and-forget `claimInvites()` inserts the `tree_members` row.
+  If `resolveTree`'s "shared with me" SELECT wins the race it returns null → FirstRun. Fix: await
+  `claimInvites()` before resolving sign-in / before `resolveTree`, or have FirstRun re-poll once.
+  **Auth sequencing.** (usability-collab.)
+- **[High] No forgot-password / reset flow exists.** No `resetPasswordForEmail` wrapper in
+  `auth-store.js`; distinct from the shipped magic-link cross-link (`4e06bf3`). Needs a Supabase
+  auth call + a "check your email" screen. (ux-onboarding-2, ux-firstrun.)
+- **[High] Cloud/SDK-load failure silently masquerades as a normal empty tree.**
+  `auth-store.js:124-130` swallows a config/SDK failure → `{cloud:false}`; `app.js:1039` then
+  boots plain local-only with no toast/gate — indistinguishable from real data loss for a cloud
+  user, and a new visitor never sees sign-in. Fix: when `VirasatConfig.isConfigured()` but
+  `Auth.ready()` still resolves `cloud:false`, warn before `bootApp()`. **Boot-gate + auth.**
+  (ux-onboarding-2.)
+- **[M] Revoked/lost access is never surfaced.** `pollOnce` (`cloud-store.js:295-308`) does
+  `if (res.error) return;`, swallowing the RLS-empty result identically to a network blip — the
+  removed member's tab shows a stale snapshot forever. Distinguish RLS-empty from network error →
+  banner + route to sign-in/TreeList. **Extends the already-logged "revoked member keeps access"
+  item (reader side).** (usability-collab.) **⚠ realtime/RLS.**
+- **[M] Being added to a new tree mid-session never surfaces** — `subscribe()` only watches the
+  active tree's row; no channel on `tree_members` for the user's id. Even a light `listTrees()`
+  poll with a toast on growth would close it. **⚠ realtime.** (usability-collab.)
+- **[M] Conflict banner never attributes who/what overwrote the edit, and reuses "another
+  device" wording for a same-device multi-tab collision.** Two paths
+  (`data-store.js:376-400` storage event; `cloud-store.js:228-245` version-guard) fire the
+  identical `sync.conflict` copy. Word them distinctly; attribution is a fast-follow needing
+  editor identity. (usability-collab.)
+- **[M] `CloudStore.start()` has no timeout** (unlike the 12s SDK-load guard) — a hung first REST
+  fetch leaves the splash spinning forever with no retry/escape for a low-bandwidth first-timer.
+  Needs a timeout→local-fallback or retry affordance. **Boot/sync.** (ux-firstrun.)
+- **[S] Google OAuth cancel/error (`?error=access_denied`) is unread on boot** — nothing reads
+  `location.search`; a user who declines at Google's consent screen bounces back to a pristine
+  landing page with no feedback. Reading the param + a toast needs no backend but is auth-flow
+  logic — grouping here for a decision alongside the other auth items. (ux-firstrun.)
+- **[S] "Private" contact fields render in plain view to viewers** (not just via DevTools as the
+  plan implies) — `buildContactBlock` (`inspector.js:520-549`) has no role check. **Corroborates
+  the already-logged inspector-redaction item;** the safe half (relabel / disclose in the Share
+  dialog that viewers see all fields) could ship without the deferred redaction RPC. (usability-collab.)
+
+---
+
 ## ✅ Shipped
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
