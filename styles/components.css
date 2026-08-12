@@ -1241,6 +1241,34 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .account-btn { padding: 4px; }
 .account-btn .avatar { cursor: pointer; }
 
+/* — Sync pip — a quiet "Saved / Saving… / Offline" chip in the header, shown
+   only in a live cloud session. Colour + dot are driven by data-state. */
+.sync-pip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: var(--r-pill);
+  background: var(--surface-2);
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+  color: var(--text-2);
+  user-select: none;
+}
+.sync-pip[hidden] { display: none; }
+.sync-pip__dot { font-size: 8px; color: var(--text-3); }
+.sync-pip[data-state="synced"]  { color: var(--olive-deep); }
+.sync-pip[data-state="synced"]  .sync-pip__dot { color: var(--olive); }
+.sync-pip[data-state="pending"] { color: var(--gold-deep); }
+.sync-pip[data-state="pending"] .sync-pip__dot { color: var(--gold); animation: sync-pip-pulse 1.2s ease-in-out infinite; }
+.sync-pip[data-state="offline"] { color: var(--danger); background: var(--danger-soft); }
+.sync-pip[data-state="offline"] .sync-pip__dot { color: var(--danger); }
+@keyframes sync-pip-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+/* Tight desktop widths: keep the coloured dot, drop the word to save room. */
+@media (max-width: 1080px) {
+  .sync-pip { padding: 4px 6px; }
+  .sync-pip__label { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sync-pip[data-state="pending"] .sync-pip__dot { animation: none; }
+}
+
 /* — Sign-in gate — full-viewport, shown only when cloud is enabled and
    nobody is signed in. Sits above everything (own layer, no modal-root). */
 .signin {

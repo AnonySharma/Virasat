@@ -101,6 +101,13 @@
         <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
         <span class="btn__label-md" data-i18n="share.title">Share</span>
       </button>
+      <!-- Sync pip — shown by app.js only in a live cloud session. Reflects
+           CloudStore.syncState() (synced / pending / offline); aria-live so a
+           screen reader hears "offline — will sync" without a visual scan. -->
+      <span class="sync-pip" id="sync-pip" role="status" aria-live="polite" hidden>
+        <i class="sync-pip__dot fa-solid fa-circle" aria-hidden="true"></i>
+        <span class="sync-pip__label" id="sync-pip-label"></span>
+      </span>
     </div>
 
     <!-- Phone-only kebab — opens an overflow menu mirroring the desktop
