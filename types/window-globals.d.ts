@@ -12,7 +12,7 @@
 // inside a file — comes through. They're typed `any` on purpose for this
 // pilot: the goal of enabling @ts-check is intra-file correctness, not a
 // fully-typed cross-module API surface. Tightening these to real shapes is a
-// later, incremental step (Phase 1), one module at a time.
+// later, incremental step, one module at a time.
 //
 // The list mirrors the globals asserted by tests/smoke.mjs, plus `supabase`
 // (the UMD SDK global, present only when cloud config is populated).

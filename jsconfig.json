@@ -20,7 +20,7 @@
     // catch actual bugs a no-types codebase hides: null/undefined dereferences
     // (strictNullChecks) and wrong argument types/counts on values TypeScript
     // can already infer (DOM APIs, Date, FileReader, etc.). Untyped params
-    // simply infer as `any`. Tightening toward full `strict` is Phase 1.
+    // simply infer as `any`. Tightening toward full `strict` is a later step.
     "strictNullChecks": true,
     "noImplicitThis": true,
     "target": "es2022",
