@@ -1112,6 +1112,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 }
 @media (prefers-reduced-motion: reduce) {
   .x-tab-banner { animation: none; }
+  .signin__provider--hint { animation: none; }
 }
 
 /* === View-only banner ===
@@ -1284,6 +1285,17 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .signin__form { display: flex; flex-direction: column; gap: var(--s-4); }
 .signin__form .btn--block { margin-top: var(--s-1); }
 .signin__provider { height: 42px; }
+/* Recovery hint: a wrong password names the magic-link button in the error;
+   this briefly pulses it so the eye finds the way out. Toggled for ~2.4s. */
+.signin__provider--hint {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  animation: signin-hint-pulse 0.9s ease-in-out 2;
+}
+@keyframes signin-hint-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px var(--accent-soft); }
+  50%      { box-shadow: 0 0 0 5px var(--accent-soft); }
+}
 .signin__link {
   align-self: center;
   background: none;
