@@ -585,10 +585,10 @@
   width: 2px; background: var(--gold);
   z-index: 1; pointer-events: none;
 }
-.timeline-now-line::before {
-  content: "TODAY";
+.timeline-now-line__label {
   position: absolute; top: 6px; left: 8px;
   font-size: 9px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; white-space: nowrap;
   color: var(--bone); background: var(--gold);
   padding: 3px 8px; border-radius: 3px;
 }
@@ -1152,6 +1152,11 @@
 @media (pointer: coarse) {
   .btn--icon { min-width: 44px; min-height: 44px; }
   .hsel__opt { min-height: 44px; padding-top: 12px; padding-bottom: 12px; }
+  /* Tree overlay zoom/fit/options buttons are visually 32–36 px for density;
+     on a touch pointer bump them to the 44 px WCAG 2.5.5 minimum. The inner
+     hover-halo (::before) and glyph stay their tuned size — only the hit area
+     grows — so the cluster doesn't visually balloon. */
+  .tree-controls .btn { min-width: 44px; min-height: 44px; }
 }
 
 /* === Story result card (search results in the People view) ===

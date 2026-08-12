@@ -48,10 +48,10 @@
    without this. */
 .field[hidden] { display: none; }
 .field__label {
-  font-size: 11px; font-weight: 600; color: var(--text-3);
+  font-size: 11px; font-weight: 600; color: var(--text-2);
   text-transform: uppercase; letter-spacing: .08em;
 }
-.field__hint { font-size: 12px; color: var(--text-3); }
+.field__hint { font-size: 12px; color: var(--text-2); }
 /* Account > Edit profile dialog: stack the name/email fields with breathing
    room (the wrapper isn't itself a flex column like .signin__form is). */
 .profile-edit { display: flex; flex-direction: column; gap: 16px; }
@@ -719,7 +719,10 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   top: calc(100% + 8px);
   left: 0;
   z-index: var(--z-modal);
-  width: 320px;
+  /* Was a fixed 320 px, which overflowed the bottom-sheet person form on
+     narrow phones. Clamp to the viewport (minus a 32 px gutter) so it always
+     fits; 320 px stays the ceiling on desktop. */
+  width: min(320px, calc(100vw - 32px));
   background: var(--bg-elev);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
@@ -730,6 +733,10 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   gap: 12px;
   animation: fade-in var(--t-fast);
 }
+/* Flip upward when there isn't room below (JS adds .hdp--up after measuring on
+   open) — the calendar would otherwise be clipped at the bottom of a phone
+   bottom-sheet. */
+.hdp--up .hdp__popover { top: auto; bottom: calc(100% + 8px); }
 .hdp__head {
   display: flex; align-items: center; justify-content: space-between;
   gap: 8px;
@@ -1106,6 +1113,13 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   box-shadow: var(--shadow-lg);
   min-width: 200px;
   max-width: calc(100vw - 16px);
+  /* A long menu (theme + lang + collect/import/export + account + trees +
+     share + sign-out) can run past the viewport on a short phone; cap it to
+     the space below the header, honour the home-bar inset, and scroll. */
+  max-height: calc(100dvh - var(--header-total) - 16px - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 1px;

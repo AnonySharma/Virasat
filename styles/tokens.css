@@ -119,6 +119,12 @@
 
   /* — Layout — */
   --header-h: 64px;
+  /* The header reserves the top safe-area inset (notch/status bar) on top of
+     its fixed bar height in the installed PWA. Everything positioned against
+     the header — the body height, the fixed rail/inspector `top`, the overlay
+     inset — must offset by the SAME total, so it lives in one derived token.
+     On non-notched devices the inset is 0 and this equals --header-h. */
+  --header-total: calc(64px + env(safe-area-inset-top, 0px));
   --rail-w: 248px;
   --inspector-w: 360px;
   --content-max: 1680px;

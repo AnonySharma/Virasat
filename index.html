@@ -42,7 +42,7 @@
 
   <!-- Header (sage band) -->
   <header class="app-header">
-    <button class="btn btn--ghost btn--icon hamburger-btn" id="hamburger-btn" type="button" aria-label="Open menu">
+    <button class="btn btn--ghost btn--icon hamburger-btn" id="hamburger-btn" type="button" aria-label="Open menu" data-i18n-aria-label="actions.openMenu">
       <i class="fa-solid fa-bars" aria-hidden="true"></i>
     </button>
     <h1 class="app-title">
@@ -68,19 +68,19 @@
 
     <label class="header-search">
       <i class="header-search__icon fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-      <input id="header-search-input" type="search" placeholder="Search people..." data-i18n-placeholder="people.searchPlaceholder" aria-label="Search people" />
+      <input id="header-search-input" type="search" placeholder="Search people..." data-i18n-placeholder="people.searchPlaceholder" aria-label="Search people" data-i18n-aria-label="actions.searchPeople" />
     </label>
 
     <div class="app-header__actions">
-      <button class="theme-toggle btn--icon" id="theme-toggle" type="button" aria-label="Toggle theme" title="Toggle theme">
+      <button class="theme-toggle btn--icon" id="theme-toggle" type="button" aria-label="Toggle theme" title="Toggle theme" data-i18n-aria-label="actions.theme" data-i18n-title="actions.theme">
         <i class="fa-solid fa-moon theme-toggle__moon" aria-hidden="true"></i>
         <i class="fa-solid fa-sun theme-toggle__sun" aria-hidden="true"></i>
       </button>
-      <div class="lang-switch" role="group" aria-label="Language">
+      <div class="lang-switch" role="group" aria-label="Language" data-i18n-aria-label="actions.language">
         <button class="lang-switch__btn is-active" data-lang="en" type="button" aria-pressed="true" aria-label="English">EN</button>
         <button class="lang-switch__btn" data-lang="hi" type="button" aria-pressed="false" aria-label="हिन्दी">HI</button>
       </div>
-      <button class="btn js-edit-only" id="collect-btn" type="button" title="Collect via Google Form">
+      <button class="btn js-edit-only" id="collect-btn" type="button" title="Collect via Google Form" data-i18n-title="actions.collectVia">
         <i class="fa-solid fa-clipboard" aria-hidden="true"></i>
         <span class="btn__label-md" data-i18n="actions.collect">Collect</span>
       </button>
@@ -105,7 +105,7 @@
     <!-- Phone-only kebab — opens an overflow menu mirroring the desktop
          action row. Hidden on >= 769px; the desktop row handles those. -->
     <button class="btn btn--ghost btn--icon kebab-btn" id="kebab-btn" type="button"
-            aria-label="More actions" aria-haspopup="menu" aria-expanded="false">
+            aria-label="More actions" data-i18n-aria-label="actions.moreActions" aria-haspopup="menu" aria-expanded="false">
       <i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i>
     </button>
   </header>
@@ -182,7 +182,7 @@
 
     <!-- Right inspector -->
     <aside class="app-inspector" id="inspector">
-      <button class="inspector-close" id="inspector-close" type="button" aria-label="Close details">
+      <button class="inspector-close" id="inspector-close" type="button" aria-label="Close details" data-i18n-aria-label="actions.closeDetails">
         <i class="fa-solid fa-xmark" aria-hidden="true"></i>
       </button>
       <div class="inspector-empty" id="inspector-empty">

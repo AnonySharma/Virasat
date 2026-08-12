@@ -9,22 +9,16 @@ Each finding is verifiable against source at the cited `file:line`. Effort tags:
 **S** = small (one rule / a few lines), **M** = medium (new copy + a component
 change), **L** = large (broad sweep).
 
-> **Progress:** the first two batches (11 findings) plus a third batch of 12
-> shipped on `feat/cloud-sync`. The **remaining backlog is below**; everything
-> shipped is collected in **[✅ Shipped](#-shipped)** at the bottom of this file.
-> **CACHE_VERSION is deliberately not yet bumped** — held until the rest of the
-> queued changes land.
+> **Progress:** the first two batches (11 findings) plus a third batch of 12 and
+> a fourth a11y/i18n/responsive sweep shipped on `feat/cloud-sync`. The
+> **remaining backlog is below**; everything shipped is collected in
+> **[✅ Shipped](#-shipped)** at the bottom of this file. **CACHE_VERSION is
+> deliberately not yet bumped** — held until the rest of the queued changes land.
 
 ---
 
 ## Accessibility & i18n
 
-- **[M] Form field labels & hints fail contrast (SC 1.4.3).** `.field__label` /
-  `.field__hint` render at `--text-3` = 3.95:1 at 11–12px. Darken to `--text-2`
-  (#4A463E = 8.7:1) or add a `--text-label` token. `styles/components.css:47-51`.
-- **[S] Inspector disclosure sections never expose `aria-expanded`.** Add
-  `aria-expanded` to the head element and update it in `toggle()`; optionally
-  `aria-controls` the body. `lib/components/inspector.js:366-385`.
 - **[M] Save validation is a 2.4s polite toast with no `aria-invalid`.** Set
   `aria-invalid` on the field and render a persistent inline error tied via
   `aria-describedby`; and/or make danger toasts assertive. Copy already exists
@@ -32,19 +26,9 @@ change), **L** = large (broad sweep).
 - **[M] Mobile kebab/hamburger: `aria-expanded` stale, focus not moved.** Toggle
   `aria-expanded` on open/close, move focus to the first item on open, restore to
   the anchor on close, add ArrowUp/Down between items. `lib/app.js:240-345, 547-553`.
-- **[S] Tree control icon-buttons hardcode English aria-labels** (unused i18n keys
-  already exist). `lib/views/tree-view.js` control buttons.
 
 ## Header, navigation & information architecture
 
-- **[S] Icon-only collapse has no CSS, so the desktop header crowds/overflows on
-  narrow laptops.** `btn__label-md` / `nav-btn__label` spans exist in markup but
-  no rule hides them; the layout jumps straight from full desktop to the 768px
-  kebab. Add `@media (max-width:1024px){ .btn__label-md{display:none} }` and let
-  `.header-search` shrink. `index.html:57,61,65,85,89,93`; `styles/base.css`.
-- **[S] Header tooltips / icon-button names are hardcoded English** despite
-  `data-i18n-title` / `data-i18n-aria-label` being implemented (i18n.js:665-670)
-  and used **zero** times in index.html. Replace literals with those attributes.
 - **[M] Global search yanks you to People on every keystroke** and disappears on
   phone with no kebab fallback. Debounce/soften the auto-switch; add a "Search
   people" kebab row on phone. `lib/app.js:139-144`; `styles/base.css:208`.
@@ -70,8 +54,6 @@ change), **L** = large (broad sweep).
   the rest into a collapsible "More details". `people-view.js:1013-1042`.
 - **[S] Date-precision dropdown always shows,** even beside a blank/"living" death
   date, and is unlabeled.
-- **[S] "Add child/spouse/parent" modal titles are hardcoded English,** ignoring
-  existing HI keys. (Overlaps the i18n sweep.)
 
 ## Tree canvas
 
@@ -85,22 +67,10 @@ of also walking ancestors is still open if desired.)*
 
 ## Mobile & responsive
 
-- **[S] Phone kebab menu has no max-height/scroll and ignores the bottom safe
-  area.** Add `max-height: calc(100dvh - 64px - env(safe-area-inset-bottom))`,
-  `overflow-y:auto`. `styles/components.css:1070-1083`.
 - **[S] Kebab overflow menu omits Add person,** the core creation action. Add a
   row inside the `canEdit` block. `lib/app.js:299-306`.
-- **[S] Tree overlay control buttons are 32px on phone** (< 44px touch min). Add
-  `min-width/height:44px` inside the `@media (pointer:coarse)` block. `views.css:1090,1107`.
-- **[S] Header doesn't reserve the top safe-area inset** — content hides under the
-  notch in the installed PWA. `padding-top: env(safe-area-inset-top)` on
-  `.app-header`. `styles/base.css:45-57`.
-- **[M] Date picker popover is a fixed 320px opening downward,** clipping inside the
-  bottom-sheet form on narrow phones. `width: min(320px, calc(100vw - 32px))` + an
-  upward-flip. `styles/components.css:704-709`.
-- **[S] Header crowds in the 769–1100px band** — full nav + 280px search + three
-  labeled actions never wrap. (Same root as the icon-only-collapse item above.)
-- **[M] Timeline has no pinch-to-zoom on touch** and a hardcoded English TODAY label.
+- **[M] Timeline has no pinch-to-zoom on touch.** (The hardcoded English TODAY
+  label has shipped — see [✅ Shipped](#-shipped).)
 
 ## Timeline & people
 
@@ -133,6 +103,41 @@ the rest of the queued cloud work lands.
   person form — placeholders, hints, empty states, precision options, toasts); the
   invisible keyboard focus ring (solid `--olive` ring + halo, meets 3:1); invites
   with no delivery path (app-link row + copy button in the sharing dialog).
+
+### Batch 4 — a11y / i18n / responsive sweep (2026-08-12)
+
+- **Contrast (SC 1.4.3).** `.field__label` / `.field__hint` moved from `--text-3`
+  (3.95:1) to `--text-2` (8.7:1). `styles/components.css`.
+- **Inspector disclosure `aria-expanded`.** Each collapsible section head now sets
+  `aria-expanded` at creation and updates it on toggle, and `aria-controls` points
+  at the body (`id`ed per section). `lib/components/inspector.js`.
+- **Tree control i18n.** Zoom in/out, View options, Fit view, and the Rename-tree
+  pen route their `aria-label`/`title` through `I18n` (new `tree.viewOptions`,
+  `tree.fitView`). `lib/views/tree-view.js`.
+- **Header icon-button names i18n.** Hamburger, theme, language group, Collect,
+  kebab, and inspector-close carry `data-i18n-title` / `data-i18n-aria-label` so
+  their tooltips/accessible names translate (new `actions.openMenu`,
+  `moreActions`, `closeDetails`, `searchPeople`, `collectVia`). `index.html`.
+- **Icon-only collapse for the 769–1100 px band.** `.btn__label-md` hides and the
+  header search shrinks to 180 px in the existing `≤1100 px` media block, so the
+  header stops crowding before the ≤768 kebab takes over. `styles/base.css`.
+- **Phone kebab scroll + safe area.** `max-height` bounded to the space under the
+  header minus the bottom inset, `overflow-y:auto`. `styles/components.css`.
+- **Tree overlay buttons ≥44 px on touch.** `.tree-controls .btn` gets a 44 px
+  min hit area under `@media (pointer:coarse)` (halo/glyph unchanged). `views.css`.
+- **Header top safe-area inset.** A derived `--header-total` (bar + `env(safe-area
+  -inset-top)`) drives the header height/padding and every fixed panel offset
+  (body height, rail/inspector `top`, overlay inset, kebab cap), so content clears
+  the notch in the installed PWA with the offsets kept in sync. `tokens.css`,
+  `base.css`, `components.css`.
+- **Date popover fits + flips.** Width clamped to `min(320px, 100vw - 32px)`; a
+  measured `.hdp--up` opens it upward when it would clip at the bottom of the
+  phone bottom-sheet. `styles/components.css`, `lib/components/heritage-datepicker.js`.
+- **Timeline TODAY label i18n.** The now-line marker is a real localized span
+  (`timeline.today`) instead of a CSS `content:"TODAY"`; the px/year chip uses
+  `timeline.pxPerYearShort`. `lib/views/timeline-view.js`, `styles/views.css`.
+- **Add child/spouse/parent modal titles** — verified already routed through
+  `I18n.t(inspector.add*)` with HI keys present; no change needed.
 
 ### Batch 3 (2026-08-12)
 

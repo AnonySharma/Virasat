@@ -47,10 +47,16 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   z-index: var(--z-header);
   background: var(--bg-elev);
   color: var(--text);
-  height: var(--header-h);
+  /* Reserve the notch/status-bar inset so header content isn't hidden under it
+     in the installed PWA (viewport-fit=cover). --header-total = bar height +
+     top inset; top-padding pushes the row's content below the notch while
+     box-sizing:border-box keeps the interactive row --header-h tall. On
+     non-notched devices the inset is 0 — no visual change. */
+  height: var(--header-total);
+  padding: env(safe-area-inset-top, 0px) var(--s-6) 0;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  padding: 0 var(--s-6);
   gap: var(--s-5);
   border-bottom: 1px solid var(--line);
   flex-shrink: 0;
@@ -139,7 +145,7 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .app-body {
   display: grid;
   grid-template-columns: var(--rail-w) minmax(0, 1fr) var(--inspector-w);
-  height: calc(100dvh - var(--header-h));
+  height: calc(100dvh - var(--header-total));
   overflow: hidden;
   min-width: 0;
 }
@@ -185,7 +191,7 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 1100px) {
   .app-body { grid-template-columns: var(--rail-w) minmax(0, 1fr); }
   .app-inspector {
-    position: fixed; right: 0; top: var(--header-h); bottom: 0;
+    position: fixed; right: 0; top: var(--header-total); bottom: 0;
     width: min(380px, 96vw);
     transform: translateX(100%);
     transition: transform var(--t-med);
@@ -193,11 +199,18 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
     box-shadow: var(--shadow-lg);
   }
   .app-inspector.is-open { transform: translateX(0); }
+  /* Header crowds in the 769–1100 px band: full nav + a 280 px search + three
+     labelled action buttons never wrap. Collapse the action buttons to
+     icon-only (their `title`/`aria-label` keep them named) and let the search
+     shrink so everything fits before the ≤768 kebab takes over. Nav labels
+     stay — they're short and are the buttons' only accessible name. */
+  .btn__label-md { display: none; }
+  .header-search { width: 180px; }
 }
 @media (max-width: 768px) {
   .app-body { grid-template-columns: minmax(0, 1fr); }
   .app-rail {
-    position: fixed; left: 0; top: var(--header-h); bottom: 0;
+    position: fixed; left: 0; top: var(--header-total); bottom: 0;
     width: 280px;
     transform: translateX(-100%);
     transition: transform var(--t-med);
@@ -251,7 +264,7 @@ button.kebab-btn { display: none; }
 }
 
 .app-overlay {
-  position: fixed; inset: var(--header-h) 0 0;
+  position: fixed; inset: var(--header-total) 0 0;
   background: rgba(34, 31, 26, .35);
   z-index: calc(var(--z-rail) - 1);
   opacity: 0; pointer-events: none;
