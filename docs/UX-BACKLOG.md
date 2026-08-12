@@ -178,12 +178,12 @@ and net-new items from it will be appended here as they report.*
   switch per person — painful for the 30-relatives-in-one-sitting persona. Add a
   footer "Save & add another" that saves then reopens a blank form, skipping the
   reveal/pan for that path.
-- **[M] Every twin (EN+HI) field pays the two-column card cost even when Hindi is
-  never used.** `pair()` wraps all 8 twinned fields in a padded dashed card
-  (`people-view.js:1074-1087`, `components.css:458-467`), doubling each field's
-  height on phone for English-only entry. Default the Hindi half to a collapsed
-  "+ हिन्दी" toggle unless it already has a value (mirror the `moreDetails.open`
-  progressive-disclosure keyed off `hasMoreData`).
+- **✅ [FIXED — Batch 6] Every twin (EN+HI) field paid the two-column card cost even
+  when Hindi was never used.** `pair()` now starts the Hindi half collapsed behind a
+  "+ हिन्दी" toggle that expands in place, unless it already holds a value (editing)
+  or the UI is in Hindi — mirroring `moreDetails`' content-keyed disclosure. Solo
+  mode drops the dashed-card chrome so an English-only field reads as a plain field.
+  `people-view.js`, `components.css`, `i18n.js`.
 - **[S] Enter never submits the form.** The modal body is a plain `<div>`, not a
   `<form>` (`dom.js:189-198`), and `openModal` only handles Escape/Tab (`157-186`);
   single-line inputs have only `oninput` (the `required` on `nameInput` is inert).
@@ -250,6 +250,10 @@ the rest of the queued cloud work lands.
   searchbar — hidden until there's text, suppresses the native WebKit cancel to
   avoid a double ×, stays in sync with programmatic `setSearch`. `app.js`,
   `people-view.js`, `index.html`, `base.css`, `components.css`, `i18n.js`.
+- **[this batch] Hindi twin fields collapse behind a "+ हिन्दी" toggle.** English-only
+  entry no longer pays the padded two-column card cost on every twinned field; the
+  Hindi half expands in place, and starts open when it has a value or the UI is
+  Hindi. `people-view.js`, `components.css`, `i18n.js`.
 
 ### Batch 5 — final backlog clear (2026-08-12)
 
