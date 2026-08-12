@@ -163,14 +163,16 @@ and net-new items from it will be appended here as they report.*
   no backend change. New `share.copyInviteLink` (EN+HI). *(Automatic re-send of the
   invite email would need a Supabase call and is out of scope for this no-backend
   pass.)* `sharing.js`, `components.css`, `i18n.js`.
-- **[M] An invitee who signs up with the wrong email lands on the blank create-tree
-  screen with no clue an invite exists.** `claim_invites` matches by `auth.email()`
-  (citext); a mismatch claims nothing, `resolveTree` finds no owned/shared tree and
-  returns `null`, and first-run shows "Create your first family tree" — the shared
-  tree is invisible with no "we couldn't find an invite for this address; the owner
-  invited <x>?" hint. Surface a first-run note when the account has zero trees but
-  arrived via an invite flow. `cloud-store.js:100-135`, `auth-store.js:223-224`,
-  `first-run.js:207-217`.
+- **✅ [FIXED — Batch 6] An invitee who signs up with the wrong email landed on the
+  blank create-tree screen with no clue an invite exists.** `claim_invites` matches
+  by `auth.email()` (citext); a mismatch claims nothing and first-run shows "Create
+  your first family tree" with the shared tree invisible. There's no reliable signal
+  to *detect* the mismatch (their email matches no invite precisely because it's the
+  wrong one, and the app link carries no invite marker), so rather than a false "we
+  found your invite" we added a quiet footnote stating the email-matching rule and
+  showing which address they're on — the topbar already carries the sign-out escape
+  hatch. New `firstRun.inviteHint` / `inviteHintNoEmail` (EN+HI). `first-run.js`,
+  `components.css`, `i18n.js`.
 
 ### Person form (net-new, post-rework)
 
@@ -270,6 +272,10 @@ the rest of the queued cloud work lands.
   `virasat:sync-state` event drive a Saved / Saving… / Offline chip in the header —
   reads existing dirty/push/online flags, no new backend. Phone surface logged as a
   follow-up. `cloud-store.js`, `app.js`, `index.html`, `components.css`, `i18n.js`.
+- **[this batch] Wrong-email invitee first-run footnote.** A quiet note on the
+  create-your-first-tree screen stating that invites open only for the exact invited
+  email and showing which address the user is on — so a mismatched invitee has a clue
+  instead of an invisible shared tree. `first-run.js`, `components.css`, `i18n.js`.
 
 ### Batch 5 — final backlog clear (2026-08-12)
 
