@@ -335,10 +335,16 @@ mechanical sweep.
   tracks `menuReturnFocus`, `showNodeMenu` focuses the first item on open, `onDocKey` roves
   Arrow/Home/End over `.tree-node-menu__item`, and Escape closes + restores focus to the trigger.
   **(2 agents.)**
-- **[M] Mobile `#rail` / `#inspector` drawers bypass `openModal`.** Plain `<aside>`s toggled by
-  class (`index.html:118,185`, `app.js`): no Escape-to-close, no `role="dialog"`/`aria-modal`,
-  no focus move-in when opened from a tree-node tap — breaking the pattern every other overlay
-  follows. **(use-mobile-a11y.)**
+- **✅ [FIXED e98fa72] Mobile `#rail` / `#inspector` drawers bypass `openModal`.** Plain
+  `<aside>`s toggled by class from several sites (`app.js` hamburger / person-select /
+  lineage-focus / view-switch): no Escape-to-close, no `role="dialog"`/`aria-modal`, no focus
+  move-in when opened from a tree-node tap. Rather than touch each toggle site, a
+  `MutationObserver` reconciles dialog semantics off the live classes — a drawer is modal exactly
+  while `.is-open` **and** the scrim `.app-overlay.is-on` is up (raised only by the mobile open
+  paths, so desktop's persistent columns are untouched). Adds `role`/`aria-modal`/`aria-label`,
+  moves focus in, restores it to the opener on close; one capture-phase keydown does Escape +
+  Tab-trap and yields when an `openModal` dialog is stacked on top. New `actions.menuDialog` /
+  `detailsDialog` (EN+HI). **(use-mobile-a11y.)**
 - **✅ [FIXED 167e2d7] SVG viewBox never follows keyboard focus.** Tabbing to an off-screen
   `.t-node` (focusable in DOM order, not screen order) moved focus outside the visible viewBox
   with no pan and no cue. New `panIntoView(personId)` on the node's `onfocus` scrolls the viewBox
@@ -353,11 +359,13 @@ mechanical sweep.
   focal point could never be moved by keyboard. Now `tabindex=0` + `role="application"` +
   `aria-label` (new `crop.dragAria`, EN+HI), with an arrow-key nudge (2%, ×5 on Shift) wired
   into the existing `apply()`/`onChange()` pipeline.
-- **[S/M] SVG hit targets under 44px on coarse pointers.** `.t-couple-knot__hit` (r14≈28px) and
-  `.t-node-add-bg` (r11≈22px) — the two most-common tree-editing gestures — never enter the
-  `@media (pointer: coarse)` 44px bump (which only covers `.tree-controls .btn`). Can't be a
-  CSS fix (r is an inline SVG attr); needs a `matchMedia("(pointer: coarse)")` check in the
-  draw code to draw a larger invisible hit-circle. **(ux-tree, use-mobile-a11y.)**
+- **✅ [FIXED b0ddf31] SVG hit targets under 44px on coarse pointers.** `.t-couple-knot__hit`
+  (r14≈28px) and `.t-node-add-bg` (r11≈22px) — the two most-common tree-editing gestures — never
+  entered the `@media (pointer: coarse)` 44px bump (which only covers `.tree-controls .btn`). Not
+  a CSS fix (r is an inline SVG attr): a memoized `isCoarsePointer()` (`matchMedia`) now grows the
+  knot's existing transparent hit circle to r22 and prepends a separate invisible r22 hit circle
+  behind the visible add disc (glyph unchanged). Both live inside `.t-couple-knot` / `.t-node-add`,
+  so the PNG-export strip removes them with their groups. **(ux-tree, use-mobile-a11y.)**
 - **✅ [FIXED a426446] Marriage-knot `:focus-visible` pulse ignores `prefers-reduced-motion`.**
   The reduced-motion block (`views.css`) silenced only `:hover`, not `:focus-visible` — a
   keyboard user with reduced-motion got an infinite scale-pulse. The block now silences both.
@@ -560,6 +568,19 @@ the rest of the queued cloud work lands.
   `panIntoView(personId)` on node `onfocus` scrolls the viewBox minimally to reveal an out-of-view
   node while preserving zoom; no-ops when already visible or during a pointer gesture. Reuses
   `lastPositions`. `tree-view.js`.
+- **[b0ddf31] 44px touch targets for the knot + add-relative disc.** The couple-knot hit circle
+  (r14≈28px) and the add-relative disc (r11≈22px) never entered the `pointer:coarse` 44px bump
+  (radius is an inline SVG attr, not CSS). A memoized `isCoarsePointer()` now grows the knot's
+  transparent hit circle to r22 and prepends a separate invisible r22 hit circle behind the
+  visible add disc (glyph unchanged); both are stripped from PNG export with their parent groups.
+  `tree-view.js`.
+- **[e98fa72] Mobile rail/inspector drawers get modal-dialog semantics.** The two panels become
+  overlay drawers on phone/tablet but were plain `<aside>`s toggled by class from several sites,
+  with none of the dialog behaviour every other overlay has. A `MutationObserver` reconciles
+  `role=dialog`/`aria-modal`/`aria-label` + focus move-in/restore off the live classes (modal
+  exactly while `.is-open` and the scrim is up — desktop columns untouched); one capture-phase
+  keydown does Escape + Tab-trap, yielding to any stacked `openModal`. New `actions.menuDialog` /
+  `detailsDialog` (EN+HI). `app.js`, `i18n.js`.
 
 ### Batch 7 — round-2 10-agent review, i18n defect cluster (2026-08-12)
 
