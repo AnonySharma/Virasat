@@ -49,6 +49,40 @@ surface. Reviewers still reporting — this list grows as agents land.*
   she showed in neither dropdown and any later edit dropped her from `parents`. Now
   slotted by actual gender, and each slot's filter always keeps its current
   occupant. `people-view.js:940-974`.
+- **✅ [FIXED c4cabb6] English leaked at boot / first-run / sample moments.** The
+  storage-persistence-denied toast, cloud-unreachable toast, the whole "Try sample
+  family" confirm dialog + its toasts, `offerSampleData`'s not-loaded toast, and the
+  first-run sample-not-loaded error were all raw English in an otherwise fully
+  bilingual app — surfacing exactly when a Hindi-first user hits a failure. All now
+  routed through I18n (new `sync.persistDenied/cloudUnreachable`, `rail.sample*`,
+  `firstRun.sampleNotLoaded`, EN+HI). `app.js`, `first-run.js`, `i18n.js`.
+
+### Onboarding, sign-in & empty states
+
+- **✅ [FIXED c4cabb6] Timeline empty state was a dead end.** Unlike People and Tree,
+  Timeline's empty state offered no CTA. Now shows the same "Add first person" button
+  — but only when the tree is truly empty; with people-but-no-dates it keeps the "add
+  birth dates" nudge. `timeline-view.js:328`.
+- **[M] First-run never detects the local tree already in this browser.** An existing
+  local user signing up for cloud gets a generic "import a Virasat export" file picker
+  with no awareness that a `familyTree.v1` blob may sit in this very localStorage — so
+  the user most likely to have pre-existing data is the one most likely to lose track
+  of it. *Note: the cloud plan deliberately scoped out a migration script, so this is a
+  product call — but the one-tap "We found a tree on this device — bring it in?" is a
+  cheap, high-trust win.* `first-run.js:164-181`, `data-store.js:16,52`.
+- **[S] Password sign-in has no recovery path.** No "Forgot password?" link; a wrong
+  password just says "doesn't match. Try again." with no next step, even though the
+  magic-link ("Email me a sign-in link") button right there IS the recovery path. No
+  new Supabase call needed — just cross-link them (append "…or use 'Email me a sign-in
+  link' below" to the invalid-login message, or highlight that button on that error).
+  `sign-in.js:136-146, 311-319, 96-99`.
+- **[S] Rail "Preserve your legacy" CTA always says data is "saved on your device"** —
+  even for signed-in cloud users whose data is synced to Supabase. Unlike its siblings
+  `#rail-trees-block` / `#share-btn` (gated by `CloudStore.isActive()`), this block has
+  no visibility/copy gating, so a cloud user permanently sees a local-only pitch + a
+  "Get started" button that just opens Export. Gate it like `refreshTreesRail()` and
+  swap to a "synced & backed up" message when signed in. `index.html:169-172`,
+  `app.js:261-278`.
 
 ### Wayfinding & tree orientation
 
