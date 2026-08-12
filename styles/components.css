@@ -1519,6 +1519,31 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   filter: drop-shadow(0 2px 4px rgba(34, 31, 26, 0.12));
 }
 .landing__tree-fig { fill: currentColor; opacity: 0.85; }
+
+/* — Hero tree assembles on load: the links "draw" in, then the people pop in
+   staggered (the couple first, then their children) — the family tree building
+   itself. Guarded by prefers-reduced-motion below, where it all just appears. */
+@media (prefers-reduced-motion: no-preference) {
+  .landing__tree-link {
+    stroke-dashoffset: var(--len, 200px);
+    animation: landing-draw 0.5s ease forwards;
+    animation-delay: 0.15s;
+  }
+  .landing__tree-node {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(0.4);
+    animation: landing-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    /* Children wait for the links to finish drawing (~0.65s), then stagger. */
+    animation-delay: calc(0.7s + var(--i, 0) * 0.1s);
+  }
+}
+@keyframes landing-draw { to { stroke-dashoffset: 0; } }
+@keyframes landing-pop {
+  0%   { opacity: 0; transform: scale(0.4); }
+  100% { opacity: 1; transform: scale(1); }
+}
 .landing__tree-node--peach    { color: var(--av-peach-ink);    }
 .landing__tree-node--peach    .landing__tree-disc { fill: var(--av-peach);    }
 .landing__tree-node--sage     { color: var(--av-sage-ink);     }
@@ -1597,6 +1622,14 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   font-weight: 500;
   color: var(--text-2);
   box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+@media (prefers-reduced-motion: no-preference) and (hover: hover) {
+  .landing__chip:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-soft);
+  }
 }
 .landing__chip > i { color: var(--accent-deep); font-size: 14px; }
 /* Three feature tiles side-by-side on a wide screen; they wrap to a single
@@ -1617,6 +1650,14 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   border: 1px solid var(--line);
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+@media (prefers-reduced-motion: no-preference) and (hover: hover) {
+  .landing__feature:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-soft);
+  }
 }
 .landing__feature-icon {
   flex: none;
@@ -1792,6 +1833,25 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   max-width: 44ch;
 }
 .landing__cta-band .landing__cta { margin-top: var(--s-2); }
+
+/* Scroll-reveal — sign-in.js adds .landing__reveal to each section below the
+   hero and swaps in .is-revealed via an IntersectionObserver as it scrolls into
+   view. Only takes effect when motion is allowed; if the observer never runs
+   (no JS, old browser) the class is never added, so the section shows normally.
+   The pre-reveal hidden state lives INSIDE the no-preference guard so reduced-
+   motion users never get a hidden-until-JS section. */
+@media (prefers-reduced-motion: no-preference) {
+  .landing__reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.55s ease, transform 0.55s ease;
+    will-change: opacity, transform;
+  }
+  .landing__reveal.is-revealed {
+    opacity: 1;
+    transform: none;
+  }
+}
 
 @media (max-width: 860px) {
   /* Hero stacks: copy centred on top, tree mock below (and smaller). */
