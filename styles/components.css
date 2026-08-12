@@ -1651,6 +1651,148 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   text-align: center;
   max-width: 520px;
 }
+
+/* Feature deep-dive — a two-column list of icon + title + body items. Reads as
+   a fuller companion to the capture chips; stacks to one column on phones. */
+.landing__deep { width: 100%; }
+.landing__deep-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s-5);
+  max-width: 820px;
+  margin-inline: auto;
+}
+.landing__deep-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-4);
+}
+.landing__deep-icon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-size: 18px;
+}
+.landing__deep-text { display: flex; flex-direction: column; gap: 2px; }
+.landing__deep-title { font-size: 16px; font-weight: 600; color: var(--text); margin: 0; }
+.landing__deep-body { font-size: 13.5px; line-height: 1.55; color: var(--text-3); margin: 0; }
+
+/* Heritage / values — a quiet centred band (no card) that pauses between the
+   feature sections and states the ethos. */
+.landing__ethos {
+  width: 100%;
+  max-width: 620px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-3);
+}
+.landing__ethos-icon {
+  font-size: 26px;
+  color: var(--accent-deep);
+  opacity: 0.9;
+}
+.landing__ethos-title {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.6vw, 26px);
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+.landing__ethos-body {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-2);
+  margin: 0;
+}
+
+/* FAQ — collapsible <details> rows, collapsed by default for a calm, skimmable
+   list. Each summary is a large tappable target; the chevron rotates on open. */
+.landing__faq { width: 100%; }
+.landing__faq-list {
+  max-width: 680px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.landing__faq-item {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.landing__faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;                 /* hide the default disclosure marker */
+}
+.landing__faq-q::-webkit-details-marker { display: none; }
+.landing__faq-chevron {
+  flex: none;
+  color: var(--text-4);
+  font-size: 13px;
+  transition: transform var(--dur-2, 180ms) var(--ease, ease);
+}
+.landing__faq-item[open] .landing__faq-chevron { transform: rotate(180deg); }
+.landing__faq-a {
+  margin: 0;
+  padding: 0 var(--s-5) var(--s-4);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-3);
+}
+
+/* Closing CTA band — a final "get started" prompt in a soft accent card so it
+   stands apart from the sections above without shouting. */
+.landing__cta-band {
+  width: 100%;
+  max-width: 620px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-3);
+  padding: var(--s-7) var(--s-6);
+  background: var(--accent-soft);
+  border-radius: var(--r-xl);
+}
+.landing__cta-title {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.6vw, 26px);
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+.landing__cta-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-2);
+  margin: 0;
+  max-width: 44ch;
+}
+.landing__cta-band .landing__cta { margin-top: var(--s-2); }
+
 @media (max-width: 860px) {
   /* Hero stacks: copy centred on top, tree mock below (and smaller). */
   .landing__hero { grid-template-columns: 1fr; gap: var(--s-5); justify-items: center; }
@@ -1667,6 +1809,9 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   .landing__inner { gap: var(--s-7); }
   .landing__features { grid-template-columns: 1fr; gap: var(--s-4); max-width: 460px; }
   .landing__feature { padding: var(--s-5); }
+  /* Deep-dive items stack to one column and narrow so they read as a list. */
+  .landing__deep-list { grid-template-columns: 1fr; gap: var(--s-4); max-width: 460px; }
+  .landing__cta-band { padding: var(--s-6) var(--s-5); }
 }
 
 /* ── First-run (signed in, no tree yet) ────────────────────────────────────
