@@ -443,8 +443,11 @@ mechanical sweep.
 
 ### Design / product calls (log, don't action — user decides)
 
-- **[L] Landing page has zero product visuals** for a fundamentally visual product — three
+- ✅ [FIXED a2d4ee4] **[L] Landing page has zero product visuals** for a fundamentally visual product — three
   generic FA icon tiles, no tree/photo imagery. Needs new assets. (ux-onboarding-2.)
+  Rebuilt into a full intro: hero + decorative SVG family-tree mock, "How it works" 3-step
+  band, "What you can capture" icon chips, kept the 3 tiles + footer. No new asset files
+  (SVG mock is inline, themed via avatar tokens).
 - **[M] Magic-link is buried last** below the full password form — arguably the lowest-friction
   path for the elder audience should have equal-or-higher weight. (ux-onboarding-2.)
 - **[S] No password-visibility (eye) toggle** on the sign-in password field; the icon-swap idiom
@@ -454,8 +457,11 @@ mechanical sweep.
   ("e.g. Our Family Tree") or derive from the user's name. Copy call.
 - **[S] Crop tool is invisible until after upload** — auto-open `CropEditor` right after a fresh
   upload (still cancel-able) instead of requiring the easy-to-miss "Reframe" tap. (usability-newuser.)
-- **[S copy] "Focus descendants" vs "Focus bloodline"** offered with no inline explanation for a
+- ✅ [FIXED e68cfba] **[S copy] "Focus descendants" vs "Focus bloodline"** offered with no inline explanation for a
   non-technical audience — add a one-line hint under each, or collapse to one with a sub-choice.
+  Verified the modes are NOT duplicated (bloodline adds an upward ancestor walk); the confusion
+  was jargon + roots having no ancestors to light. Relabelled "Focus bloodline" →
+  "Focus ancestors & descendants" (EN+HI). Logic unchanged.
 - **[S] Default a new person's name to `Auth.getFirstName()`** when the tree is empty and the
   draft is unseeded — the user just typed it at sign-up. Small, friendly. (usability-newuser.)
 - **[S maintenance] `profile-view.js` (261 lines) is unreachable dead code** — both call sites are
@@ -581,6 +587,27 @@ the rest of the queued cloud work lands.
   exactly while `.is-open` and the scrim is up — desktop columns untouched); one capture-phase
   keydown does Escape + Tab-trap, yielding to any stacked `openModal`. New `actions.menuDialog` /
   `detailsDialog` (EN+HI). `app.js`, `i18n.js`.
+
+### Batch 9 — user-reported polish (2026-08-12)
+
+- **[b623260] Forms-template page couldn't scroll.** `forms/family-tree-template.html` is a plain
+  long document but inherited the SPA app-shell lock (`base.css`: `body{height:100dvh;overflow:hidden}`).
+  Scoped override in its own `<style>` restores native page scroll. `family-tree-template.html`.
+- **[5d3db7a] Timeline avatars showed broken-image icons.** `buildBarAvatar` left `src=""` on a
+  `getUrl` miss → the browser's broken-image glyph. Added a `showInitials()` fallback so a failed
+  async photo resolve removes the `<img>` and paints initials, matching `UI.avatar`. `timeline-view.js`.
+- **[a2d4ee4] Landing page rebuilt into a full product intro.** Hero + decorative inline SVG
+  family-tree mock (aria-hidden, themed via avatar pastel tokens), "How it works" 3-step band,
+  "What you can capture" icon chips, kept the 3 feature tiles + privacy footer. New `landing.*`
+  keys (EN+HI). `sign-in.js`, `components.css`, `i18n.js`.
+- **[dea5e2b] Inspector action-row glyphs disambiguated.** Show-in-tree & Save-as-image both read
+  as node graphs; share-nodes was the wrong (Share) glyph for image export; Add-note & Edit were
+  two pens. Now five distinct glyphs reusing app idioms: `fa-sitemap` (tree), `fa-note-sticky`,
+  `fa-regular fa-image` (matches export/photo), `fa-user-pen`, `fa-trash-can`. `inspector.js`.
+- **[e68cfba] "Focus bloodline" relabelled.** Confirmed the two focus modes are NOT duplicated
+  (bloodline adds an upward ancestor walk); the confusion was jargon + roots having no ancestors
+  to light. Renamed to "Focus ancestors & descendants" (EN+HI); logic unchanged. `tree-view.js`,
+  `i18n.js`.
 
 ### Batch 7 — round-2 10-agent review, i18n defect cluster (2026-08-12)
 
