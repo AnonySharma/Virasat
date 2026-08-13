@@ -889,6 +889,28 @@
 .inspector-chip:hover { background: var(--bg-elev); border-color: var(--gold); }
 .inspector-chip__role { color: var(--text-3); font-weight: 400; font-size: 11px; margin-left: auto; font-variant-numeric: tabular-nums; }
 
+/* Explicitly-unknown parent — a quiet dashed placeholder chip. Not a button
+   (nothing to reveal), so it carries no hover/pointer affordance. The dashed
+   border echoes the tree's dashed "unknown" placeholder node so the two
+   surfaces read as the same concept. */
+.inspector-chip--unknown {
+  cursor: default;
+  background: transparent;
+  border: 1px dashed var(--line);
+  color: var(--text-3);
+  font-style: italic;
+  font-weight: 400;
+}
+.inspector-chip--unknown:hover { background: transparent; border-color: var(--line); }
+.inspector-chip__ph {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 1px dashed var(--line);
+  color: var(--text-3);
+  font-size: 11px;
+}
+
 .inspector-add-row {
   display: flex; flex-wrap: wrap; gap: 6px;
   margin-top: 14px;
@@ -1392,6 +1414,32 @@
   color: var(--gold-deep);
 }
 .form-pet-toggle i { color: var(--gold); }
+
+/* === Form — parent slot + "Unknown" toggle === */
+.parent-slot { display: flex; flex-direction: column; gap: 6px; }
+.parent-slot__picker { transition: opacity var(--t-fast); }
+.parent-unknown-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  align-self: flex-start;
+  padding: 4px 10px;
+  font-size: 11px; color: var(--text-3);
+  background: var(--surface-2);
+  border: 1px dashed var(--line);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+}
+.parent-unknown-toggle input { margin: 0; }
+.parent-unknown-toggle:has(input:checked) {
+  background: var(--surface-2);
+  border-color: var(--text-3);
+  color: var(--text-2);
+}
+/* When Unknown is checked, the picker is meaningless — dim it and take it out
+   of the tab / pointer flow (HeritageSelect has no disabled state of its own). */
+.parent-slot--unknown .parent-slot__picker {
+  opacity: 0.4;
+  pointer-events: none;
+}
 
 /* === Tree — pet badge === */
 .t-node-pet-bg {
