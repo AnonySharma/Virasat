@@ -42,6 +42,10 @@
 .btn--danger { color: var(--danger); border-color: var(--danger-soft); background: transparent; }
 .btn--danger:hover { background: var(--danger-soft); }
 .btn--icon { width: 38px; padding: 0; justify-content: center; }
+/* Dropdown caret on a menu-opening button (e.g. header "Data ▾"). Quieter and
+   smaller than the leading icon so it reads as an affordance, not a second
+   glyph competing for weight. */
+.btn__caret { font-size: 9px; opacity: .55; margin-left: -2px; }
 .btn--sm { height: 32px; padding: 0 12px; font-size: 12.5px; }
 .btn--block { width: 100%; justify-content: center; }
 
@@ -251,23 +255,24 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .rail-item--danger:hover { background: var(--danger-soft); color: var(--danger); }
 .rail-item--danger:hover i { color: var(--danger); opacity: 1; }
 
-.rail-stats {
-  margin: 6px 12px 0; padding: 0;
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+/* Divider between everyday and destructive tools in the rail list. A hairline
+   with a little breathing room; it's a non-interactive <li>, so it never picks
+   up .rail-item hover/focus affordances. */
+.rail-divider {
+  height: 1px; margin: 6px 12px;
+  background: var(--line); list-style: none;
 }
-.rail-stat {
-  padding: 12px;
-  background: var(--surface-2);
-  border-radius: var(--r-sm);
-  display: flex; flex-direction: column; gap: 2px;
-}
-.rail-stat dt { font-size: 11px; color: var(--text-3); margin: 0; }
-.rail-stat dd {
-  margin: 0; font-family: var(--font-display);
-  font-size: 26px; font-weight: 500; color: var(--text);
+
+/* Tree statistics, demoted from two number tiles to one quiet reference line
+   (the Tree-view subtitle already shows these prominently). The count spans
+   inherit tabular numerals so single/double-digit values don't jitter. */
+.rail-statline {
+  margin: 0; padding: 0 12px;
+  font-size: 12px; color: var(--text-3);
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em; line-height: 1;
 }
+.rail-statline span[id] { color: var(--text-2); font-weight: 600; }
+.rail-statline__sep { margin: 0 6px; color: var(--text-4); }
 
 .rail-cta {
   margin: var(--s-3) 4px 0;

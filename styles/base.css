@@ -119,6 +119,13 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .nav-btn.is-active { background: var(--olive-soft); color: var(--olive-deep); }
 .nav-btn__icon { width: 14px; height: 14px; opacity: .85; }
 
+/* The rail's "Overview" view-switcher duplicates the header tabs on desktop,
+   so hide it ≥769px. It stays in the phone slide-in drawer, where .app-nav is
+   hidden (≤768px block below) and this is the only way to switch views. */
+@media (min-width: 769px) {
+  .rail-block--views { display: none; }
+}
+
 .app-header__actions { margin-left: auto; display: inline-flex; gap: 8px; align-items: center; }
 
 /* Header search — quiet, almost a pill */
@@ -210,13 +217,34 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
     box-shadow: var(--shadow-lg);
   }
   .app-inspector.is-open { transform: translateX(0); }
-  /* Header crowds in the 769–1100 px band: full nav + a 280 px search + three
-     labelled action buttons never wrap. Collapse the action buttons to
-     icon-only (their `title`/`aria-label` keep them named) and let the search
-     shrink so everything fits before the ≤768 kebab takes over. Nav labels
-     stay — they're short and are the buttons' only accessible name. */
+}
+
+/* Header fit — a WIDER band than the inspector-collapse above. The title +
+   384 px nav + 280 px search + labelled actions overflow the header well
+   before 1100 px (measured: actions run ~90 px off-screen at 1200 px). Collapse
+   the action-button text to icon-only (their `title`/`aria-label` keep them
+   named) and shrink the search so the row fits down to the ≤768 kebab handover.
+   Nav labels stay — they're short and are the tabs' only accessible name.
+   Kept separate from the 1100 px block so the inspector stays a docked pane in
+   this band rather than becoming a drawer. */
+@media (max-width: 1360px) {
   .btn__label-md { display: none; }
   .header-search { width: 180px; }
+  /* Drop the decorative "your family's living legacy" tagline here too — it's
+     the least essential header element (~230 px), and keeping it in this band
+     is what tipped the row into overflow. Already hidden ≤768; this supersedes
+     that rule, so the 768 block no longer needs its own copy. */
+  .app-title__sub { display: none; }
+}
+
+/* Tablet-narrow: full nav + a 180 px search + actions still overflow below
+   ~1024 px (iPad-landscape 1024 is the last width that fits). Retire the header
+   search here — it's the most redundant control at this width (the People view
+   carries its own searchbar, and the ≤768 kebab exposes search too), which
+   keeps the primary nav + Share/Data actions fully on-screen. Supersedes the
+   ≤768 `display:none`, so that block no longer needs its own copy. */
+@media (max-width: 1023px) {
+  .header-search { display: none; }
 }
 @media (max-width: 768px) {
   .app-body { grid-template-columns: minmax(0, 1fr); }
@@ -229,8 +257,6 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
     box-shadow: var(--shadow-lg);
   }
   .app-rail.is-open { transform: translateX(0); }
-  .header-search { display: none; }
-  .app-title__sub { display: none; }
   .hamburger-btn { display: inline-flex !important; }
   /* On phone the rail handles view switching (Tree/People/Timeline live in
      it); the duplicate top-of-header row would just compete for space. */

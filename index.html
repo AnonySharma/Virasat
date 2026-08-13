@@ -110,17 +110,15 @@
         <button class="lang-switch__btn is-active" data-lang="en" type="button" aria-pressed="true" aria-label="English">EN</button>
         <button class="lang-switch__btn" data-lang="hi" type="button" aria-pressed="false" aria-label="हिन्दी">HI</button>
       </div>
-      <button class="btn js-edit-only" id="collect-btn" type="button" title="Collect via Google Form" data-i18n-title="actions.collectVia">
-        <i class="fa-solid fa-clipboard" aria-hidden="true"></i>
-        <span class="btn__label-md" data-i18n="actions.collect">Collect</span>
-      </button>
-      <button class="btn js-edit-only" id="import-btn" type="button" title="Import" data-i18n-title="actions.import">
-        <i class="fa-solid fa-file-import" aria-hidden="true"></i>
-        <span class="btn__label-md" data-i18n="actions.import">Import</span>
-      </button>
-      <button class="btn" id="export-btn" type="button" title="Export" data-i18n-title="actions.export">
-        <i class="fa-solid fa-file-export" aria-hidden="true"></i>
-        <span class="btn__label-md" data-i18n="actions.export">Export</span>
+      <!-- Data menu — folds Collect / Import / Export (three secondary buttons
+           that used to compete with the primary Share for attention) into one
+           overflow. The menu rows handle their own edit-only visibility, so
+           this button shows for everyone: a viewer simply sees Export alone.
+           Opened by app.js, reusing the .kebab-menu popover machinery. -->
+      <button class="btn" id="data-btn" type="button" aria-haspopup="menu" aria-expanded="false" title="Data" data-i18n-title="actions.data">
+        <i class="fa-solid fa-database" aria-hidden="true"></i>
+        <span class="btn__label-md" data-i18n="actions.data">Data</span>
+        <i class="fa-solid fa-chevron-down btn__caret" aria-hidden="true"></i>
       </button>
       <!-- Inviting family is the highest-value action in the multi-user app, so
            Share is the header's primary button. Owner-only; shown by app.js
@@ -152,7 +150,11 @@
 
     <!-- Left rail: filters / tools / stats / legacy CTA -->
     <aside class="app-rail" id="rail">
-      <section class="rail-block">
+      <!-- View switcher. On desktop this duplicates the header tabs (.app-nav),
+           so it's hidden ≥769px via .rail-block--views. It stays visible in the
+           phone slide-in drawer, where .app-nav is display:none and this is the
+           ONLY way to switch views. -->
+      <section class="rail-block rail-block--views">
         <h3 class="rail-heading" data-i18n="rail.overview">Overview</h3>
         <ul class="rail-list" id="rail-views">
           <li><button class="rail-item is-active" data-view="tree" type="button"><i class="fa-solid fa-sitemap"></i><span data-i18n="nav.tree">Tree</span></button></li>
@@ -191,17 +193,26 @@
           <li><button class="rail-item" id="tool-edit" type="button"><i class="fa-regular fa-pen-to-square"></i><span data-i18n="rail.editTree">Manage people</span></button></li>
           <li><button class="rail-item" id="tool-path" type="button"><i class="fa-solid fa-route"></i><span data-i18n="rail.findRelation">Find relation</span></button></li>
           <li><button class="rail-item" id="tool-print" type="button"><i class="fa-solid fa-print"></i><span data-i18n="rail.printBook">Print family book</span></button></li>
+          <!-- Rare, high-consequence actions split below a divider so the
+               everyday tools read first and Reset isn't one slip from Add.
+               Both rows are edit-only, so the divider is too (else a viewer
+               sees a divider with nothing under it). -->
+          <li class="rail-divider js-edit-only" aria-hidden="true"></li>
           <li class="js-edit-only"><button class="rail-item" id="tool-sample" type="button"><i class="fa-solid fa-wand-magic-sparkles"></i><span data-i18n="rail.trySample">Try sample family</span></button></li>
           <li class="js-edit-only"><button class="rail-item rail-item--danger" id="tool-reset" type="button"><i class="fa-solid fa-trash-can"></i><span data-i18n="rail.reset">Reset everything</span></button></li>
         </ul>
       </section>
 
+      <!-- The Tree-view subtitle ("15 members · 4 generations · 12 memories")
+           already carries these numbers prominently, so the rail keeps just a
+           single quiet reference line rather than two competing number tiles.
+           IDs preserved so app.js refreshRail() still populates them. -->
       <section class="rail-block">
-        <h3 class="rail-heading" data-i18n="rail.stats">Tree statistics</h3>
-        <dl class="rail-stats">
-          <div class="rail-stat"><dt data-i18n="rail.members">Members</dt><dd id="stat-members">0</dd></div>
-          <div class="rail-stat"><dt data-i18n="rail.generations">Generations</dt><dd id="stat-generations">0</dd></div>
-        </dl>
+        <p class="rail-statline">
+          <span id="stat-members">0</span> <span data-i18n="rail.members">Members</span>
+          <span class="rail-statline__sep" aria-hidden="true">·</span>
+          <span id="stat-generations">0</span> <span data-i18n="rail.generations">Generations</span>
+        </p>
       </section>
 
       <section class="rail-cta">

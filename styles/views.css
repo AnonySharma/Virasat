@@ -1184,20 +1184,6 @@
   aspect-ratio: 16 / 9;
   border-radius: var(--r-md);
 }
-.crop-frame__hint {
-  position: absolute;
-  bottom: 8px; left: 50%;
-  transform: translateX(-50%);
-  background: rgba(15, 19, 32, 0.78);
-  color: #fff;
-  padding: 4px 10px;
-  border-radius: var(--r-pill);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  pointer-events: none;
-  opacity: 0.85;
-}
-.crop-frame--round .crop-frame__hint { bottom: auto; top: 50%; transform: translate(-50%, -50%); }
 
 /* Per-frame zoom slider — avatar and hero are tuned independently. */
 .crop-frame__zoom {
