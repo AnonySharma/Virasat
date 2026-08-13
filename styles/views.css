@@ -344,6 +344,55 @@
   stroke-dasharray: 4 4;
   opacity: 0.7;
 }
+
+/* Unknown-parent placeholder ("phantom") — a dashed, muted card sitting in
+   the parent row above a child whose father/mother is recorded as actively
+   unknown (adoption, a lost line). Deliberately quiet: dashed ring, "?" glyph,
+   italic label, so it reads as an absence-with-intent, not a real person.
+   These are a pure overlay (no data-person-id) — the tree's filter / highlight
+   / soft-update passes never touch them. */
+.t-phantom-node { pointer-events: none; }
+.t-phantom-photo-bg { fill: var(--bg-elev); }
+.t-phantom-ring {
+  fill: none;
+  stroke: var(--text-3);
+  stroke-width: 2;
+  stroke-dasharray: 4 4;
+  opacity: 0.7;
+}
+.t-phantom-glyph {
+  fill: var(--text-3);
+  font-family: var(--font-display);
+  font-weight: 600;
+  opacity: 0.65;
+}
+.t-phantom-name {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 15px;
+  fill: var(--text-3);
+  letter-spacing: -0.01em;
+}
+@media (max-width: 720px) {
+  .t-phantom-name { font-size: 13px; }
+}
+.t-phantom-edge {
+  fill: none;
+  stroke: var(--text-3);
+  stroke-width: 1.25;
+  stroke-dasharray: 4 4;
+  stroke-linecap: butt;
+  opacity: 0.55;
+}
+/* When a lineage focus dims the tree, dim the phantoms in lockstep so they
+   don't float at full strength over a faded canvas. They carry no lineage
+   membership of their own, so a blanket fade during focus is the right call. */
+.tree-svg:has(.t-node.is-faded) .t-phantom-node,
+.tree-svg:has(.t-edge.is-faded) .t-phantom-edge {
+  opacity: 0.25;
+  transition: opacity var(--t-med);
+}
 /* Wedding-rings emblem (assets/wedding-rings.svg).
    Crisp white outline against the photo rings — chained zero-blur
    drop-shadows in the four cardinal directions stack into a clean
