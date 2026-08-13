@@ -20,11 +20,15 @@
 .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--olive), 0 0 0 5px var(--olive-soft); }
 
 .btn--primary {
-  background: var(--olive); color: var(--bone); border-color: var(--olive);
+  /* Cream label + hover are FIXED (not --bone/--olive-deep): those tokens flip
+     in dark mode (--bone→charcoal, --olive-deep→light mint), which turned this
+     button into dark-on-olive / light-on-light. The olive fill itself is stable
+     across themes, so a fixed cream reads correctly on both. */
+  background: var(--olive); color: var(--on-accent); border-color: var(--olive);
   font-weight: 500;
   box-shadow: var(--shadow-glow-olive);
 }
-.btn--primary:hover { background: var(--olive-deep); border-color: var(--olive-deep); }
+.btn--primary:hover { background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); color: var(--on-accent); }
 
 .btn--gold {
   background: var(--gold); color: #2A1E05; border-color: var(--gold);
@@ -1490,9 +1494,9 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
    themes, exactly like .landing__band. */
 .landing__hero--stage {
   background:
-    radial-gradient(90% 120% at 100% 0%, rgba(184, 154, 90, 0.20) 0%, transparent 50%),
-    radial-gradient(90% 130% at 0% 100%, rgba(94, 125, 99, 0.35) 0%, transparent 55%),
-    linear-gradient(155deg, #24352A 0%, #1C2A22 55%, #2A2620 100%);
+    radial-gradient(90% 120% at 100% 0%, rgba(184, 154, 90, 0.22) 0%, transparent 50%),
+    radial-gradient(90% 130% at 0% 100%, rgba(94, 125, 99, 0.38) 0%, transparent 55%),
+    linear-gradient(155deg, #294036 0%, #1E2E26 55%, #17231D 100%);
   /* Full-bleed: gold hairline only at the base, a soft drop shadow to separate
      the band from the ivory page below, and an inset top highlight. */
   border-bottom-color: rgba(184, 154, 90, 0.35);
@@ -2115,32 +2119,108 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 }
 .landing__cta-band .landing__cta { margin-top: var(--s-2); }
 
-/* ── Dramatic dark bands ────────────────────────────────────────────────────
-   The page alternates warm light sections with bold dark panels (ink-brown and
-   deep-olive) for real contrast rhythm — the biggest departure from the earlier
-   all-ivory look. The band colours are fixed (not token-driven) because they're
-   meant to read as rich, saturated panels on BOTH the light-ivory and the
-   dark-charcoal page backgrounds; the text on them is always cream. A faint
-   gold glow in the top-right corner and gold accents tie them to the palette. */
+/* ── Landing footer + legal pages ───────────────────────────────────────────
+   A quiet closing footer: the About / Privacy / Terms pages (opened as modals
+   lifted above the landing) over the reassurance line. */
+.landing__footer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding-top: var(--s-6);
+  border-top: 1px solid var(--line);
+  margin-top: var(--s-2);
+}
+.landing__foot-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.landing__foot-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-deep);
+  transition: color var(--t-fast), background var(--t-fast);
+}
+.landing__foot-link:hover { color: var(--gold-deep); text-decoration: underline; }
+.landing__foot-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--olive-soft); }
+.landing__foot-dot { color: var(--text-4); font-size: 13px; user-select: none; }
+.landing__foot-note {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-3);
+  margin: 0;
+  text-align: center;
+  max-width: 52ch;
+}
+
+/* Legal / About modal body — comfortable reading measure with heritage type. */
+.legal { max-width: 60ch; }
+.legal__h {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  margin: var(--s-5) 0 var(--s-2);
+}
+.legal__h:first-child { margin-top: 0; }
+.legal__p {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text-2);
+  margin: 0 0 var(--s-3);
+}
+.legal__list {
+  margin: 0 0 var(--s-3);
+  padding-left: var(--s-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+.legal__list li {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+.legal__list li::marker { color: var(--gold-deep); }
+
+/* ── Dramatic bands ─────────────────────────────────────────────────────────
+   The page alternates warm light sections with bold, saturated panels (deep
+   forest "ink" + deep "olive") for a real contrast rhythm. The band colours are
+   theme-aware tokens (see tokens.css --band-*): on the ivory page they read as
+   rich dark plates; on the charcoal page they lift to RAISED panels rather than
+   sinking into it. A gold hairline defines the edge and the text is always
+   cream. A faint gold glow in the top-right corner ties them to the palette. */
 .landing__band {
   position: relative;
   width: 100%;
   padding: var(--s-8) var(--s-7);
   border-radius: var(--r-2xl);
   overflow: hidden;
-  color: #F4EFE3;
+  color: var(--band-text);
+  /* A gold hairline defines the panel edge on both themes — vital in dark mode
+     where the raised fill sits close to the charcoal page. */
+  border: 1px solid var(--band-line);
   box-shadow: var(--shadow-md);
 }
 .landing__band::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(90% 130% at 100% 0%, rgba(184, 154, 90, 0.20), transparent 55%);
+  background: radial-gradient(90% 130% at 100% 0%, rgba(184, 154, 90, 0.22), transparent 55%);
   pointer-events: none;
 }
 .landing__band > * { position: relative; z-index: 1; }
-.landing__band--ink   { background: linear-gradient(158deg, #2A2620 0%, #3A332A 100%); }
-.landing__band--olive { background: linear-gradient(158deg, #33493B 0%, #46634C 100%); }
+.landing__band--ink   { background: linear-gradient(158deg, var(--band-ink-from) 0%, var(--band-ink-to) 100%); }
+.landing__band--olive { background: linear-gradient(158deg, var(--band-olive-from) 0%, var(--band-olive-to) 100%); }
 /* Section title inside a dark band flips to cream (its gold underline already
    reads on dark). */
 .landing__band .landing__section-title { color: #F8F4EC; }

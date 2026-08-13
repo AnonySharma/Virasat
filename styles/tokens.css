@@ -67,6 +67,22 @@
   --deceased:     #8B7F70;
   --deceased-soft:#E5DFD2;
 
+  /* — Landing "dramatic" bands — theme-aware so a rich dark panel keeps real
+     contrast on BOTH the ivory (light) and charcoal (dark) page. Green/olive
+     family only — no brown (which fought the palette and vanished on dark). A
+     gold hairline defines the edge, especially in dark mode where the fill sits
+     close to the page. Two tones: "ink" (deep forest charcoal) + "olive". */
+  --band-ink-from:   #22332A;
+  --band-ink-to:     #2C4133;
+  --band-olive-from: #33493B;
+  --band-olive-to:   #46634C;
+  --band-line:       rgba(184, 154, 90, 0.30);
+  --band-text:       #F4EFE3;
+  /* Text/hover for a filled accent button — fixed so it survives the dark-mode
+     token flips (--bone→dark, --olive-deep→light mint) that broke .btn--primary. */
+  --on-accent:       #FFFCF5;
+  --accent-fill-hover: #3F5944;
+
   --danger:       #B95844;
   --danger-soft:  #ECD7CB;
 
@@ -172,4 +188,13 @@
     --av-butter:    #4D421B;     --av-butter-ink:   #ECE0AE;
     --av-clay:      #4A3623;     --av-clay-ink:     #DCBFA4;
     --av-mist:      #3A3D43;     --av-mist-ink:     #D9D4CB;
+
+    /* On the charcoal page a band must be a RAISED panel, not another dark void,
+       so lift the fills above the page (#1A1815) and strengthen the gold edge. */
+    --band-ink-from:   #2A3B31;
+    --band-ink-to:     #354D3D;
+    --band-olive-from: #38513F;
+    --band-olive-to:   #4B6A52;
+    --band-line:       rgba(184, 154, 90, 0.42);
+    --accent-fill-hover: #6E9173;
 }
