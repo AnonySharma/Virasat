@@ -363,17 +363,72 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .rail-more-filters__badge { flex: 0 0 auto; background: var(--olive-soft); color: var(--olive-deep); }
 
 /* Facet modal body — the gender / era / birthplace / occupation / needs groups
-   moved out of the rail. A little more air between groups than the rail had,
-   and a two-column grid on wider screens so long lists don't scroll forever. */
-.filter-modal { display: flex; flex-direction: column; gap: 16px; min-width: min(88vw, 340px); }
-.filter-modal .rail-fgroup { gap: 3px; }
+   moved out of the rail. Each facet is a titled section whose values are
+   wrapping pill-chips (the ecommerce faceted-filter idiom): the count rides
+   INSIDE each chip so it can never be clipped, and chips wrap onto new lines
+   instead of forcing a horizontal scroll. This reads as filters, not a form. */
+.filter-modal { display: flex; flex-direction: column; gap: 18px; min-width: min(88vw, 320px); max-width: 560px; }
 .filter-modal__empty { margin: 8px 2px; color: var(--text-3); font-size: 13px; }
-@media (min-width: 560px) {
-  .filter-modal { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 24px; min-width: 520px; }
-  /* Birthplace / occupation can be tall — let them span both columns so their
-     "Show all" list doesn't wildly unbalance the grid height. */
-  .filter-modal .rail-fgroup { align-content: start; }
+.filter-fgroup { display: flex; flex-direction: column; gap: 9px; }
+.filter-fgroup__title {
+  margin: 0; font-size: 11px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-4);
 }
+.filter-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* A single facet value. Pill shape, label + inline count, toggles active. The
+   count sits inside so it travels with the chip and never overflows a track. */
+.filter-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  max-width: 100%;
+  padding: 6px 12px;
+  border: 1px solid var(--line-2, var(--line));
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+}
+/* On the near-black dark surface the resting --line-2 border nearly vanishes;
+   lift it to a slightly brighter hairline so each chip still reads as a tappable
+   pill rather than floating text. */
+:root[data-theme="dark"] .filter-chip { border-color: var(--line-strong, #4E4C42); background: var(--surface-2); }
+.filter-chip i { font-size: 12px; color: var(--text-3); transition: color var(--t-fast); }
+.filter-chip__label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.filter-chip__count {
+  flex: 0 0 auto;
+  min-width: 18px; padding: 0 6px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--text-3);
+  font-size: 11px; font-weight: 600; line-height: 18px; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.filter-chip:hover { background: var(--surface-2); border-color: var(--line-strong, var(--line-2)); color: var(--text); }
+:root[data-theme="dark"] .filter-chip:hover { background: var(--surface-3); }
+.filter-chip:hover i { color: var(--text-2); }
+.filter-chip:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--olive); }
+.filter-chip.is-active {
+  background: var(--olive-soft); border-color: var(--olive); color: var(--olive-deep);
+}
+.filter-chip.is-active i { color: var(--olive-deep); }
+.filter-chip.is-active .filter-chip__count { background: rgba(255,255,255,.7); color: var(--olive-deep); }
+:root[data-theme="dark"] .filter-chip.is-active .filter-chip__count { color: #3F5944; }
+
+/* "Needs attention" chips carry a warm danger accent so a maintenance facet
+   reads distinctly from a plain value facet. */
+.filter-chip--needs { color: var(--danger); }
+.filter-chip--needs i { color: var(--danger); opacity: .85; }
+.filter-chip--needs:hover { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+.filter-chip--needs:hover i { color: var(--danger); opacity: 1; }
+.filter-chip--needs.is-active { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+.filter-chip--needs.is-active i { color: var(--danger); }
+
+/* "Show all (N)" / "Show less" — a ghost chip that wraps inline with the rest. */
+.filter-chip--more { color: var(--accent); font-weight: 600; border-style: dashed; }
+.filter-chip--more:hover { background: var(--surface-2); border-color: var(--accent); color: var(--accent-deep); }
 
 /* Tree statistics, demoted from two number tiles to one quiet reference line
    (the Tree-view subtitle already shows these prominently). The count spans

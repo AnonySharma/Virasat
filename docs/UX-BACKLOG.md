@@ -538,7 +538,49 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v29`).
+(currently `v31`).
+
+### Batch 13 — filter modal → faceted chips (2026-08-14)
+
+- **The "More filters" modal read as a form, and long-label counts were hidden (user-reported
+  on the Batch 12 build).** The two-column grid of full-width rows overflowed horizontally on
+  long occupation labels ("Documentary cinematographer (assistant)"), pushing the trailing
+  count pill off-track — so the right column's counts were clipped — and the stacked rows read
+  like a form, not a filter. Reworked each facet into **wrapping pill-chips** with the count
+  baked **inside** each chip (the ecommerce faceted-filter idiom): the count travels with the
+  chip so it can never be clipped, chips wrap onto new lines instead of forcing a horizontal
+  scroll, and the pill treatment reads unmistakably as filters. The `filterRow`/`filterGroup`/
+  `filterListFacet` builders gained a `chip` flag so the in-context count logic + "Show all (N)"
+  stay single-source (the toggle becomes a dashed ghost-chip that wraps inline). Active chips
+  take the olive-soft fill; "needs attention" chips carry the danger accent; dark mode lifts the
+  resting border + surface so chips stay legible on the near-black panel. Verified via CDP in
+  both themes: four facet groups render, **zero clipped counts**, no horizontal overflow
+  (`scrollWidth === clientWidth`), and context-aware counts still recompute on pick.
+  `app.js`, `components.css`.
+
+### Batch 12 — filter declutter + relationship-bar shortcuts (2026-08-14)
+
+- **[4cfb592] The faceted rail Filter was too crowded (user-reported on the Batch 11 build).**
+  Fully-expanded Gender + Era + Birthplace + Occupation + Needs-attention made a wall of
+  full-width rows. Kept only the everyday **Status** list (All/Living/Deceased) + "Clear all
+  filters" in the rail; moved the rest behind a compact **"More filters (N)"** button that
+  opens a roomy two-column modal (`UI.openModal`). The button badges the count of active
+  non-status facets (a narrowed-but-collapsed state stays visible); the modal repaints live as
+  picks change, its in-context counts + "Show all (N)" toggles work without closing, and a
+  double-open guard stops stacked backdrops. Also fixed a **latent count-pill bug** this
+  surfaced: the base `.rail-item span { flex: 1 }` was stretching `.rail-count` into a wide bar
+  (equal specificity + source order) — scoped it to `span:not(.rail-count)` so pills hug their
+  number everywhere. Verified via CDP: rail shows Status + button only, modal carries the five
+  facet groups, pill width dropped from ~50% to ~10% of the row, live badge/active-row updates,
+  guard holds at one modal. `app.js`, `i18n.js`, `components.css`.
+- **[4cfb592] Relationship (Compare) bar — wrong "Done" icon + dead body (user-reported, Image #1).**
+  The persisted "A → B · N steps" bar used an ✕ on its Done button (reads as cancel, but it
+  confirms/dismisses) → now a ✓. And the bar body did nothing; clicking it (once a pair is
+  resolved) now reopens **Find a Relation** prefilled with both endpoints — a shortcut to the
+  full step-by-step chain or to swap one end. "Done" stops propagation so it only clears; the
+  bar gets a pointer + hover tint + title only in the clickable (resolved-pair) state. Verified
+  the Done icon is `fa-check` and `PathFinder.open(a,b)` prefills both selects. `tree-view.js`,
+  `i18n.js`, `views.css`.
 
 ### Batch 11 — faceted rail Filter + gender normalization (2026-08-14)
 
