@@ -557,6 +557,17 @@ tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
   both themes: four facet groups render, **zero clipped counts**, no horizontal overflow
   (`scrollWidth === clientWidth`), and context-aware counts still recompute on pick.
   `app.js`, `components.css`.
+- **[#110] Memorial hero was low-contrast in dark mode (user-reported, Image #1).** The
+  in-memoriam tokens (`--deceased` taupe #8B7F70, `--deceased-soft` parchment #E5DFD2) were
+  defined light-only with no dark override, so on the dark inspector the "IN LOVING MEMORY"
+  eyebrow + top rule nearly vanished and the deceased date-range chip painted near-black
+  `--ink-2` text on a bright parchment slab. Added dark-tuned values — a warm sand eyebrow/rule
+  (#BCAF9A) and a translucent warm wash (`rgba(188,175,154,.18)`) that sits *on* the dark
+  surface — plus a new `--deceased-ink` token (#DED6C6 in dark) so `.chip--deceased` stops
+  hardcoding `--ink-2`. Light mode is byte-identical (the new token aliases the old value).
+  Verified via CDP in both themes: dark eyebrow #BCAF9A on #1F1D19 (~7.9:1) and chip text
+  #DED6C6 (~8:1) both clear WCAG AA; light computed colors unchanged. `tokens.css`,
+  `components.css`.
 
 ### Batch 12 — filter declutter + relationship-bar shortcuts (2026-08-14)
 

@@ -66,6 +66,7 @@
   --alive-soft:   var(--olive-soft);
   --deceased:     #8B7F70;
   --deceased-soft:#E5DFD2;
+  --deceased-ink: var(--ink-2);   /* readable text on the --deceased-soft chip */
 
   /* Text/hover for a filled accent button — fixed so it survives the dark-mode
      token flips (--bone→dark, --olive-deep→light mint) that broke .btn--primary. */
@@ -176,6 +177,15 @@
        per-component overrides. */
     --olive-deep:   #C5DBC9;
     --gold-deep:    #E2C684;
+
+    /* In-memoriam palette, re-tuned for dark. The light values (#E5DFD2 wash,
+       #8B7F70 taupe) painted a bright parchment slab + low-contrast text over
+       the dark inspector — the reported memorial-card contrast bug. Flip to a
+       translucent warm wash that sits ON the dark surface and a soft warm sand
+       for the eyebrow + chip text so both read clearly without a light box. */
+    --deceased:     #BCAF9A;
+    --deceased-soft: rgba(188, 175, 154, 0.18);
+    --deceased-ink:  #DED6C6;
 
     --av-peach:     #5C3F2B;     --av-peach-ink:    #F0D4B8;
     --av-sage:      #3F4E33;     --av-sage-ink:     #D2DDC4;

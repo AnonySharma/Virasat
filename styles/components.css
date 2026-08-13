@@ -218,7 +218,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   white-space: nowrap;
 }
 .chip--alive    { background: var(--olive-soft); color: var(--olive-deep); border-color: transparent; }
-.chip--deceased { background: var(--deceased-soft); color: var(--ink-2); border-color: transparent; }
+.chip--deceased { background: var(--deceased-soft); color: var(--deceased-ink); border-color: transparent; }
 .chip--gold     { background: var(--gold-soft); color: var(--gold-deep); border-color: transparent; }
 .chip--muted    { color: var(--text-3); }
 
