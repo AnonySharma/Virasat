@@ -286,6 +286,26 @@
   outline-offset: 2px;
 }
 
+/* Compare (relationship-path) banner (#94) — the path summary ("A → B ·
+   relation · N steps") is far longer than the lineage banner's "Name", so
+   keep it a single-line pill that truncates rather than wrapping into a tall
+   block. The name span carries the long text; clamp + ellipsis it, and let the
+   pill grow only up to a viewport-relative ceiling. */
+.lineage-banner--compare { max-width: min(92vw, 620px); flex-wrap: nowrap; }
+.lineage-banner--compare .lineage-banner__label { white-space: nowrap; flex: 0 0 auto; }
+.lineage-banner--compare .lineage-banner__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;      /* let the flex item shrink below its content width */
+  flex: 0 1 auto;
+}
+.lineage-banner--compare .lineage-banner__reset { flex: 0 0 auto; }
+@media (max-width: 560px) {
+  /* On phones drop the "Relationship" eyebrow so the names + count keep room. */
+  .lineage-banner--compare .lineage-banner__label { display: none; }
+}
+
 .t-node-name {
   font-family: var(--font-display);
   font-weight: 500;
@@ -1614,6 +1634,13 @@
 
 /* (Pet tether retired — pets are now child-edge risers with .t-edge--pet
    styling, drawn as part of drawEdges.) */
+
+/* Compare (relationship-path) armed / active state — olive-filled disc so the
+   route icon reads as "on", matching the rail's active-item accent. Uses the
+   ::before halo (already positioned) as the fill so it sits behind the icon. */
+.tree-controls .btn.is-active { color: var(--olive-deep); }
+.tree-controls .btn.is-active::before { background: var(--olive-soft); }
+.tree-controls .btn.is-active:hover::before { background: var(--olive-soft); }
 
 /* Pets toggle off state */
 .tree-controls .btn.is-off i { opacity: 0.35; }
