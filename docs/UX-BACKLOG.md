@@ -538,7 +538,29 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v31`).
+(currently `v32`).
+
+### Batch 14 — one search bar + search-scope popover (2026-08-14)
+
+- **[#111] Two search bars showed at once on desktop (user-reported, Image #2).** The fixed
+  header search (≥1024 px) and the People view's own in-view searchbar both painted at desktop
+  widths, doubling the control; below 1024 the header search is already retired so only the
+  in-view bar showed. Consolidated to **exactly one search bar at every width** — hide the
+  in-view `.searchbar` at ≥1024 px (header carries search there, works from any view) and keep
+  it as the sole bar below 1024 where the header search is gone. The phone-kebab "Search people"
+  path (which focuses the in-view bar) is unaffected — it only fires at widths where that bar is
+  the visible one.
+- **Search-scope popover (user-requested).** A sliders button on the search bar opens a
+  "Search in" checklist — **Names & notes / Occupations / Places / Stories** — so the query can
+  be narrowed (e.g. names-only, to stop stories flooding results). Defaults to all-on; persisted
+  per session (`virasat.searchScope`); a gold dot rides the button whenever the scope is narrowed.
+  Clearing the last box falls back to names so search never silently matches nothing. **Person-name
+  matches always lead the results** regardless of scope, then other-field matches, then story
+  cards — flipping the old story-first order. The toggle is shared: the in-view bar builds its own,
+  and `PeopleView.mountHeaderScope()` grafts the same one (driving one shared state + popover) into
+  the static header bar. New i18n keys (`people.searchScope*`, EN+HI). Verified via CDP at 1400 px
+  (light+dark) and 390 px: one visible bar each, popover opens with no viewport overflow, toggling
+  persists + lights the dot. `people-view.js`, `app.js`, `components.css`, `i18n.js`.
 
 ### Batch 13 — filter modal → faceted chips (2026-08-14)
 

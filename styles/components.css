@@ -614,6 +614,13 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .searchbar input::placeholder { color: var(--text-3); }
 .searchbar input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
 .searchbar__icon { color: var(--text-3); font-size: 13px; }
+/* One search bar at any width. The header carries search on desktop (≥1024),
+   so the People view's own bar would double it there — hide it. Below 1024 the
+   header search is retired (base.css), so this in-view bar becomes the sole
+   search, and the Add button reclaims the row on its own. */
+@media (min-width: 1024px) {
+  .view-head .searchbar { display: none; }
+}
 .searchbar__clear {
   flex: none; display: inline-flex; align-items: center; justify-content: center;
   width: 22px; height: 22px; padding: 0; margin: 0;
@@ -624,6 +631,47 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 }
 .searchbar__clear[hidden] { display: none; }
 .searchbar__clear:hover { background: var(--olive-soft); color: var(--text); }
+
+/* Scope toggle — the little sliders button that opens the "search in…"
+   checklist. Lives inside both search bars (in-view + header). A dot rides its
+   corner whenever the scope is narrowed (not all fields on), so a collapsed
+   scope is discoverable without opening the menu. */
+.searchbar__scope {
+  position: relative; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; padding: 0; margin: 0 -4px 0 0;
+  border: 0; border-radius: 50%; cursor: pointer;
+  background: transparent; color: var(--text-3);
+  font-size: 12px; line-height: 1;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.searchbar__scope:hover { background: var(--surface-3); color: var(--text); }
+.searchbar__scope[aria-expanded="true"] {
+  background: var(--olive-soft); color: var(--accent-deep);
+}
+.searchbar__scope-dot {
+  position: absolute; top: 2px; right: 2px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent-hi); border: 1.5px solid var(--surface-2);
+}
+.searchbar__scope-dot[hidden] { display: none; }
+
+/* Scope popover — reuses the .kebab-menu shell (fixed, elevated, dismiss on
+   outside-click/Escape); these rules just lay out its checklist rows. */
+.scope-menu { min-width: 220px; padding: 8px; }
+.scope-menu__head {
+  font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-3); padding: 4px 10px 8px;
+}
+.scope-menu__item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: var(--r-sm); cursor: pointer;
+  font-size: 14px; color: var(--text); user-select: none;
+  transition: background var(--t-fast);
+}
+.scope-menu__item:hover { background: var(--surface-2); }
+.scope-menu__cb { flex: none; width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; margin: 0; }
+.scope-menu__icon { flex: none; width: 16px; text-align: center; color: var(--text-3); font-size: 13px; }
 
 .sr-only {
   position: absolute !important; width: 1px; height: 1px;
