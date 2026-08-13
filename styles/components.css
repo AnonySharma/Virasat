@@ -256,7 +256,11 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   text-align: left;
 }
 .rail-item i { width: 16px; font-size: 14px; color: var(--text-3); }
-.rail-item span { flex: 1; }
+/* Only the label span flexes to fill; the count pill must stay hugged to its
+   content (it has its own flex:0 0 auto, but this selector's equal specificity
+   + source order would otherwise let a bare `span` rule stretch it into a wide
+   bar). Excluding .rail-count keeps the pill compact. */
+.rail-item span:not(.rail-count) { flex: 1; }
 .rail-item:hover { background: var(--surface-2); color: var(--text); }
 .rail-item:hover i { color: var(--text-2); }
 .rail-item.is-active { background: var(--olive-soft); color: var(--olive-deep); }
@@ -336,6 +340,40 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .rail-clear-filters i { font-size: 12px; }
 .rail-clear-filters:hover { background: var(--surface-2); }
 .rail-clear-filters:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--olive); }
+
+/* "More filters (N)" — opens the facet modal. A calm bordered row that sits
+   under the Status list; a filled dot/badge appears when non-status facets are
+   active so a narrowed-but-collapsed state is never invisible. */
+.rail-more-filters {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; margin-top: 6px; padding: 8px 12px;
+  border: 1px solid var(--line); background: transparent;
+  border-radius: var(--r-sm);
+  color: var(--text-2); font-size: 13px; font-weight: 500;
+  cursor: pointer; text-align: left;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+}
+.rail-more-filters i { width: 16px; font-size: 13px; color: var(--text-3); }
+.rail-more-filters span { flex: 1; }
+.rail-more-filters:hover { background: var(--surface-2); color: var(--text); border-color: var(--line-strong, var(--line)); }
+.rail-more-filters:hover i { color: var(--text-2); }
+.rail-more-filters:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--olive); }
+.rail-more-filters.has-active { border-color: var(--olive); color: var(--olive-deep); }
+.rail-more-filters.has-active i { color: var(--olive-deep); }
+.rail-more-filters__badge { flex: 0 0 auto; background: var(--olive-soft); color: var(--olive-deep); }
+
+/* Facet modal body — the gender / era / birthplace / occupation / needs groups
+   moved out of the rail. A little more air between groups than the rail had,
+   and a two-column grid on wider screens so long lists don't scroll forever. */
+.filter-modal { display: flex; flex-direction: column; gap: 16px; min-width: min(88vw, 340px); }
+.filter-modal .rail-fgroup { gap: 3px; }
+.filter-modal__empty { margin: 8px 2px; color: var(--text-3); font-size: 13px; }
+@media (min-width: 560px) {
+  .filter-modal { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 24px; min-width: 520px; }
+  /* Birthplace / occupation can be tall — let them span both columns so their
+     "Show all" list doesn't wildly unbalance the grid height. */
+  .filter-modal .rail-fgroup { align-content: start; }
+}
 
 /* Tree statistics, demoted from two number tiles to one quiet reference line
    (the Tree-view subtitle already shows these prominently). The count spans

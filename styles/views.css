@@ -301,6 +301,11 @@
   flex: 0 1 auto;
 }
 .lineage-banner--compare .lineage-banner__reset { flex: 0 0 auto; }
+/* A resolved pair is clickable — it reopens Find a Relation prefilled. Signal
+   it with a pointer + a faint surface tint on hover, but leave the "Done"
+   button's own gold hover to read on top (it stops the click). */
+.lineage-banner--compare.is-clickable { cursor: pointer; }
+.lineage-banner--compare.is-clickable:hover { border-color: rgba(94, 125, 99, 0.4); background: var(--surface-1, #FCFBF8); }
 @media (max-width: 560px) {
   /* On phones drop the "Relationship" eyebrow so the names + count keep room. */
   .lineage-banner--compare .lineage-banner__label { display: none; }
