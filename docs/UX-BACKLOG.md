@@ -450,11 +450,16 @@ mechanical sweep.
   (SVG mock is inline, themed via avatar tokens).
 - **[M] Magic-link is buried last** below the full password form — arguably the lowest-friction
   path for the elder audience should have equal-or-higher weight. (ux-onboarding-2.)
-- **[S] No password-visibility (eye) toggle** on the sign-in password field; the icon-swap idiom
+- ✅ [FIXED f9293a4] **[S] No password-visibility (eye) toggle** on the sign-in password field; the icon-swap idiom
   already exists (`themeBtn`). Standard affordance but a UI choice.
-- **[S] First-run tree-name placeholder hardcodes "Sharma"** (`first-run.js:82`,
+  Added an in-field eye button (`.input-affix`) that flips type password↔text +
+  swaps icon/aria-pressed/aria-label (`auth.showPassword/hidePassword`, EN+HI); tabindex=-1
+  keeps the tab order field→Submit.
+- ✅ [FIXED f9293a4] **[S] First-run tree-name placeholder hardcodes "Sharma"** (`first-run.js:82`,
   `i18n.js:143`) — a single-family-origins artifact now that it's multi-tenant. Neutralize
   ("e.g. Our Family Tree") or derive from the user's name. Copy call.
+  Neutralized to "e.g. Our family tree" / "हमारा परिवार वृक्ष" across the tree + firstRun
+  placeholders (EN+HI) and the first-run.js fallback.
 - **[S] Crop tool is invisible until after upload** — auto-open `CropEditor` right after a fresh
   upload (still cancel-able) instead of requiring the easy-to-miss "Reframe" tap. (usability-newuser.)
 - ✅ [FIXED e68cfba] **[S copy] "Focus descendants" vs "Focus bloodline"** offered with no inline explanation for a
@@ -462,13 +467,18 @@ mechanical sweep.
   Verified the modes are NOT duplicated (bloodline adds an upward ancestor walk); the confusion
   was jargon + roots having no ancestors to light. Relabelled "Focus bloodline" →
   "Focus ancestors & descendants" (EN+HI). Logic unchanged.
-- **[S] Default a new person's name to `Auth.getFirstName()`** when the tree is empty and the
+- ✅ [FIXED f9293a4] **[S] Default a new person's name to `Auth.getFirstName()`** when the tree is empty and the
   draft is unseeded — the user just typed it at sign-up. Small, friendly. (usability-newuser.)
-- **[S maintenance] `profile-view.js` (261 lines) is unreachable dead code** — both call sites are
+  Guarded to the genuinely-empty case (not edit, no seeded name, `getPeople().length===0`) so
+  it can't clobber a later add; no-op in local mode (`getFirstName()` → "").
+- ✅ [FIXED f9293a4] **[S maintenance] `profile-view.js` (261 lines) is unreachable dead code** — both call sites are
   `else if` after an always-mounted `Inspector`; the registry never references it. It also has a
   latent date-formatting bug. Delete, or wire it up as a distinct full-page profile. (ux-forms.)
-- **[S maintenance] Dead `.crop-frame__hint` CSS** (`views.css:1081-1094`) — styled, never
+  Deleted the file (357 LOC as shipped) + its 4 references (index.html, sw.js, smoke.mjs ×2) +
+  the 2 dead call-site branches.
+- ✅ [FIXED c04c72e] **[S maintenance] Dead `.crop-frame__hint` CSS** (`views.css:1081-1094`) — styled, never
   instantiated (same pattern as the deleted `.tree-gen-label`). Wire the hint element or delete.
+  Deleted (the live crop hint is `.crop-editor__hint`, a different class).
 
 ### ⚠ Supabase / SQL / realtime / boot-gate — do NOT action without explicit user direction
 
@@ -527,8 +537,34 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 ## ✅ Shipped
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
-tsc 5.9.3 = 0 errors). **CACHE_VERSION deliberately not yet bumped** — held until
-the rest of the queued cloud work lands.
+tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
+(currently `v27`).
+
+### Batch 10 — user-reported dark-mode + declutter + polish (2026-08-13)
+
+- **[c897eb7] Dark-mode landing was hard on the eyes (user-reported).** Two defects: the jali
+  lattice backdrop rendered as high-contrast noise (bright gold at 0.16/0.22 on near-black read
+  far louder than light mode's olive on ivory — the dark values had been bumped the wrong way),
+  and the hero gradient had been lightened to a flat mid-sage slab lighter than the rest of the
+  dark UI. Calmed the lattice to 0.07/0.10 and deepened the hero to a forest jewel
+  (`#1E3A2E/#162B22/#0E1C16`). Diagnosed + A/B'd live via CDP screenshots; light mode untouched.
+  `components.css`, `tokens.css`.
+- **[c04c72e] Decluttered the busy workspace chrome (user-reported "duplicate options").** ROADMAP
+  §P3.9. Folded Collect/Import/Export into one header "Data ▾" overflow (reusing the `.kebab-menu`
+  popover), leaving Share the lone primary; hid the rail "Overview" view-switcher on desktop (it
+  duplicated the header tabs — kept in the phone drawer where it's the only nav); demoted "Tree
+  statistics" from two number tiles to one quiet line; split the destructive tools (Try sample,
+  Reset everything) below a hairline divider. Also fixed a latent header-overflow bug this
+  surfaced (actions ran ~90px off-screen ~1024–1360px, clipping the new menu) — verified
+  overflow-free 860–1440px via CDP. `index.html`, `base.css`, `components.css`, `app.js`, `i18n.js`.
+  Deferred: folding the All/Living/Deceased Filter into per-view toolbars (a 3-view redesign of
+  the global `window.Filter` API) — tracked separately.
+- **[f9293a4] Approved frontend polish batch + dead-code cleanup.** Four items — see the flipped
+  "Design / product calls" entries above: password reveal (eye) toggle on sign-in; default a new
+  person's name to `Auth.getFirstName()` in an empty tree; deleted the unreachable
+  `profile-view.js` (357 LOC) + its 4 references + 2 dead branches; neutralized the "Sharma"
+  tree-name placeholder → "Our family tree" (EN+HI). `sign-in.js`, `people-view.js`,
+  `timeline-view.js`, `i18n.js`, `first-run.js`, `components.css`, `index.html`, `sw.js`, `smoke.mjs`.
 
 ### Batch 8 — round-2 a11y / wayfinding / data-entry (2026-08-12)
 
