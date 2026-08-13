@@ -1,5 +1,9 @@
 # Virasat — issues
 
+> **This file tracks core-app bugs & tech-debt only.** The live, day-to-day backlog
+> — including all cloud-sync / auth / sharing work — is [`UX-BACKLOG.md`](UX-BACKLOG.md).
+> This file predates the cloud work and intentionally makes no mention of it.
+
 Bugs, regressions, and tech-debt found across four audit rounds plus user-reported issues. **Open items at the top, ranked by impact priority.** Solved items live in [Resolved](#resolved) at the bottom for traceability.
 
 Use the priority tier as the order to work through; within a tier, ordered by impact.
@@ -32,38 +36,24 @@ Use the priority tier as the order to work through; within a tier, ordered by im
 - 🟡 **Crop editor 404-tolerates silently** when `photoUrl` 404s. Drag still applies to a 0×0 broken image. Add an `<img>.onerror` that aborts with a toast.
 - 🟡 **Generation labels clip on 360 px viewports.** Polish.
 - 🟡 **PWA uninstall recovery story.** Browser keeps localStorage + IDB after uninstall on most platforms. Document: "Uninstall removes the icon, not the data. Use Tools → Reset everything before uninstalling for a clean wipe."
-- 🟡 **First-time tooltips for hidden affordances.** Right-click on tree, click on the gold knot, drag in the crop editor — none are visually hinted on first run. One-shot tooltips gated by `localStorage.getItem("virasat.tip.knot")` etc.
+- 🟡 **First-time tooltips for hidden affordances.** The tree long-press menu (phone) and the desktop right-click pan-hint are now covered; what's still unhinted on first run is the **gold-knot click** and the **crop-editor drag**. One-shot tooltips gated by `localStorage.getItem("virasat.tip.knot")` etc.
 - 🟡 **Date-input placeholder doesn't update with precision.** When the user picks "About", the input still says `YYYY-MM-DD`.
-- 🟡 **Heritage date-picker popover overflows narrow modals.** 320 px popover + `left: 0` can push past the right edge on a 375 px screen. JS reposition.
 - 🟡 **Timeline name column truncates Hindi names at 120 px.** Polish — accept truncation, consider line-wrap on `(pointer: coarse)`.
 - 🟡 **Inspector "Add child" success doesn't expand the Family section.** If collapsed, the new child is invisible until the user clicks the section header.
 - 🟡 **Storage.persist() toast may race the toast-root mount.** Defer inside `DOMContentLoaded`.
 - 🟡 **Landscape phone (667×375) is functionally tight.** Inherent constraint; consider a more compact tree layout when `(orientation: landscape) and (max-height: 480px)`.
-- 🟡 **Header search hidden on phones.** Compact search-icon → modal/drawer would restore discoverability.
 
 ---
 
 ## Tech stack & free hosting
 
-**Verdict: stack is right-sized. Stay vanilla, stay on a static host.**
-
-The whole codebase is ~17 k JS lines spread across 26 modules, all attached to `window`. Right at the ceiling before the lack of an explicit dependency graph starts to bite, but it's not biting yet — and the *no-build, just-open-index.html* property is a feature for a 30-year-lifespan family heirloom app.
-
-**Hosting — top pick: stay on GitHub Pages.** Free HTTPS, free custom domain, automatic deploys on push. The 100 GB/month bandwidth cap is unreachable.
-
-**Alternative: Cloudflare Pages.** Same feature set + (a) global edge CDN (faster outside North America), (b) instant PR-preview URLs. 5-min migration if those matter.
-
-**Skip Netlify / Vercel / Firebase Hosting** — same free tier, more setup friction, no advantage here.
-
-**Concrete next steps in ROI order:**
-
-1. **Custom domain** (~10 min, ~$12/yr). `virasat.family` or similar. Trust signal for relatives storing decades of photos.
-2. **JSON-backup-to-private-Gist** (~1 hr). One-time PAT pasted into the app; *Backup to cloud* button POSTs a timestamped JSON to a private Gist. Survives device loss without OAuth.
-3. **Self-host the fonts** (~2 hrs) only if first-offline-boot font flash becomes a complaint. Subset Fraunces / Inter / Noto Serif Devanagari / Font Awesome to woff2 via `glyphhanger`. Adds ~400 KB to the precache, removes two CDN dependencies.
-4. **ES modules** (~4–6 hrs) only when contributors arrive who need IDE autocomplete. `<script type="module">` is zero-config, keeps the no-build promise.
-5. **Vite for dev DX** (~30 min after #4) for hot-reload during dev. Production build stays static.
-
-**Skip cloud-storage OAuth** (Drive / Dropbox). The redirect-URI + `localhost` dance breaks PWAs. JSON export + manual cloud upload is more portable.
+> Superseded by [`ROADMAP.md`](ROADMAP.md) §P3.5, which is the source of truth for the
+> stack and hosting decisions (Supabase + GitHub Pages, since implemented on
+> `feat/cloud-sync`). The earlier survey that lived here — comparing static hosts and
+> weighing a Gist-backup vs. real auth — has been overtaken by that work and removed to
+> avoid two conflicting records. For scale: the app is ~18 k JS lines across 26 `window`
+> modules, still no-build (`just-open-index.html`), which remains a deliberate
+> 30-year-heirloom property.
 
 ---
 
@@ -142,6 +132,8 @@ Fixed items (✅) tagged with the resolving commit hash. Verified-false / closed
 - ✅ **Bare-text dialog buttons across modals.** Sweep covered Cancel / Save / Close / Remove / Forget / Today / Clear and the story-editor footer. (`de8e6be`)
 - ✅ **Full SVG re-render on every store mutation.** Topology-signature gate: when the structural bits (parents / spouses / petOwners / isPet / deathDate / story-count presence / photo presence / marriages keys / view toggles) haven't changed, render() skips layout + DOM rebuild and patches cosmetic bits (name / dates / density-chip number) on existing nodes. (`51d2f8c`)
 - ✅ **People-view search re-renders the entire grid per keystroke.** Debounced 120 ms + person cards cached in `Map<id, {sig, node}>`. Cache reuses DOM when name/date/place/photo are stable; pruned once size > 2× population. (`51d2f8c`)
+- ✅ **Header search hidden on phones.** Resolved with a different shape than the originally-suggested modal/drawer: the phone kebab menu carries a *Search people* row (`app.js` `openKebabMenu`) that routes into the People view's search, so discoverability is restored without a second search surface.
+- ✅ **Heritage date-picker popover overflows narrow modals.** The popover is now `width: min(320px, calc(100vw - 32px))` (`components.css`) and flips above the field via a `.hdp--up` class when there's more room above than below (`heritage-datepicker.js`), so it never pushes past a narrow modal's edge.
 
 ### Tier D — Low
 
@@ -152,4 +144,4 @@ Fixed items (✅) tagged with the resolving commit hash. Verified-false / closed
 
 ---
 
-*Last updated 2026-06-19. Tiers reflect impact priority across all four audit rounds + user-reported issues.*
+*Last updated 2026-08-13. Tiers reflect impact priority across all four audit rounds + user-reported issues.*

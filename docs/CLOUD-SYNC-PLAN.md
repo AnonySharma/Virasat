@@ -1,9 +1,9 @@
 # Cloud Sync — Multi-user platform plan (Supabase + GitHub Pages)
 
-> **Status:** Approved, not yet implemented. This branch (`feat/cloud-sync`) is the
-> tracking point for the work. The pre-migration state is tagged **`pre-cloud-sync`**
-> (`git reset --hard pre-cloud-sync` to return to it). This doc is the source of truth;
-> it refines `ROADMAP.md` §P3.5 against the confirmed product decisions below.
+> **Status:** Implemented — Phases 0-8 shipped on this branch (`feat/cloud-sync`);
+> see the ✅ phase table below for the commit trail. The pre-migration state is tagged
+> **`pre-cloud-sync`** (`git reset --hard pre-cloud-sync` to return to it). This doc is
+> the source of truth; it refines `ROADMAP.md` §P3.5 against the confirmed product decisions below.
 
 ## Context
 
@@ -13,7 +13,7 @@ Virasat today is a single-device, no-login PWA: the entire tree is one JSON blob
 JSON export/import. The goal: (1) **log in** so data follows you across devices with
 **no manual export**, and (2) **share a tree by email** with **view or edit** access.
 
-This adds auth + a cloud backend **without a build step** (the app is 18 ordered classic
+This adds auth + a cloud backend **without a build step** (the app is a stack of ordered classic
 `<script>` IIFEs served as static files — a deliberate "30-year heirloom" property). The
 architecture is unusually ready: reads are synchronous over an in-memory snapshot, all
 writes funnel through one `persist()` hook, and an existing cross-tab reload+conflict seam
@@ -80,30 +80,33 @@ event (reuses the app.js conflict banner verbatim). 60s polling fallback if the 
   scope `clearAll` to the active tree's prefix.
 - Extend the fire-and-forget delete idiom to also `storage.remove()` (best-effort, RLS-guarded).
 
-**SDK loading (no build):** load the **UMD** `@supabase/supabase-js@2.x` from `cdn.jsdelivr.net`
-as a classic `<script>` with SRI (`window.supabase.createClient`). Do **not** convert to
-`type=module` (would defer + reorder all 18 scripts — large, risky, orthogonal). `flowType: 'pkce'`
-so OAuth/magic-link return `?code=` in the query (not `#access_token` in the hash), leaving the
-app's `#tree/#people/#timeline` hash router untouched.
+**SDK loading (no build):** the **UMD** `@supabase/supabase-js@2.x` from `cdn.jsdelivr.net`
+with SRI (`window.supabase.createClient`). As shipped it loads **lazily** (injected only when
+cloud config is populated) rather than as a static `<script>`, so a local-only user fetches zero
+bytes of it — see the Phase 1 deferral note below. We do **not** convert the app's own modules to
+`type=module` (would defer + reorder all classic scripts — large, risky, orthogonal). `flowType:
+'pkce'` so OAuth/magic-link return `?code=` in the query (not `#access_token` in the hash), leaving
+the app's `#tree/#people/#timeline` hash router untouched.
 
 **`sw.js`** (bump `CACHE_VERSION "v11"→"v12"`): add `cdn.jsdelivr.net` to `isCdnHost()` + the
 pinned SDK URL to `CDN_SHELL` (so offline boot has the SDK — this is the real missing piece, not
-a `.supabase.co` branch, which the cross-origin bail at line 120 already covers); add a defensive
-explicit `.supabase.co` early-return; add the 6 new `lib/auth/*.js` files to `SHELL` (atomic
+a `.supabase.co` branch, which the cross-origin bail already covers); add a defensive
+explicit `.supabase.co` early-return; add the 7 `lib/auth/*.js` files to `SHELL` (atomic
 `addAll` — a typo fails install).
 
 ---
 
-## New files (`lib/auth/`, ~1,200 LOC)
-- `config.js` (~10) — `window.VirasatConfig = { supabaseUrl, supabaseAnonKey, bucket }` (anon key
+## New files (`lib/auth/`, ~2,300 LOC across 7 modules)
+- `config.js` — `window.VirasatConfig = { supabaseUrl, supabaseAnonKey, bucket }` (anon key
   is public-safe; RLS is the enforcement point). App's first config object.
-- `auth-store.js` (~250) — creates the client, `Auth.ready()`, sign-in (all 3 methods), sign-out,
-  `onAuthChange`, calls `claim_invites` on every login.
-- `cloud-store.js` (~350) — tree list/create/load, version-guarded push (debounced ~1.5s),
-  Realtime channel + 60s polling fallback, offline dirty-flag + reconnect replay, local→cloud migration.
-- `sign-in.js` (~200) — splash gate, sign-in screen, account/sign-out menu (built on `UI.el`/`openModal`).
-- `tree-list.js` (~200) — tree switcher + create.
-- `sharing.js` (~200) — invite-by-email dialog + member/role list.
+- `auth-store.js` — lazily loads the SDK, creates the client, `Auth.ready()`, sign-in (all 3
+  methods), sign-out, `onAuthChange`, calls `claim_invites` on every login.
+- `cloud-store.js` — tree list/create/load, version-guarded push (debounced ~1.5s),
+  Realtime channel + 60s polling fallback, offline dirty-flag + reconnect replay.
+- `sign-in.js` — splash gate, sign-in screen, account/sign-out menu (built on `UI.el`/`openModal`).
+- `first-run.js` — first-run onboarding path (wired in `index.html` + precached in `sw.js`).
+- `tree-list.js` — tree switcher + create/rename/delete.
+- `sharing.js` — invite-by-email dialog + member/role list.
 
 ## Existing edits (~200 LOC)
 - `lib/core/data-store.js` (~60) — per-tree cache; split `persist()`; add `hydrateFromRemote`/
@@ -445,7 +448,7 @@ else loadedVersion = data.version;
 
 ## Verification (per phase, end-to-end)
 - **Every JS-touching commit:** `node -c <file>` + `node tests/smoke.mjs` (must stay green:
-  "smoke ok — 18 scripts…"; will need +6 for the new files) + `CACHE_VERSION` bump.
+  currently "smoke ok — 26 scripts, 26 globals, 14 UI helpers") + `CACHE_VERSION` bump.
 - **Phase 1 (auth):** sign in via each of the 3 methods in a real browser; confirm gated app +
   session survives reload + PWA relaunch; confirm PKCE leaves the hash router working.
 - **Phase 2 (sync):** edit on device A → appears on device B (or two browser profiles); force a

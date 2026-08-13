@@ -1,6 +1,6 @@
 # Pre-launch privacy audit — user-text rendering
 
-Last verified: 2026-06-19. Re-run before any public launch and after any change to `UI.el` or any view module.
+Last verified: 2026-08-13. Re-run before any public launch and after any change to `UI.el` or any view module.
 
 The convention this codebase follows: **every user-controlled string reaches the DOM via `textContent`, `.value`, or `UI.el(tag, attrs, children)` where `children` is normalised to a TextNode**. There are no string-to-HTML interpolation paths for user data anywhere. This file documents that convention site by site, so a future contributor can grep for any drift.
 
@@ -50,6 +50,9 @@ The previously-present `html: ...` attribute that bypassed this contract by assi
 | `marriage.story`, `marriage.date`, `marriage.place` | user typed | `UI.el("p" / "dd", null, value)` in marriage modal view-mode | TextNode |
 | `meta.familyTitle`, `meta.familyName` | user typed | `UI.el("span", null, title)` in tree view-head | TextNode |
 | Search query (highlighting) | user typed | `UI.el("mark", null, slice)` inside text content — slice is plain string passed as child, never as raw markup | TextNode |
+| Signed-in email | account provider | `.textContent` in account-menu meta (`app.js` `openAccountMenu`) + account-chip `setAttribute("title", …)` (`paintAccountButton`) | TextNode + attr |
+| `tree.title` | user typed | `UI.el("span", { class: "tree-row__name" }, tree.title)` in the tree switcher (`tree-list.js`); share dialog title is a `UI.openModal` text title | TextNode |
+| Member email | invited by owner | `UI.el("span", { class: "share-member__email" }, entry.email)` in the member list (`sharing.js`) | TextNode |
 
 **No user string reaches a string-to-HTML interpolation anywhere in the codebase.** Verified by grep:
 

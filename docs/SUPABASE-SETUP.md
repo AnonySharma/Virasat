@@ -96,8 +96,10 @@ email with view or edit access.
 
 Supabase free projects **pause after ~7 days with no API traffic**; the next
 visitor then eats a multi-second cold start. A tiny GitHub Actions cron that
-pings the REST endpoint every few days prevents it. We'll add
-`.github/workflows/keepalive.yml` once sign-in + sync are verified.
+pings the REST endpoint every few days prevents it. This is already in the
+repo as `.github/workflows/keep-alive.yml` (anon REST read every 3 days); all
+that remains is to add the `SUPABASE_URL` and `SUPABASE_ANON_KEY` repo secrets
+so the scheduled run can authenticate.
 
 ---
 
