@@ -288,6 +288,55 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   background: var(--line); list-style: none;
 }
 
+/* === Faceted filter panel (built by app.js renderFilterPanel) ===
+   An ecommerce-style stack of facet groups (Status / Gender / Era / Birthplace
+   / Occupation / Needs attention). Rows reuse .rail-item + .rail-count, so
+   hover / .is-active / the count pill all come for free; only the group
+   scaffolding + the show-more / clear-all affordances are new here. */
+.rail-filter-panel { display: flex; flex-direction: column; gap: 10px; }
+.rail-fgroup { display: flex; flex-direction: column; gap: 2px; }
+.rail-fgroup__title {
+  margin: 2px 0 2px; padding: 0 12px;
+  font-size: 11px; font-weight: 600;
+  color: var(--text-4);
+}
+/* Filter rows sit a touch tighter than tool rows. Facet values (a birthplace,
+   an occupation) can be long — clamp the label to one line with an ellipsis so
+   it can't wrap and overflow the fixed-height row into its neighbours. The
+   min-width:0 lets the flex child shrink below its content width (without it
+   text-overflow never triggers); the full value stays available via title. */
+.rail-item--filter { height: 34px; font-weight: 500; }
+.rail-item--filter span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* "Show all (N)" / "Show less" toggle under a capped list facet. */
+.rail-showmore {
+  align-self: flex-start;
+  margin: 2px 0 0; padding: 4px 12px;
+  border: 0; background: transparent;
+  color: var(--accent);
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; border-radius: var(--r-sm);
+}
+.rail-showmore:hover { text-decoration: underline; }
+.rail-showmore:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--olive); }
+/* Clear-all, shown at the top of the panel only when something is narrowed. */
+.rail-clear-filters {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 6px 12px;
+  border: 0; background: transparent;
+  color: var(--accent);
+  font-size: 12.5px; font-weight: 600;
+  cursor: pointer; border-radius: var(--r-sm);
+  text-align: left;
+}
+.rail-clear-filters i { font-size: 12px; }
+.rail-clear-filters:hover { background: var(--surface-2); }
+.rail-clear-filters:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--olive); }
+
 /* Tree statistics, demoted from two number tiles to one quiet reference line
    (the Tree-view subtitle already shows these prominently). The count spans
    inherit tabular numerals so single/double-digit values don't jitter. */

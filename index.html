@@ -172,18 +172,14 @@
         </ul>
       </section>
 
+      <!-- Faceted filter panel. Built entirely by app.js renderFilterPanel():
+           Status / Gender / Era / Birthplace / Occupation / Needs attention,
+           each group rendered only when it carries options, with live
+           in-context counts. The single home for narrowing the family — the
+           People grid hides non-matches, Tree & Timeline dim them. -->
       <section class="rail-block">
         <h3 class="rail-heading" data-i18n="rail.filter">Filter</h3>
-        <ul class="rail-list" id="rail-filters">
-          <li><button class="rail-item" data-filter="all" type="button"><i class="fa-solid fa-circle-dot"></i><span data-i18n="rail.all">All</span><span class="rail-count" id="cnt-all">0</span></button></li>
-          <li><button class="rail-item" data-filter="alive" type="button"><i class="fa-solid fa-leaf" style="color: var(--sage)"></i><span data-i18n="rail.living">Living</span><span class="rail-count" id="cnt-alive">0</span></button></li>
-          <li><button class="rail-item" data-filter="deceased" type="button"><i class="fa-regular fa-circle"></i><span data-i18n="rail.deceased">Deceased</span><span class="rail-count" id="cnt-deceased">0</span></button></li>
-        </ul>
-      </section>
-
-      <section class="rail-block" id="rail-maintenance-block" hidden>
-        <h3 class="rail-heading" data-i18n="rail.maintenance">Needs attention</h3>
-        <ul class="rail-list" id="rail-maintenance"></ul>
+        <div id="rail-filter-panel" class="rail-filter-panel"></div>
       </section>
 
       <section class="rail-block">
