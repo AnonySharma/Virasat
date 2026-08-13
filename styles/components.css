@@ -104,6 +104,31 @@
 }
 .textarea { min-height: 92px; resize: vertical; line-height: 1.6; }
 
+/* Trailing in-field control (the sign-in password reveal eye). The wrapper is
+   the positioning context; the input reserves right padding so text never runs
+   under the button, and the button sits inside the field's right edge. */
+.input-affix-wrap { position: relative; display: block; }
+.input--with-affix { padding-right: 44px; }
+.input-affix {
+  position: absolute;
+  top: 50%; right: 6px;
+  transform: translateY(-50%);
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; background: transparent;
+  color: var(--text-3);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: color var(--t-fast), background var(--t-fast);
+}
+.input-affix:hover { color: var(--text); background: var(--surface-2); }
+.input-affix:focus-visible {
+  outline: none;
+  color: var(--text);
+  box-shadow: 0 0 0 2px var(--olive);
+}
+.input-affix[aria-pressed="true"] { color: var(--accent); }
+
 /* Single-select gets a custom chevron — matches heritage feel and clears the
    browser's default arrow which clashed with rounded corners. */
 .select:not([multiple]) {
