@@ -538,7 +538,34 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v27`).
+(currently `v29`).
+
+### Batch 11 — faceted rail Filter + gender normalization (2026-08-14)
+
+- **[b469ffa] Inspector/insights showed "No gender recorded yet." for sample-data people
+  (user-reported).** The whole app compares gender against canonical codes (`"m"/"f"/"o"`),
+  but sample data (and any human-entered import) stored words like `"female"`, so every
+  gender-aware read (inspector "Who they are" row, insights breakdown, relation labels)
+  silently saw a non-code and fell back to "not recorded". Fixed at the durable layer:
+  `normaliseGender()` in `normalizePerson` maps `male/female/other` (+ common synonyms and
+  casing) to codes on every load / add / update / replaceAll / cloud hydrate, so existing
+  data self-heals rather than patching only the sample file. Unit-tested (12 cases).
+  Also unblocked the new Gender facet below. `data-store.js`.
+- **[a569d49] Reworked the rail Filter into a faceted, ecommerce-style panel shared by all
+  three views (user-requested — "add more filters in the sidebar… like on ecommerce sites").**
+  The lone All/Living/Deceased row becomes a stack of facet groups: Status, Gender, Era
+  (birth decade), Birthplace, Occupation, and Needs attention. Each group renders only when
+  it carries options; each row shows a live count computed in the context of the OTHER active
+  facets (the "N remaining if you also pick this" behaviour); long values ellipsise to one
+  line (full text on hover); Birthplace/Occupation cap at 6 behind "Show all (N)". `window.Filter`
+  is now a shared faceted predicate: the People grid **hides** non-matches, while Tree and
+  Timeline **dim** them so the family's shape is never lost. State is a per-dimension object
+  persisted for the session (back-compat with the old bare status string). Folded away People
+  view's duplicate facet bar + missing-field banner and the old `#rail-filters`/`#rail-maintenance`
+  markup. Verified end-to-end via CDP (group structure, in-context counts summing correctly,
+  hide/dim/clear, context-aware Needs-attention counts with click-through parity, long-label
+  truncation, dark mode). `app.js`, `index.html`, `people-view.js`, `tree-view.js`,
+  `timeline-view.js`, `i18n.js`, `components.css`, `views.css`.
 
 ### Batch 10 — user-reported dark-mode + declutter + polish (2026-08-13)
 
@@ -557,8 +584,8 @@ tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
   Reset everything) below a hairline divider. Also fixed a latent header-overflow bug this
   surfaced (actions ran ~90px off-screen ~1024–1360px, clipping the new menu) — verified
   overflow-free 860–1440px via CDP. `index.html`, `base.css`, `components.css`, `app.js`, `i18n.js`.
-  Deferred: folding the All/Living/Deceased Filter into per-view toolbars (a 3-view redesign of
-  the global `window.Filter` API) — tracked separately.
+  Deferred the Filter rework — later superseded: instead of per-view toolbars the user asked to
+  enrich the sidebar into an ecommerce-style faceted panel; shipped in Batch 11 (`a569d49`).
 - **[f9293a4] Approved frontend polish batch + dead-code cleanup.** Four items — see the flipped
   "Design / product calls" entries above: password reveal (eye) toggle on sign-in; default a new
   person's name to `Auth.getFirstName()` in an empty tree; deleted the unreachable
