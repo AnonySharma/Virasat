@@ -1299,13 +1299,16 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   background-size: auto, auto, 60px 60px;
   overflow-y: auto;
 }
-/* On dark surfaces the olive lattice would nearly vanish — lift it to a warm
-   gold so the jali still reads. */
+/* On dark surfaces the olive lattice would nearly vanish, so it's lifted to a
+   warm gold — but a BRIGHT line on a near-black field reads far louder than the
+   light theme's dark line on ivory at the same alpha, so the gold must sit at a
+   much lower opacity than the light olive (not higher) to feel equally quiet.
+   Kept faint so it's a texture behind the copy, never noise the text fights. */
 :root[data-theme="dark"] .signin {
   background-image:
     radial-gradient(120% 120% at 50% -10%, var(--gold-soft) 0%, transparent 55%),
     radial-gradient(60% 55% at 50% 48%, var(--bg) 0%, transparent 70%),
-    url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23B89A5A' stroke-opacity='0.16' stroke-width='1'%3E%3Ccircle cx='0' cy='0' r='28'/%3E%3Ccircle cx='56' cy='0' r='28'/%3E%3Ccircle cx='0' cy='56' r='28'/%3E%3Ccircle cx='56' cy='56' r='28'/%3E%3Ccircle cx='28' cy='28' r='28'/%3E%3Ccircle cx='28' cy='28' r='3.5' fill='%23B89A5A' fill-opacity='0.22' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
+    url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23B89A5A' stroke-opacity='0.07' stroke-width='1'%3E%3Ccircle cx='0' cy='0' r='28'/%3E%3Ccircle cx='56' cy='0' r='28'/%3E%3Ccircle cx='0' cy='56' r='28'/%3E%3Ccircle cx='56' cy='56' r='28'/%3E%3Ccircle cx='28' cy='28' r='28'/%3E%3Ccircle cx='28' cy='28' r='3.5' fill='%23B89A5A' fill-opacity='0.10' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
 }
 .signin__card {
   width: 100%;

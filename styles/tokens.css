@@ -189,10 +189,13 @@
     /* A filled olive button's hover, brightened for the dark page. */
     --accent-fill-hover: #6E9173;
 
-    /* Lift + saturate the hero stage so it reads as a green jewel against the
-       near-black dark page instead of melting into it. Deliberately brighter
-       than the light-mode jewel so the two themes are unmistakably different. */
-    --hero-from: #3C6E58;
-    --hero-mid:  #28513F;
-    --hero-to:   #1C3629;
+    /* Deep forest jewel for the hero stage. It must stay genuinely DARK for a
+       dark theme — an earlier pass lightened it toward mid-sage, which read as a
+       flat, washed-out slab lighter than the rest of the dark UI. These deep
+       greens keep the hero a distinct green stage (the aurora glow + gold sheen
+       carry the depth) while transitioning naturally into the near-black bands
+       below, rather than sitting on the page as a bright rectangle. */
+    --hero-from: #1E3A2E;
+    --hero-mid:  #162B22;
+    --hero-to:   #0E1C16;
 }
