@@ -1489,14 +1489,15 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 /* The hero as a dark heritage "stage": deep forest-green depth with an
    animated aurora glow and drifting golden dust motes (built in sign-in.js,
    styled below). Copy flips to cream. This is the page's focal moment — the
-   one place that leads with atmosphere rather than a light plate. Fixed dark
-   colours (not tokens) so it reads identically on the light and dark app
-   themes, exactly like .landing__band. */
+   one place that leads with atmosphere rather than a light plate. The green is
+   theme-aware via --hero-* tokens: a rich jewel on the light page, lifted and
+   saturated in dark mode so it stays a distinct stage instead of melting into
+   the near-black background. */
 .landing__hero--stage {
   background:
     radial-gradient(90% 120% at 100% 0%, rgba(184, 154, 90, 0.22) 0%, transparent 50%),
     radial-gradient(90% 130% at 0% 100%, rgba(94, 125, 99, 0.38) 0%, transparent 55%),
-    linear-gradient(155deg, #294036 0%, #1E2E26 55%, #17231D 100%);
+    linear-gradient(155deg, var(--hero-from) 0%, var(--hero-mid) 55%, var(--hero-to) 100%);
   /* Full-bleed: gold hairline only at the base, a soft drop shadow to separate
      the band from the ivory page below, and an inset top highlight. */
   border-bottom-color: rgba(184, 154, 90, 0.35);
