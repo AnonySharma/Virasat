@@ -13,7 +13,7 @@ change), **L** = large (broad sweep).
 > `feat/cloud-sync` (batches 1–5, below). **The original backlog is fully
 > cleared.** Everything is collected in **[✅ Shipped](#-shipped)** at the bottom
 > of this file. **CACHE_VERSION** is now bumped once per shipped commit (the earlier
-> hold has been lifted; currently `v47`). A fresh deep UX + usability review is being
+> hold has been lifted; currently `v48`). A fresh deep UX + usability review is being
 > run to surface anything new; net-new findings will be appended under
 > **[Follow-up review](#follow-up-review-2026-08-12)** as they come in.
 
@@ -565,7 +565,26 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v47`).
+(currently `v48`).
+
+### Batch 27 — backfill imported / seeded photos to the cloud bucket (2026-08-14)
+
+- **[M, cloud] Photos on an imported, device-restored, or sample tree never reached the bucket, so
+  they vanished on a second device.** Only `fileToPhotoId` (the pick-a-file Save path) uploads a
+  blob to Storage. But a tree that arrives via `replaceAll(seed)` — first-run Import / "found a tree
+  on this device" / Try-a-sample, plus the mid-session file Import — carries photoIds whose blobs
+  land only in IDB (same-device blobs) or inline as base64 (folded into IDB by `migrateLegacy`).
+  Nothing pushed those to the cloud, so another member's `getUrl` → IDB miss → `downloadPhoto` → 404
+  → initials, permanently. Added `PhotoStore.backfillToCloud()`: it walks the active tree's people +
+  marriage `photoId`s, reads each blob from IDB, and `uploadPhoto`s any that resolve (upsert, so
+  idempotent). Inert off-cloud (`cloudCtx()` null → immediate no-op) and best-effort per photo
+  (`uploadPhoto` never throws). Every `replaceAll`-then-photos path now chains it **after**
+  `migrateLegacy` resolves (so freshly-minted photoIds are included), fire-and-forget so the UX
+  never blocks on N uploads: first-run Import / device-restore / sample (`first-run.js`), mid-session
+  file Import (`export-import.js`), and both Try-a-sample entry points (`app.js`) — the sample inlines
+  its photos as base64, so folding them into IDB + bucket also stops ~450 KB riding inside every cloud
+  push. No SQL change — the `tree-photos` bucket + insert policy already exist. Static battery green.
+  `photo-store.js`, `first-run.js`, `export-import.js`, `app.js`. CACHE_VERSION v47 → v48.
 
 ### Batch 26 — self-service "Leave this tree" for shared-in members (2026-08-14)
 
