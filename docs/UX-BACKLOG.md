@@ -139,11 +139,12 @@ and net-new items from it will be appended here as they report.*
   `components.css`, `i18n.js`. *Remaining: the pip lives in `.app-header__actions`,
   which collapses into the kebab on phone (`base.css:240`), so there's no phone
   affordance yet — see follow-up below.*
-- **[S] Sync pip has no phone surface.** The Batch-6 pip is desktop-only because the
+- ✅ [FIXED — Batch 18] **[S] Sync pip has no phone surface.** The Batch-6 pip is desktop-only because the
   header action row is hidden ≤768px. Phone users (the flaky-connection persona) get
-  no sync cue. Options: a compact dot in the phone header (next to the kebab), or a
-  "will sync when you reconnect" line in the kebab menu. No new backend — reuses
-  `CloudStore.syncState()` + the `virasat:sync-state` event.
+  no sync cue. Shipped a compact coloured dot beside the kebab, painted by the same
+  `refreshSyncPip()` off `CloudStore.syncState()` (label is screen-reader-only; tap toasts
+  the status). No new backend — reuses the `virasat:sync-state` event. `index.html`, `app.js`,
+  `components.css`.
 - **[M] Imported-tree photos aren't backfilled to the cloud bucket.** Surfaced while
   shipping the Batch-6 "found a tree on this device" import (and true of the existing
   file-Import path too): `commit(seed)` runs `replaceAll` + a JSON push, so the tree's
@@ -448,8 +449,10 @@ mechanical sweep.
   Rebuilt into a full intro: hero + decorative SVG family-tree mock, "How it works" 3-step
   band, "What you can capture" icon chips, kept the 3 tiles + footer. No new asset files
   (SVG mock is inline, themed via avatar tokens).
-- **[M] Magic-link is buried last** below the full password form — arguably the lowest-friction
+- ✅ [FIXED — Batch 18] **[M] Magic-link is buried last** below the full password form — arguably the lowest-friction
   path for the elder audience should have equal-or-higher weight. (ux-onboarding-2.)
+  Reworked to email-first / magic-primary: email → "Email me a sign-in link" (primary) →
+  "or use a password" → password → secondary "Sign in". Sign-up flips it back. `sign-in.js`.
 - ✅ [FIXED f9293a4] **[S] No password-visibility (eye) toggle** on the sign-in password field; the icon-swap idiom
   already exists (`themeBtn`). Standard affordance but a UI choice.
   Added an in-field eye button (`.input-affix`) that flips type password↔text +
@@ -460,8 +463,10 @@ mechanical sweep.
   ("e.g. Our Family Tree") or derive from the user's name. Copy call.
   Neutralized to "e.g. Our family tree" / "हमारा परिवार वृक्ष" across the tree + firstRun
   placeholders (EN+HI) and the first-run.js fallback.
-- **[S] Crop tool is invisible until after upload** — auto-open `CropEditor` right after a fresh
+- ✅ [FIXED — Batch 18] **[S] Crop tool is invisible until after upload** — auto-open `CropEditor` right after a fresh
   upload (still cancel-able) instead of requiring the easy-to-miss "Reframe" tap. (usability-newuser.)
+  Shared `openReframe()` now auto-opens (silently) after a fresh upload; dismissing keeps the
+  fit-centred default. `people-view.js`.
 - ✅ [FIXED e68cfba] **[S copy] "Focus descendants" vs "Focus bloodline"** offered with no inline explanation for a
   non-technical audience — add a one-line hint under each, or collapse to one with a sub-choice.
   Verified the modes are NOT duplicated (bloodline adds an upward ancestor walk); the confusion
@@ -538,7 +543,38 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v36`).
+(currently `v37`).
+
+### Batch 18 — magic-link first + auto-crop + phone sync pip (2026-08-14)
+
+- **[#451] Magic-link was buried dead-last, below the full password form.** For the elder
+  audience a one-tap sign-in link is the lowest-friction path, yet it sat at the very bottom
+  as a quiet secondary button. Restructured the sign-in card into an **email-first, passwordless-
+  primary** layout: a shared email field at the top, then **"Email me a sign-in link"** as the
+  primary (olive) CTA, an **"or use a password"** divider, then the password field and a now-
+  secondary "Sign in". Sign-*up* flips it back (it needs a password + first name), so the magic
+  button and its divider hide and "Create account" is primary again. Email stays in the same
+  `<form>` as the password so password managers still associate them. New `auth.orPassword`
+  (EN+HI); the wrong-password recovery hint copy now says the link is "above". Verified via CDP
+  at phone width: magic renders above the password field and is primary in sign-in; in sign-up
+  both the magic button and its divider collapse to `display:none` (the `[hidden]`-vs-`display`
+  cascade trap needed explicit overrides) and "Create account" is primary. `sign-in.js`,
+  `components.css`, `i18n.js`.
+- **[#463] The crop tool was invisible until you found the easy-to-miss "Reframe" tap.** After a
+  fresh photo upload in the person form, the CropEditor now opens automatically so the user lands
+  straight on framing — still fully cancel-able (dismissing keeps the fit-centred default). The
+  reframe logic was extracted into a shared `openReframe()` reused by both the button and the
+  auto-open path; the auto-open passes a `silent` flag so a just-uploaded photo (which always has
+  a URL) never shows the "reframe first" toast. `people-view.js`.
+- **[#142] The sync pip had no phone surface.** The Batch-6 pip (green *Saved* / gold *Saving…* /
+  red *Offline*) lives in `.app-header__actions`, which collapses to `display:none` ≤768px — so
+  phone users (the flaky-connection persona) got no sync cue. Added a compact phone-only twin: a
+  bare coloured dot beside the kebab, painted by the **same** `refreshSyncPip()` off
+  `CloudStore.syncState()` (one source of truth, two surfaces). Its label is screen-reader-only
+  (the colour carries the state) and a tap toasts the plain-language status. No new backend —
+  reuses the existing `virasat:sync-state` event. Verified via CDP at 390px: the phone dot renders
+  (desktop pip's parent stays collapsed), both repaint together synced→offline, and a tap toasts
+  "Offline". `index.html`, `app.js`, `components.css`.
 
 ### Batch 17 — account page: change password + reset (2026-08-14)
 

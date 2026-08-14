@@ -137,6 +137,17 @@
       </span>
     </div>
 
+    <!-- Phone-only sync pip. The desktop pip above lives in .app-header__actions,
+         which collapses to display:none ≤768px, leaving phone users (the
+         flaky-connection persona) with no sync cue. This compact dot sits next
+         to the kebab instead; app.js paints it from the SAME refreshSyncPip()
+         off CloudStore.syncState(). The label is screen-reader-only (the dot
+         carries the colour); tapping it toasts the plain-language status. -->
+    <span class="sync-pip sync-pip--phone" id="sync-pip-phone" role="status" aria-live="polite" hidden>
+      <i class="sync-pip__dot fa-solid fa-circle" aria-hidden="true"></i>
+      <span class="sync-pip__label" id="sync-pip-phone-label"></span>
+    </span>
+
     <!-- Phone-only kebab — opens an overflow menu mirroring the desktop
          action row. Hidden on >= 769px; the desktop row handles those. -->
     <button class="btn btn--ghost btn--icon kebab-btn" id="kebab-btn" type="button"

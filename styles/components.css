@@ -1556,6 +1556,19 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   .sync-pip { padding: 4px 6px; }
   .sync-pip__label { display: none; }
 }
+/* Phone pip: a bare coloured dot beside the kebab. The desktop pip lives in
+   .app-header__actions (display:none ≤768px), so this is the phone-only twin —
+   hidden on desktop, shown ≤768px. Its label is always screen-reader-only (the
+   colour carries the state); a tap toasts the full plain-language status. */
+.sync-pip--phone { display: none; padding: 6px; cursor: pointer; }
+.sync-pip--phone .sync-pip__label {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+.sync-pip--phone .sync-pip__dot { font-size: 10px; }
+@media (max-width: 768px) {
+  .sync-pip--phone:not([hidden]) { display: inline-flex; }
+}
 @media (prefers-reduced-motion: reduce) {
   .sync-pip[data-state="pending"] .sync-pip__dot { animation: none; }
 }
@@ -1635,6 +1648,13 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .signin__form { display: flex; flex-direction: column; gap: var(--s-4); }
 .signin__form .btn--block { margin-top: var(--s-1); }
 .signin__provider { height: 42px; }
+/* The magic-link button and the "or use a password" divider are toggled off in
+   sign-up mode via [hidden]. Both set an explicit display (.btn → inline-flex,
+   .signin__divider → flex) that outranks the UA [hidden] rule, so — exactly like
+   .field[hidden] / .signin__error[hidden] above — they need these overrides or
+   they'd stay visible when hidden. */
+.signin__provider[hidden] { display: none; }
+.signin__divider[hidden] { display: none; }
 /* Recovery hint: a wrong password names the magic-link button in the error;
    this briefly pulses it so the eye finds the way out. Toggled for ~2.4s. */
 .signin__provider--hint {
