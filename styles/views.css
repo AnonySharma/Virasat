@@ -1386,6 +1386,11 @@
   transition: background var(--t-fast), border-color var(--t-fast);
 }
 .contact-row:hover { background: var(--bg-elev); border-color: var(--gold); }
+/* Viewer-redacted contact row — a locked placeholder, never interactive. */
+.contact-row--redacted { cursor: default; }
+.contact-row--redacted:hover { background: var(--surface-2); border-color: var(--line); }
+.contact-row--redacted .contact-row__icon { color: var(--text-3); }
+.contact-row__value--redacted { color: var(--text-3); font-style: italic; }
 .contact-row__icon {
   color: var(--gold);
   font-size: 14px; width: 18px;

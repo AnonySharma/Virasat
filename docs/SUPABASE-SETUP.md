@@ -28,7 +28,9 @@ are skipped.
 - **Table Editor** shows `trees`, `tree_members`, `tree_invites`.
 - **Database → Functions** shows `claim_invites`, `is_tree_member`,
   `can_edit_tree`, `is_tree_owner`, `invite_to_tree`, `revoke_access`,
-  `leave_tree`.
+  `leave_tree`, and the redaction helpers `redact_contact`, `redact_person`,
+  `get_tree` (the last three are defined but not yet called by the app — a
+  staged fast-follow; creating them now is inert).
 - **Storage** shows a **`tree-photos`** bucket marked **Private**.
 
 ---

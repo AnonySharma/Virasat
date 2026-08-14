@@ -185,6 +185,52 @@ begin
   delete from public.tree_invites i where i.tree_id=p_tree and i.email=auth.email();
 end; $$;
 
+-- — Viewer field redaction (fast-follow; defined now, NOT yet wired) ————————
+-- The app lets an owner mark a person's phone / email / address "private". In
+-- the UI those fields are already hidden from view-only members (inspector.js
+-- renders a locked placeholder). But with whole-blob delivery the RAW data
+-- jsonb still reaches a viewer's client via both the trees_select policy and
+-- the realtime channel, so a determined viewer can read the value in DevTools.
+--
+-- get_tree() is the server-side enforcement: a SECURITY DEFINER RPC that hands
+-- editors the full blob but strips private contact fields for viewers, so the
+-- value never leaves Postgres. It's defined here so the SQL is ready, but it is
+-- deliberately NOT wired client-side yet: closing the leak fully also means
+-- routing the viewer's INITIAL load AND the realtime updates through this RPC
+-- (a raw row must never hit a viewer), which is the realtime/boot-gate rework
+-- the cloud plan scoped as one coherent fast-follow. Defining it now is inert
+-- (nothing calls it) and idempotent.
+create or replace function public.redact_contact(c jsonb) returns jsonb
+  language plpgsql immutable set search_path = public as $$
+begin
+  if c is null then return c; end if;
+  if coalesce((c->>'privatePhone')::boolean, false)   then c := c - 'phone';   end if;
+  if coalesce((c->>'privateEmail')::boolean, false)   then c := c - 'email';   end if;
+  if coalesce((c->>'privateAddress')::boolean, false) then c := c - 'address'; end if;
+  return c;
+end; $$;
+
+create or replace function public.redact_person(p jsonb) returns jsonb
+  language sql immutable set search_path = public as $$
+  select case when p ? 'contact'
+    then jsonb_set(p, '{contact}', public.redact_contact(p->'contact'))
+    else p end; $$;
+
+create or replace function public.get_tree(p_tree uuid) returns jsonb
+  language plpgsql security definer stable set search_path = public as $$
+declare d jsonb; ppl jsonb;
+begin
+  if not public.is_tree_member(p_tree) then raise exception 'not a tree member'; end if;
+  select data into d from public.trees where id = p_tree;
+  if d is null then return null; end if;
+  if public.can_edit_tree(p_tree) then return d; end if;   -- owner/editor: full blob
+  -- viewer: strip private contact fields on every person before returning.
+  -- WITH ORDINALITY + ORDER BY keeps the people array in its original order.
+  select jsonb_agg(public.redact_person(elem) order by ord) into ppl
+    from jsonb_array_elements(coalesce(d->'people', '[]'::jsonb)) with ordinality as t(elem, ord);
+  return jsonb_set(d, '{people}', coalesce(ppl, '[]'::jsonb));
+end; $$;
+
 -- — Private photo bucket (object key = <tree_id>/<photo_id>.jpg) ——————————
 insert into storage.buckets (id,name,public) values ('tree-photos','tree-photos',false)
   on conflict (id) do nothing;

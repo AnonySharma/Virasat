@@ -13,7 +13,7 @@ change), **L** = large (broad sweep).
 > `feat/cloud-sync` (batches 1–5, below). **The original backlog is fully
 > cleared.** Everything is collected in **[✅ Shipped](#-shipped)** at the bottom
 > of this file. **CACHE_VERSION** is now bumped once per shipped commit (the earlier
-> hold has been lifted; currently `v48`). A fresh deep UX + usability review is being
+> hold has been lifted; currently `v49`). A fresh deep UX + usability review is being
 > run to surface anything new; net-new findings will be appended under
 > **[Follow-up review](#follow-up-review-2026-08-12)** as they come in.
 
@@ -126,16 +126,17 @@ and net-new items from it will be appended here as they report.*
   return; the node-menu hides every mutating item behind a `canEdit` check (Focus
   actions stay for all roles); person-card Edit/Delete carry `.js-edit-only`.
   `people-view.js:467-473,1327-1334,1370-1376`, `tree-view.js:1561-1687`.
-- **[S] The "Private" contact chip hides a field from *exports* but still shows it
-  to in-app viewers — and its scope was implied, not stated.** With whole-blob LWW,
-  viewers receive the full `data` JSONB, so a field marked private is redacted from
-  JSON/PNG/poster exports yet remains visible to every member in the inspector. The
-  chip's i18n leak is ✅ fixed (b574759 — title now reads "Hidden from exports (still
-  visible to people with access)", EN+HI), which makes the export-only scope
-  explicit. *Open product call (not a defect): whether "private" should also redact
-  the value in the in-app inspector for non-owner/non-self viewers — that needs the
-  viewer-redaction RPC the cloud plan deferred as a fast-follow, so it stays a
-  decision, not a fix.* `inspector.js:535-547`.
+- **✅ [FIXED — Batch 28, UI half] The "Private" contact chip hid a field from *exports*
+  but still showed it to in-app viewers.** The open product call ("should private also
+  redact in-app for viewers?") was decided **yes**. `buildContactBlock` now renders a
+  locked placeholder for a private field on a read-only (viewer) tree, and — the part
+  that matters — never emits the value into the DOM or a tappable `tel:`/`mailto:` href.
+  Copy corrected to "Hidden from exports and view-only members (editors still see it)".
+  **Server-side enforcement is the documented fast-follow:** `get_tree()` (+ `redact_person`
+  / `redact_contact`) is now defined in `schema.sql`, but wiring it means routing the
+  viewer's initial load AND realtime updates through it (a raw row must never reach a
+  viewer) — the realtime/boot-gate rework kept as one coherent follow-up. `inspector.js`,
+  `views.css`, `i18n.js`, `schema.sql`.
 - **✅ [FIXED — Batch 6, desktop] No visible offline / syncing indicator.**
   `cloud-store.js` tracked the full sync lifecycle but none of it surfaced. Added a
   derived `CloudStore.syncState()` ("synced" | "pending" | "offline") + a
@@ -554,10 +555,12 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
   `location.search`; a user who declines at Google's consent screen bounces back to a pristine
   landing page with no feedback. Reading the param + a toast needs no backend but is auth-flow
   logic — grouping here for a decision alongside the other auth items. (ux-firstrun.)
-- **[S] "Private" contact fields render in plain view to viewers** (not just via DevTools as the
-  plan implies) — `buildContactBlock` (`inspector.js:520-549`) has no role check. **Corroborates
-  the already-logged inspector-redaction item;** the safe half (relabel / disclose in the Share
-  dialog that viewers see all fields) could ship without the deferred redaction RPC. (usability-collab.)
+- **✅ [FIXED — Batch 28] "Private" contact fields rendered in plain view to viewers.**
+  `buildContactBlock` now has a role check: on a read-only tree it renders private fields as
+  a locked placeholder and never emits the value or a clickable href. Copy relabelled so the
+  scope is explicit; the DevTools-level leak (whole-blob delivery) is closed by the `get_tree()`
+  redaction RPC that's now defined in `schema.sql` and staged for wiring with the realtime rework.
+  (was usability-collab.)
 
 ---
 
@@ -565,7 +568,29 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v48`).
+(currently `v49`).
+
+### Batch 28 — hide "Private" contact fields from view-only members (2026-08-14)
+
+- **[M, cloud/privacy] A field marked "Private" was hidden from exports but shown in full to
+  view-only members in the inspector.** The flag's whole point is "not for everyone", yet a
+  viewer-role member saw the value (and a tappable `tel:`/`mailto:` link) like any editor — the
+  chip even used to read "still visible to people with access". Decided the open product call
+  **yes**: `buildContactBlock` now checks `FamilyStore.isReadOnly()` and, for a private field on
+  a read-only tree, renders a **locked placeholder** ("Hidden by the owner") instead — the real
+  value never enters the DOM and there's no clickable href, so it can't leak through the rendered
+  page or a long-press. Editors and the owner are unaffected (they legitimately edit the field).
+  Copy corrected across `contactHint` / `privateHint` / `privateExportOnly` (EN+HI) to state the
+  real scope: "Hidden from exports and view-only members (editors still see it)". **Server-side
+  enforcement is the staged fast-follow:** with whole-blob LWW the raw `data` JSONB still reaches a
+  viewer's client (initial load + realtime), so a determined viewer could read it in DevTools. The
+  `get_tree()` RPC (+ `redact_person` / `redact_contact`) that strips private fields for viewers is
+  now **defined** in `schema.sql`, but deliberately **not wired** — closing the leak fully means
+  routing the viewer's initial load AND every realtime update through it (a raw row must never hit a
+  viewer), which is the realtime/boot-gate rework kept as one coherent follow-up. Defining it now is
+  inert + idempotent (added to the setup runbook's verify list). Static battery green.
+  `inspector.js`, `views.css`, `i18n.js`, `supabase/schema.sql`, `docs/SUPABASE-SETUP.md`.
+  CACHE_VERSION v48 → v49.
 
 ### Batch 27 — backfill imported / seeded photos to the cloud bucket (2026-08-14)
 
