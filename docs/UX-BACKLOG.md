@@ -398,9 +398,11 @@ mechanical sweep.
 - **[M design] Lineage-focus mode has no representation outside Tree view.** `lineageFocusId`
   is local to `tree-view.js`; switching to People/Timeline silently drops the mental model with
   no banner/cue. Design call (how should other views reflect an active lineage focus?).
-- **[S copy] "Fit view" vs "Reset view" name-collide** (worse in Hindi: "पूरा वृक्ष" vs "पूरा
-  दिखाएँ") though they do different things (viewport reset vs. clear lineage-focus dim). Rename
-  the lineage one ("Clear focus" / "Show everyone"). Copy decision.
+- ✅ [FIXED — Batch 18] **[S copy] "Fit view" vs "Reset view" name-collide** (worse in Hindi:
+  "पूरा वृक्ष" vs "पूरा दिखाएँ") though they do different things (viewport reset vs. clear
+  lineage-focus dim). The lineage-clear affordance was renamed "Clear focus" / "ध्यान हटाएँ"
+  (key `tree.resetView` → `tree.clearFocus`), pairing with the "…पर ध्यान दें" focus menu items
+  and sharing no word with `fitView` in either language. `tree-view.js`, `i18n.js`.
 - **✅ [FIXED e3d8583] People grid shows no "currently open in Inspector" indicator** — Tree
   toggles `is-selected` via `Inspector.getSelected()` but `personCard` (`people-view.js`) had no
   equivalent. Cards now carry `data-person-id`; a new `applySelection()` toggles `.is-selected`
@@ -543,7 +545,7 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v37`).
+(currently `v38`).
 
 ### Batch 18 — magic-link first + auto-crop + phone sync pip (2026-08-14)
 
@@ -575,6 +577,16 @@ tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
   reuses the existing `virasat:sync-state` event. Verified via CDP at 390px: the phone dot renders
   (desktop pip's parent stays collapsed), both repaint together synced→offline, and a tap toasts
   "Offline". `index.html`, `app.js`, `components.css`.
+- **[#401] "Fit view" and "Reset view" name-collided.** The lineage-focus *clear* affordance
+  (banner reset button + the node-menu toggle-off state) and the viewport-*fit* toolbar button
+  both read as "reset the view" in English, and in Hindi both literally began with "पूरा"
+  ("पूरा वृक्ष" vs "पूरा दिखाएँ") — indistinguishable. The clear affordance was the mislabelled
+  one (it drops the lineage dim, it doesn't move the viewport), so its key `tree.resetView` was
+  renamed `tree.clearFocus` with copy that pairs with the "Focus …" menu items it toggles against
+  and shares no word with `fitView`: **"Clear focus" / "ध्यान हटाएँ"**. The unrelated internal
+  `resetView()` function (the fit handler, labelled `fitView`) is untouched. Verified via CDP on a
+  fresh (SW/cache-nuked) load: `clearFocus` resolves in EN+HI, `fitView` is unchanged, and the old
+  `tree.resetView` key is fully retired (no dangling references). `tree-view.js`, `i18n.js`.
 
 ### Batch 17 — account page: change password + reset (2026-08-14)
 
