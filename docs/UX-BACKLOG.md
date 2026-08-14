@@ -538,7 +538,22 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v34`).
+(currently `v35`).
+
+### Batch 16 — "How this app works" help guide (2026-08-14)
+
+- **[#114] There was no in-app guide to what the app does or how to use each feature.** A new
+  `HelpGuide` module (`lib/features/help-guide.js`) opens a single scrollable modal that lists every
+  feature grouped by intent — Getting around (Tree/People/Timeline/Insights), Building your tree
+  (add/manage/photos/stories), Finding people (search/filter/find-relation), Sharing & keeping safe
+  (print/backup/collect), Your account & cloud, and Handy-to-know (language/theme/offline) — each row
+  a feature name + a one-line how-to. Reached from a new **How this app works** row in the rail Tools
+  list and the phone kebab (always visible — viewers benefit too). The account/cloud section only
+  renders in a live signed-in session, so a single-device user isn't shown features they don't have.
+  All copy is data-driven and fully bilingual (new `help.*` namespace + `rail.help`, EN+HI). Verified
+  via CDP: opens in light+dark and EN+HI with no untranslated-key leak and no overflow (5 sections
+  offline, 6 when signed in). `help-guide.js`, `app.js`, `index.html`, `i18n.js`, `components.css`,
+  `sw.js`, `smoke.mjs`, `window-globals.d.ts`.
 
 ### Batch 15 — native Ctrl+P prints the family book (2026-08-14)
 

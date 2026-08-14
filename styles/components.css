@@ -435,6 +435,40 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .filter-chip--more { color: var(--accent); font-weight: 600; border-style: dashed; }
 .filter-chip--more:hover { background: var(--surface-2); border-color: var(--accent); color: var(--accent-deep); }
 
+/* ===========================================================
+   Help guide — the "How this app works" modal (HelpGuide.open).
+   A single scrollable sheet of grouped feature → how-to rows.
+   =========================================================== */
+.help-guide {
+  display: flex; flex-direction: column; gap: 22px;
+  min-width: min(90vw, 340px); max-width: 560px;
+}
+.help-guide__intro {
+  margin: 0; color: var(--text-2); font-size: 14px; line-height: 1.55;
+}
+.help-guide__section { display: flex; flex-direction: column; gap: 12px; }
+.help-guide__heading {
+  display: flex; align-items: center; gap: 9px;
+  margin: 0; font-size: 11px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-4);
+}
+.help-guide__heading-icon { font-size: 12px; color: var(--olive); }
+.help-guide__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.help-guide__item { display: flex; align-items: flex-start; gap: 12px; }
+.help-guide__item-icon {
+  flex: 0 0 auto;
+  width: 30px; height: 30px; margin-top: 1px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--olive-soft); color: var(--olive-deep);
+  font-size: 13px;
+}
+:root[data-theme="dark"] .help-guide__item-icon { background: var(--surface-2); color: var(--olive); }
+.help-guide__item-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.help-guide__term { font-size: 14px; font-weight: 600; color: var(--text); }
+.help-guide__how { font-size: 13px; line-height: 1.5; color: var(--text-3); }
+
 /* Tree statistics, demoted from two number tiles to one quiet reference line
    (the Tree-view subtitle already shows these prominently). The count spans
    inherit tabular numerals so single/double-digit values don't jitter. */

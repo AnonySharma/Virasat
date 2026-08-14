@@ -189,6 +189,7 @@
           <li><button class="rail-item" id="tool-edit" type="button"><i class="fa-regular fa-pen-to-square"></i><span data-i18n="rail.editTree">Manage people</span></button></li>
           <li><button class="rail-item" id="tool-path" type="button"><i class="fa-solid fa-route"></i><span data-i18n="rail.findRelation">Find relation</span></button></li>
           <li><button class="rail-item" id="tool-print" type="button"><i class="fa-solid fa-print"></i><span data-i18n="rail.printBook">Print family book</span></button></li>
+          <li><button class="rail-item" id="tool-help" type="button"><i class="fa-solid fa-circle-question"></i><span data-i18n="rail.help">How this app works</span></button></li>
           <!-- Rare, high-consequence actions split below a divider so the
                everyday tools read first and Reset isn't one slip from Add.
                Both rows are edit-only, so the divider is too (else a viewer
@@ -272,6 +273,7 @@
   <script src="lib/features/export-import.js"></script>
   <script src="lib/features/collect-form.js"></script>
   <script src="lib/features/print-book.js"></script>
+  <script src="lib/features/help-guide.js"></script>
 
   <!-- cloud auth: gated on lib/auth/config.js. This build ships real
        credentials, so the Supabase SDK is loaded lazily by auth-store.js and
