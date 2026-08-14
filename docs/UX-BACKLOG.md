@@ -13,7 +13,7 @@ change), **L** = large (broad sweep).
 > `feat/cloud-sync` (batches 1–5, below). **The original backlog is fully
 > cleared.** Everything is collected in **[✅ Shipped](#-shipped)** at the bottom
 > of this file. **CACHE_VERSION** is now bumped once per shipped commit (the earlier
-> hold has been lifted; currently `v50`). A fresh deep UX + usability review is being
+> hold has been lifted; currently `v63`). A fresh deep UX + usability review is being
 > run to surface anything new; net-new findings will be appended under
 > **[Follow-up review](#follow-up-review-2026-08-12)** as they come in.
 
@@ -568,7 +568,59 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v50`).
+(currently `v63`).
+
+### Batch 30 — discovery-synthesis bug sweep (2026-08-15)
+
+Net-new defects surfaced by a fresh discovery pass (verified absent from the
+lists above). One verified bug per commit; static battery green each time.
+
+- **[High, viz] Insights view ignored the active Filter.** `computeStats()` always ran over
+  the whole tree and `notifyViewsOfFilter()` never repainted Insights, so switching to it with
+  a facet active silently showed whole-tree numbers. It now filters through `Filter.matches`
+  when active, prints a "showing N of M — filter applied" note + a distinct filter-empty state,
+  and `InsightsView.setFilter()` is wired in for live updates. `insights-view.js`, `app.js`,
+  `i18n.js`, `views.css`. New keys `insights.filteredNote/filterEmptyTitle/filterEmptyText`.
+- **[High, onboarding] First-run create had no timeout — a hung network trapped the user.**
+  `commit()` awaited `CloudStore.createTree` with no ceiling; against a paused/cold Supabase
+  any of its round-trips could hang forever, and since `busy` stays true and the sign-out
+  handler bails on `busy`, every control including the escape hatch froze until a manual
+  reload. The awaits now race a rejecting timeout (20s create, 10s best-effort seed flush) that
+  lands in the existing catch (resets `busy`, re-enables buttons) with a distinct "server may
+  be waking up" message. `first-run.js`, `i18n.js`. New key `firstRun.createTimeout`.
+- **[Med, onboarding] No new-version signal.** The SW `skipWaiting()`'d on install, so a fresh
+  deploy activated while the open tab kept running old in-memory JS with no prompt. It now parks
+  in `waiting`; app.js shows a dismissible "new version ready" strip (reusing the cross-tab
+  banner), accepting posts `SKIP_WAITING`, and a `controllerchange` listener reloads once —
+  guarded so the first-install `clients.claim()` doesn't reload a new visitor. Never hot-swaps
+  mid-edit (no keystroke autosave). `sw.js`, `app.js`, `i18n.js`. New key `sync.updateReady`.
+- **[Med, viz] Hash router was read-only.** Boot + `hashchange` READ the view hash but nothing
+  ever WROTE it, so Back/forward did nothing and `#people`/`#timeline` didn't deep-link.
+  `activate()` (the single view-switch choke point) now reflects the view into `location.hash`;
+  boot normalizes an empty/junk hash with `replaceState`. Guarded both ends so each switch
+  renders once. `app.js`.
+- **[Med, cloud] Delete/leave tree never reclaimed local storage.** Both removed the row/
+  membership and repointed the store but left the tree's `familyTree.<treeId>.v1` cache blob
+  and its IndexedDB photo blobs in the browser forever. New `FamilyStore.purgeLocalTree` drops
+  the cache key and frees photos — **reference-counted**: IDB photo keys are flat bare photoIds
+  two local trees can share (same backup imported twice), so a blob is freed only when no
+  surviving cache key (or live state) still references it. Wired into both flows after the
+  network op succeeds, best-effort. Local half only; the cloud row + bucket stay off-limits.
+  `data-store.js`, `cloud-store.js`.
+- **[Low, onboarding] First-run topbar overlapped the card on short viewports.** The centred
+  card grew under the absolutely-positioned topbar on `max-height:640px`; the topbar now drops
+  into normal flow and the column top-aligns so the two stack and scroll. `components.css`.
+- **[Med, onboarding] apple-touch-icon was an SVG iOS ignores.** Home-screen installs got a
+  blurry page screenshot instead of the emblem. Added a real opaque 180×180 PNG (rendered from
+  `icon.svg`, flattened onto the emblem's `#DAE2D5` field so iOS's composite-onto-black +
+  rounded mask is seamless), pointed the link at it, precached it, and added a PNG manifest
+  icon. `index.html`, `manifest.webmanifest`, `sw.js`, `assets/apple-touch-icon.png` (new).
+- Also folded in earlier this session: i18n leaks in the Insights/Timeline/Tree eyebrows +
+  Timeline Born/Died/age labels; HeritageSelect/datepicker `ariaLabel` support wired across the
+  person form + path-finder; JSON/Backup export now scoped to the same lineage set as the PNG
+  (via exposed `ImageExport.buildFocusSet`); a shared-tree import warning; a CropEditor unsaved-
+  changes guard; touch-target sizing on the lang toggle; and inspector hero-name wrapping.
+  CACHE_VERSION v50 → v63.
 
 ### Batch 29 — redesign the printable family book (2026-08-14)
 
