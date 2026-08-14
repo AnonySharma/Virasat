@@ -170,6 +170,21 @@ begin
   end if;
 end; $$;
 
+-- — Self-service leave (owner-independent) ————————————————————————————————
+-- The counterpart to the owner's revoke_access: lets a shared-in member remove
+-- THEMSELVES. Caller-scoped (auth.uid()/auth.email()), so no ownership check —
+-- but an owner is refused (they must delete or transfer the tree, not orphan
+-- it). Also clears any lingering invite row for their email so leaving sticks
+-- (the directory won't show them as pending) until the owner re-invites.
+-- Idempotent: leaving a tree you're not in simply deletes zero rows.
+create or replace function public.leave_tree(p_tree uuid)
+  returns void language plpgsql security definer set search_path = public as $$
+begin
+  if public.is_tree_owner(p_tree) then raise exception 'owner cannot leave own tree'; end if;
+  delete from public.tree_members m where m.tree_id=p_tree and m.user_id=auth.uid();
+  delete from public.tree_invites i where i.tree_id=p_tree and i.email=auth.email();
+end; $$;
+
 -- — Private photo bucket (object key = <tree_id>/<photo_id>.jpg) ——————————
 insert into storage.buckets (id,name,public) values ('tree-photos','tree-photos',false)
   on conflict (id) do nothing;

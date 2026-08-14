@@ -13,7 +13,7 @@ change), **L** = large (broad sweep).
 > `feat/cloud-sync` (batches 1–5, below). **The original backlog is fully
 > cleared.** Everything is collected in **[✅ Shipped](#-shipped)** at the bottom
 > of this file. **CACHE_VERSION** is now bumped once per shipped commit (the earlier
-> hold has been lifted; currently `v46`). A fresh deep UX + usability review is being
+> hold has been lifted; currently `v47`). A fresh deep UX + usability review is being
 > run to surface anything new; net-new findings will be appended under
 > **[Follow-up review](#follow-up-review-2026-08-12)** as they come in.
 
@@ -171,12 +171,19 @@ and net-new items from it will be appended here as they report.*
   realtime tick / poll, or subscribe to `tree_members`. **⚠ Touches Supabase realtime
   wiring — do NOT action without explicit user direction.** `cloud-store.js:140-150,
   85-93,260-268`.
-- **[S] No "leave this tree" for a shared-in member.** A viewer/editor can't remove
-  themselves from someone else's tree — only the owner can revoke (`revoke_access`
-  is owner-checked). A relative who no longer wants access is stuck. Needs a new
-  owner-independent `leave_tree()` SQL RPC + a button in the account/tree UI.
-  **⚠ Requires a new SQL RPC — do NOT action without explicit user direction.**
-  `sharing.js:202-218`, `tree-list.js`.
+- **✅ [FIXED — Batch 26] No "leave this tree" for a shared-in member.** A viewer/editor couldn't
+  remove themselves from someone else's tree — only the owner could revoke (`revoke_access` is
+  owner-checked), so a relative who no longer wanted access was stuck. Added the owner-independent
+  `leave_tree(p_tree)` SECURITY DEFINER RPC (caller-scoped via `auth.uid()`/`auth.email()`; refuses
+  owners; removes the caller's own membership + any lingering invite so leaving sticks) to
+  `supabase/schema.sql`, `CloudStore.leaveTree(id)` (mirrors `deleteTree`'s active-tree repointing —
+  switches to another tree first, or drops to first-run if it was the only one — but calls the RPC,
+  leaving the tree row itself untouched), and a red "Leave" action on every shared-in (non-owned) row
+  in the tree switcher, the counterpart to the owner-only Delete. New `tree.leave/leaveConfirm/left/
+  leaveError` keys (EN+HI). **User authorized the cloud/SQL work.** *The user must re-run
+  `supabase/schema.sql` (idempotent) in the Supabase SQL editor so the RPC exists before the button
+  is used — noted in the setup runbook's verify list.* `supabase/schema.sql`, `cloud-store.js`,
+  `tree-list.js`, `i18n.js`, `docs/SUPABASE-SETUP.md`.
 - **✅ [FIXED — Batch 6] A pending invite couldn't have its link re-copied per-row.**
   Pending rows now carry an owner-only "copy invite link" button (reuses
   `copyLink()` + `appLink()`, with the same `.is-copied` feedback as the global one);
@@ -558,7 +565,23 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v46`).
+(currently `v47`).
+
+### Batch 26 — self-service "Leave this tree" for shared-in members (2026-08-14)
+
+- **[S, cloud] A viewer/editor couldn't leave a tree they were shared into.** Only the owner could
+  revoke access (`revoke_access` is owner-checked), so a relative who no longer wanted a tree in
+  their switcher was stuck with it. Added the owner-independent `leave_tree(p_tree)` SECURITY DEFINER
+  RPC — caller-scoped (`auth.uid()`/`auth.email()`), refuses owners (they must delete or transfer,
+  never orphan a tree), and removes the caller's own membership plus any lingering invite row so
+  leaving sticks until re-invited. `CloudStore.leaveTree(id)` mirrors `deleteTree`'s careful
+  repointing (detach pusher + realtime, switch to another tree first or drop to first-run if it was
+  the only one) but calls the RPC, leaving the tree row itself untouched for everyone else. The tree
+  switcher now shows a red "Leave" action (`fa-right-from-bracket`) on every non-owned row — the
+  counterpart to the owner-only Delete. New `tree.leave/leaveConfirm/left/leaveError` (EN+HI).
+  **Requires re-running the idempotent `supabase/schema.sql`** so the RPC exists (added to the setup
+  runbook's verify list). Static battery green. `supabase/schema.sql`, `cloud-store.js`, `tree-list.js`,
+  `i18n.js`, `docs/SUPABASE-SETUP.md`. CACHE_VERSION v46 → v47.
 
 ### Batch 25 — multi-select within filter facet sections (2026-08-14, user-reported)
 
