@@ -13,7 +13,7 @@ change), **L** = large (broad sweep).
 > `feat/cloud-sync` (batches 1–5, below). **The original backlog is fully
 > cleared.** Everything is collected in **[✅ Shipped](#-shipped)** at the bottom
 > of this file. **CACHE_VERSION** is now bumped once per shipped commit (the earlier
-> hold has been lifted; currently `v45`). A fresh deep UX + usability review is being
+> hold has been lifted; currently `v46`). A fresh deep UX + usability review is being
 > run to surface anything new; net-new findings will be appended under
 > **[Follow-up review](#follow-up-review-2026-08-12)** as they come in.
 
@@ -558,7 +558,23 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v45`).
+(currently `v46`).
+
+### Batch 25 — multi-select within filter facet sections (2026-08-14, user-reported)
+
+- **[user] "Why can't we select multiple filters in one section?"** The rail/modal faceted Filter
+  modelled each dimension as a single scalar (`{gender:"", place:"", occupation:"", era:"", missing:""}`),
+  so picking a second occupation *replaced* the first — every section behaved like a radio group. Now
+  the five data facets (gender / birthplace / occupation / era / needs-attention) are **arrays** with
+  standard faceted-search semantics: **OR within a section, AND across sections** (e.g. "born in Delhi
+  OR Mumbai, AND an engineer"). Status stays a 3-way radio (all/alive/deceased are mutually exclusive).
+  Clicking a chip toggles it in/out of its section's set; the "N" badge counts *active sections*, not
+  values. `Filter.matches/get/isActive/activeCount/set/clear` contract preserved — `get()` now returns
+  a deep clone (no array aliasing) and `set()` still accepts a bare scalar, so the People view's
+  `Filter.set({missing:field})` caller is untouched. sessionStorage back-compat folds both older shapes
+  (bare status string; scalar-per-dimension object) into arrays via `normalizeFilter`. Verified end-to-end
+  against the live app over CDP: OR-within, AND-across, click-toggle select→deselect, scalar back-compat,
+  section-count badge, clone-safety, status-radio, and clear all pass. `app.js`. CACHE_VERSION v45 → v46.
 
 ### Batch 24 — localize the collect-form questionnaire + Hindi CSV headers (2026-08-14)
 
