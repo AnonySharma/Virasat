@@ -1218,10 +1218,13 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
    =========================================================== */
 .print-book-root { display: none; }
 @media print {
-  /* Hide everything else so only the book prints. */
-  body > *:not(.print-book-root) { display: none !important; }
+  /* Only seize the page when a book is actually mounted (body.is-printing,
+     set by PrintBook while a print is in flight). Otherwise — e.g. Ctrl+P on
+     an empty tree, where no book gets built — leave the normal page to print
+     rather than forcing everything hidden = a blank sheet. */
+  body.is-printing > *:not(.print-book-root) { display: none !important; }
   body.is-printing { background: #fff; }
-  .print-book-root { display: block; }
+  body.is-printing .print-book-root { display: block; }
   .print-page {
     page-break-after: always;
     break-after: page;

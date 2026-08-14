@@ -538,7 +538,22 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v33`).
+(currently `v34`).
+
+### Batch 15 — native Ctrl+P prints the family book (2026-08-14)
+
+- **[#113] Ctrl+P / File → Print produced a blank page (only the in-app "Print family book"
+  button worked).** The print stylesheet unconditionally hid everything except `.print-book-root`
+  — but that element was built *only* inside `PrintBook.open()`, so any native print route (Ctrl+P,
+  Cmd+P, File → Print, or a programmatic `window.print()` from elsewhere) hid the whole app and
+  printed an empty sheet. Extracted an idempotent `buildBook()`/`cleanup()` and hooked them to the
+  standard `beforeprint`/`afterprint` events, so **every** print route now yields the identical
+  formatted book (cover + one A4 page per person). `open()` still preloads photos first (it can
+  await; `beforeprint` can't) so cold remote-tree faces aren't blank. The "hide everything" rule is
+  now gated on `body.is-printing`, so Ctrl+P on an empty tree prints the normal page instead of
+  being forced blank. Verified via CDP under emulated print media: native `beforeprint` builds the
+  16-page book (was blank), `afterprint` tears it down, a double `beforeprint` stacks only one copy,
+  an empty tree stays unseized, and no `.print-page` overflows A4. `print-book.js`, `components.css`.
 
 ### Batch 14 — one search bar + search-scope popover + staged filter apply + sign-in chrome (2026-08-14)
 
