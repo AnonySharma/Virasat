@@ -36,7 +36,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Virasat" />
-  <link rel="apple-touch-icon" href="assets/icon.svg" />
+  <!-- iOS ignores an SVG apple-touch-icon and falls back to a blurry page
+       screenshot on the home screen. Point it at a real 180×180 PNG (opaque —
+       iOS composites any alpha onto black and applies its own rounded mask). -->
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
 
   <!-- Anti-FOUC boot guard. Boot is gated on an async Auth.ready() (app.js),
        but the app shell below is static HTML that would otherwise paint on the
