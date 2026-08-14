@@ -807,6 +807,10 @@
   text-align: center;
   line-height: 1.1;
   color: var(--text);
+  /* The inspector is only ~360px (96vw on mobile) with overflow-x:hidden on an
+     ancestor, so a long unbroken name would clip silently. Match the People
+     card name's wrapping. */
+  word-break: break-word;
 }
 .inspector-hero__name-hi { display: block; font-size: 15px; font-weight: 400; color: var(--text-3); margin-top: 2px; letter-spacing: 0; }
 .inspector-hero__role {
@@ -1270,6 +1274,12 @@
      hover-halo (::before) and glyph stay their tuned size — only the hit area
      grows — so the cluster doesn't visually balloon. */
   .tree-controls .btn { min-width: 44px; min-height: 44px; }
+  /* Language toggle — the one interactive control on every pre-app screen
+     (sign-in / first-run / landing), undersized at ~19×33 for a bilingual
+     audience. Grow the hit area to the 44 px minimum; let the pill container
+     grow with it (its base height:32px would otherwise clip the buttons). */
+  .lang-switch { height: auto; }
+  .lang-switch__btn { min-height: 44px; padding-top: 12px; padding-bottom: 12px; }
 }
 
 /* === Story result card (search results in the People view) ===
