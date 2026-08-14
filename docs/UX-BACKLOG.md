@@ -545,7 +545,27 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v38`).
+(currently `v39`).
+
+### Batch 19 — read-aloud voice fix (2026-08-14, user-reported)
+
+- **Read-aloud spoke in a garbled, illegible voice (user-reported).** The inspector's
+  Web Speech narration set only `utterance.lang` (from the UI toggle) and **never selected an
+  explicit voice**, so the engine used the OS default voice for everything. Two failures fell out
+  of that: (1) on a system whose default is a wrong-language or a macOS **novelty** voice (Boing,
+  Bubbles, Zarvox…), even plain English came out sung/robotised — "not legible"; (2) the whole
+  bio was one utterance, but in Hindi UI mode `getField()` falls back to the English field where
+  no translation exists, so a single person's text is routinely **mixed-script** — a Hindi voice
+  was handed Latin text (and vice-versa) → phonetic gibberish. Rewrote narration to build an
+  ordered **queue of script-classified segments**, merge consecutive same-script parts, and
+  sentence-chunk each (≤200 chars, honouring the Hindi danda "।") to dodge Chrome's long-utterance
+  truncation. Each segment is spoken with an **explicitly-selected, real, script-matched voice**
+  (`getVoices()` cached + refreshed on `voiceschanged`; novelty voices filtered; `en-IN`→`en-US`→
+  `en-GB` / `hi-IN` preference; neutral rate & pitch). A run counter cancels a superseded queue so
+  a late `onend` can't resume stale audio. Verified via CDP against a real 199-voice engine (whose
+  default was the en-IN "Rishi"): a mixed English-name / Hindi-bio / English-story record now
+  yields 3 segments voiced Rishi(en-IN) · Lekha(hi-IN) · Rishi(en-IN), each at rate/pitch 1.
+  `inspector.js`.
 
 ### Batch 18 — magic-link first + auto-crop + phone sync pip (2026-08-14)
 
