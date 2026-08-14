@@ -435,9 +435,15 @@ mechanical sweep.
   the child has ≥2 parents.
 - **[M design] No "create new person" from inside a relation picker.** Every parent/spouse must
   pre-exist; entering a branch "as remembered" forces abandoning the current form. Feature/design.
-- **[S design] Removing a spouse / clearing a parent has no confirm and no undo** (unlike
-  `deletePerson`), and the whole-form discard guard doesn't cover a single stray `×`. Design call
-  (confirm vs. undo affordance).
+- ✅ [FIXED — Batch 20] **[S design] Removing a spouse / clearing a parent has no confirm and no
+  undo** (unlike `deletePerson`), and the whole-form discard guard doesn't cover a single stray
+  `×`. Resolved as **confirm** (not undo — `UI.toast` has no action-button affordance, so undo
+  would mean widening the toast API): a non-danger `UI.confirm` now guards the two silent-unlink
+  gestures — the spouse `×` (only when the row holds a *picked* person; an empty row still clears
+  frictionlessly) and clearing a parent to "— None —" (only realId→empty; swapping one parent for
+  another isn't gated, and Cancel restores the prior pick via `setValue`, which doesn't re-fire
+  `onChange`). Copy names the person and states it only unlinks here (they stay in the tree).
+  `people-view.js`, `i18n.js`.
 - **✅ [FIXED a426446] Tab-trap popover exemption references a non-existent class.** `dom.js`
   checked `.hdp__pop` but the real class is `.hdp__popover`. Was a no-op (the popover's buttons
   are in-modal so the fallback scan still found them) — but a latent trap if either popover is
@@ -545,7 +551,23 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v39`).
+(currently `v40`).
+
+### Batch 20 — confirm before unlinking a spouse / parent (2026-08-14)
+
+- **[#436] Removing a spouse or clearing a parent had no confirm and no undo.** Unlike deleting a
+  person, the spouse-row `×` and clearing a parent to "— None —" mutated the draft instantly, and
+  the form's whole-discard guard doesn't catch a single stray click. Chose **confirm** over undo
+  (the toast API carries no action button, so undo would mean widening it — scope creep for a
+  reversible unlink). A non-danger `UI.confirm` now guards both gestures, scoped so it never nags:
+  the spouse `×` confirms only when the row holds a *picked* person (an empty/unpicked row clears
+  silently); the parent dropdown confirms only on a realId→empty transition (swapping one parent
+  for another is a deliberate correction and stays ungated). On Cancel the parent picker reverts
+  with `setValue`, which doesn't re-fire `onChange` (loop-safe). The copy names the person and
+  clarifies it only unlinks them here — they stay in the tree. New `form.unlink*` keys (EN+HI).
+  Verified via CDP across all four paths (spouse cancel/confirm, parent cancel/confirm): cancel
+  keeps the relation and the form open, confirm clears it; the parent revert restores the exact
+  prior pick. `people-view.js`, `i18n.js`.
 
 ### Batch 19 — read-aloud voice fix (2026-08-14, user-reported)
 
