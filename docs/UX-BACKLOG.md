@@ -90,17 +90,23 @@ and net-new items from it will be appended here as they report.*
 
 ### Wayfinding & tree orientation
 
-- **[M design] Generation rows have no on-canvas orientation label.** The dead
-  `.tree-gen-label` CSS has been deleted (it was an HTML overlay pinned to the
-  stage's left edge — it could never have tracked the SVG `viewBox` pan/zoom, so it
-  would have drifted off its rows the moment you panned). A *correct* version is an
-  SVG `<text>` placed in tree coordinates per generation row (`computeLayout()`
-  already buckets by generation, `tree-view.js`), so it pans/zooms with the nodes.
-  Open question that makes this a design call, not a mechanical fix: **what does the
-  label say?** We have no semantic generation names — "Generation 1/2/3" is noise,
-  and the root generation isn't necessarily the eldest. Options: a subtle left-edge
-  "◆" tick per row, or a decade/era hint derived from each row's median birth year.
-  Deferred pending a copy decision.
+- ✅ [FIXED — Batch 21] **[M design] Generation rows have no on-canvas orientation
+  label.** The dead `.tree-gen-label` CSS had been deleted (an HTML overlay pinned to
+  the stage's left edge — it could never have tracked the SVG `viewBox` pan/zoom).
+  Resolved the open copy question in favour of the **decade/era hint** over a bare
+  "◆" tick or "Generation N" (which is noise, and the root row isn't necessarily the
+  eldest): each row now carries an SVG `<text>` in a left-gutter axis labelled by the
+  row's **median birth year floored to a decade** ("1950s"), echoing the title
+  eyebrow's "Established c. NNNN" idiom. Median is outlier-robust; a row with no dated
+  people shows nothing (silence over a meaningless label). Drawn in tree coordinates
+  (new `.tree-eras` layer, painted behind everyone) so it pans/zooms with the nodes;
+  `computeBBox` folds the gutter in so the wider Hindi string never clips, and the
+  PNG/poster export strips it (an on-canvas aid, not part of the artifact). Repainted
+  in the soft-update path too, since birth-year edits don't bust the topology
+  signature. Default-on with a "Show eras" view-options toggle (the popover's four
+  labels, previously hardcoded English, are now i18n'd). New `tree.eraDecade` +
+  `tree.optionsTitle`/`showPets`/`showStoryCount`/`showDates`/`showEras` keys (EN+HI).
+  `tree-view.js`, `image-export.js`, `i18n.js`, `views.css`.
 - **✅ [FIXED — Batch 6] Header/People search now has an explicit clear button.**
   Both search boxes gained a `×` button (hidden until there's text), the native
   WebKit cancel affordance is suppressed to avoid a double ×, and the People one
@@ -551,7 +557,28 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v40`).
+(currently `v41`).
+
+### Batch 21 — generation-row era labels on the tree canvas (2026-08-14)
+
+- **[M design] Generation rows had no on-canvas orientation label.** Resolved the audit's
+  open copy question (bare "◆" tick vs. "Generation N" vs. era hint) in favour of a **decade
+  era hint**: each generation row now carries an SVG `<text>` in a left-gutter axis, labelled
+  by the row's **median birth year floored to a decade** ("1950s"), echoing the header
+  eyebrow's "Established c. NNNN" idiom. "Generation 1/2/3" was rejected as noise (and the
+  root row isn't necessarily the eldest); median is outlier-robust, and a row with no dated
+  people shows nothing rather than a meaningless label. Drawn in tree coordinates (new
+  `.tree-eras` layer behind the nodes) so it pans/zooms with everyone; `computeBBox` folds the
+  gutter in (via `getBBox`) so the wider Hindi string never clips, and the PNG/poster export
+  strips the layer (an on-canvas aid, not part of the saved artifact). Repainted in the
+  soft-update path too, because a birth-year edit doesn't bust the topology signature. Ships
+  default-on behind a new "Show eras" row in the view-options popover — whose four labels were
+  hardcoded English and are now i18n'd. New `tree.eraDecade` + `tree.optionsTitle`/`showPets`/
+  `showStoryCount`/`showDates`/`showEras` keys (EN+HI). Verified via CDP: correct per-row
+  medians `[1930s,1960s,1990s]` (ignoring a dateless child), one label per row in the gutter,
+  the real toggle hides/shows them, Hindi renders "1930 का दशक", and a birth-year soft-edit
+  repaints the row median while preserving node identity (proving the soft path fired).
+  `tree-view.js`, `image-export.js`, `i18n.js`, `views.css`. CACHE_VERSION v40 → v41.
 
 ### Batch 20 — confirm before unlinking a spouse / parent (2026-08-14)
 

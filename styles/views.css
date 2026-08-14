@@ -340,6 +340,21 @@
   text-transform: lowercase;
   letter-spacing: .04em;
 }
+/* Left-gutter era markers — one decade per generation row. A faint vertical
+   axis: display type, low-contrast, tabular numerals, non-interactive so they
+   never intercept a pan/tap. Deliberately dimmer than node dates so they read
+   as background scaffolding, not data. */
+.t-era-label {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  fill: var(--text-4);
+  opacity: .6;
+  letter-spacing: .02em;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  user-select: none;
+}
 /* Parent-child connectors: thin, calm, low-contrast so they read as a
    structural skeleton, not as anything you'd confuse with a marriage line. */
 .t-edge {
