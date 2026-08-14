@@ -440,8 +440,9 @@ mechanical sweep.
   invisible, orphaned link. `commitDraft` now caps at 2 (toasts new `form.parentsFull`, EN+HI, and
   adds without the link) and "Save & add another" drops `__addAsParentOf` from the next seed once
   the child has ≥2 parents.
-- **[M design] No "create new person" from inside a relation picker.** Every parent/spouse must
-  pre-exist; entering a branch "as remembered" forces abandoning the current form. Feature/design.
+- ✅ [FIXED — Batch 23] **[M design] No "create new person" from inside a relation picker.** Every
+  parent/spouse must pre-exist; entering a branch "as remembered" forces abandoning the current
+  form. Feature/design.
 - ✅ [FIXED — Batch 20] **[S design] Removing a spouse / clearing a parent has no confirm and no
   undo** (unlike `deletePerson`), and the whole-form discard guard doesn't cover a single stray
   `×`. Resolved as **confirm** (not undo — `UI.toast` has no action-button affordance, so undo
@@ -558,7 +559,31 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v42`).
+(currently `v43`).
+
+### Batch 23 — create a new person from inside a relation picker (2026-08-14)
+
+- **[M design] No "create new person" from inside a relation picker.** Every parent/spouse had to
+  already exist as a record — so entering a branch "as remembered" (a grandfather you've never
+  added, a spouse from a side you haven't started) forced abandoning the half-filled form,
+  creating that person separately, and coming back. Added an inline **"＋ Add a new person…"**
+  sentinel row pinned to the top of every relation picker (Father, Mother, each spouse row).
+  Choosing it opens a small **stacked** name-only dialog (modals already stack — the crop editor
+  opens the same way) with the new person's **gender pre-inferred from the slot** that asked
+  (Father→male, Mother→female, spouse→the opposite of this record's gender where known), so the
+  common case is one field and Enter. On create the person is persisted immediately (same idiom
+  as "Save & add another"), spliced name-sorted into the picker's candidate list, and selected in
+  the slot — all without disturbing the outer form. The *link* to the record being edited is only
+  written when that form is saved, so cancelling the outer form leaves an unlinked person (findable
+  in People), never a lost one; cancelling the sub-dialog creates nobody and reverts the picker to
+  its prior value (the sentinel is intercepted in each `onChange`, never stored as a value, and the
+  display is reverted up front so it never lingers behind the sub-dialog). New `form.relAddNew` key
+  (EN+HI); the sub-dialog reuses the existing `inspector.addParent`/`addSpouse` titles and
+  `form.name`/`nameRequired` copy. Verified via CDP: the sentinel is present in the pickers; picking
+  it stacks a depth-2 dialog titled "Add parent"; typing a name + Create yields a male person shown
+  in the Father slot; saving the outer form links them as the child's parent; and the cancel path
+  creates nobody while leaving only the outer modal. `people-view.js`, `i18n.js`. CACHE_VERSION
+  v42 → v43.
 
 ### Batch 22 — active lineage-focus surfaces outside the tree (2026-08-14)
 
