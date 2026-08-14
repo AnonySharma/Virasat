@@ -3037,6 +3037,17 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   .onboard-chrome-slot--page { top: var(--s-3); right: var(--s-3); }
   .onboard-chrome-slot--page .theme-toggle { width: 34px; height: 34px; }
 }
+@media (max-height: 640px) {
+  /* Short viewport (landscape phone, small desktop window): the card is taller
+     than the screen, and the flex column centres it — so its top edge slides
+     UP under the absolutely-positioned topbar. Drop the topbar into normal flow
+     (stretched full-width so the greeting-left / sign-out-right spread holds)
+     and top-align the column, so topbar and card stack and the whole screen
+     scrolls (the .signin root already has overflow-y: auto) instead of
+     colliding. No fixed offset — the flow itself keeps them apart. */
+  .firstrun { justify-content: flex-start; gap: var(--s-4); }
+  .firstrun__topbar { position: static; align-self: stretch; }
+}
 
 /* "Back" from the auth card to the landing intro — a quiet ghost link in the
    card's top-left, mirroring the chrome's top-right. Hidden by default; shown
