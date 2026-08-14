@@ -12,8 +12,8 @@ change), **L** = large (broad sweep).
 > **Progress:** every finding from the original 8-agent audit has now shipped on
 > `feat/cloud-sync` (batches 1–5, below). **The original backlog is fully
 > cleared.** Everything is collected in **[✅ Shipped](#-shipped)** at the bottom
-> of this file. **CACHE_VERSION is deliberately not yet bumped** — held until the
-> rest of the queued changes land. A fresh deep UX + usability review is being
+> of this file. **CACHE_VERSION** is now bumped once per shipped commit (the earlier
+> hold has been lifted; currently `v45`). A fresh deep UX + usability review is being
 > run to surface anything new; net-new findings will be appended under
 > **[Follow-up review](#follow-up-review-2026-08-12)** as they come in.
 
@@ -253,10 +253,10 @@ bilingual-first app. All confirmed by direct `grep`/read. This is a mechanical s
 (route literals → `I18n.t`, add EN+HI keys), the same treatment already applied to the
 date picker / PathFinder / person form.
 
-**✅ CLUSTER CLEARED (Batch 7).** Every confirmed leak below is shipped. The one
-remaining sub-item is the collect-form questionnaire *titles* (⚠ PARTIAL) — deferred
-because they double as CSV import headers, so it's a data-contract decision, not a
-mechanical sweep.
+**✅ CLUSTER CLEARED (Batch 7; last sub-item closed in Batch 24).** Every confirmed
+leak below is shipped, including the collect-form questionnaire *titles* — the
+data-contract decision it was waiting on resolved as "localize + Hindi header aliases"
+(see Batch 24).
 
 - **✅ [FIXED 319cb76] Marriage / wedding-details modal — 0 `I18n.t` calls across ~325 lines.**
   `showMarriageModal` (`tree-view.js:1215-1539`): title, empty-state copy, Date/Place/Story
@@ -284,16 +284,15 @@ mechanical sweep.
   `inspector.sec*` so the heirloom export can be worded/styled on its own). *(The photo-`await`
   race the cloud plan flagged for this file was already fixed — `open()` preloads every
   `getUrl` before `window.print()`.)*
-- **⚠ [PARTIAL 19f2461] Collect-via-form questionnaire — English-only.** `collect-form.js`: the
-  two file-local error toasts ("Copy failed" / "Read failed") are now i18n'd (`collect.copyFailed`
-  / `readFailed`). **Deferred:** the 13 `formQuestions()` titles (`:98-115`). They double as the
-  Google-Form question titles **and** the CSV column headers `importCsvText` matches on
-  (`row["birth date"]`, `row["father's name"]`, …, exact-match after `normalizeHeader`).
-  Localizing the titles without expanding the importer's header-alias sets in lockstep would
-  break the CSV round-trip — a data-contract change, **not** a mechanical i18n sweep. Needs a
-  design decision: either (a) keep the machine-facing headers English + add a separate localized
-  *display* label per question, or (b) add HI aliases to every `row[...]` lookup. Logged for the
-  user to decide.
+- **✅ [FIXED — Batch 24] Collect-via-form questionnaire — English-only.** `collect-form.js`: the
+  two file-local error toasts ("Copy failed" / "Read failed") were already i18n'd. The remaining
+  14 `formQuestions()` titles/help — which double as the Google-Form question titles **and** the
+  CSV column headers `importCsvText` matches on — are now localized (`collect.q.*`, EN+HI) via the
+  chosen approach (b): every `row[...]` lookup gained the matching Hindi header alias in lockstep
+  (father/mother/spouse/birth-date/death-date/birth-place/death-place/gender/occupation/about/
+  achievements/education), `NAME_HEADERS` gained the HI name title, and `shortenGender` learned
+  the Hindi gender words (पुरुष/महिला/अन्य), so a form generated in Hindi round-trips while every
+  English header still resolves. Verified both directions with an ephemeral VM harness.
 - **✅ [FIXED 2633348] Inspector date-precision reimplemented in English + hardcoded " yrs".**
   `buildPersonalInfo`'s local `withPrecision()` now routes the c./before/after prefixes through
   the existing `date.circa/before/after` keys (passing the formatted date as `{year}`); the
@@ -559,7 +558,25 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v43`).
+(currently `v45`).
+
+### Batch 24 — localize the collect-form questionnaire + Hindi CSV headers (2026-08-14)
+
+- **[Batch 7 leftover] Collect-via-form questionnaire was English-only.** The 14 `formQuestions()`
+  titles/help lines were the last hardcoded English in the i18n sweep, held back because each title
+  doubles as both a Google-Form question label **and** a CSV column header the importer matches on —
+  localizing them naively would have broken the CSV round-trip. Resolved with the user-chosen
+  approach: **localize titles + add Hindi header aliases.** New `collect.q.*` namespace (EN+HI) drives
+  every title/help via `I18n.t`, so the in-app preview and the copied form JSON are now bilingual. In
+  lockstep, `importCsvText` gained the matching Hindi header alias on every `row[...]` lookup
+  (father/mother/spouse/birth-date/death-date/birth-place/death-place/gender/occupation/about/
+  achievements/education), `NAME_HEADERS` gained the Hindi name-column title, and `shortenGender`
+  learned the Hindi gender words (पुरुष/महिला/अन्य) — so a form generated and filled in Hindi imports
+  cleanly while every existing English header still resolves. `normalizeHeader` already lowercases and
+  collapses whitespace without stripping punctuation, so the Devanagari titles match verbatim. Verified
+  both directions (Hindi-headed CSV and English-headed CSV) with an ephemeral VM harness: headers
+  resolved, gender words parsed, parent linked by Hindi header, titles localized, no English regression.
+  `collect-form.js`, `i18n.js`. CACHE_VERSION v44 → v45.
 
 ### Batch 23 — create a new person from inside a relation picker (2026-08-14)
 
