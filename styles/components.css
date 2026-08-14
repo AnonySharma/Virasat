@@ -14,6 +14,11 @@
 }
 .btn:hover { background: var(--surface-2); border-color: var(--line-2); }
 .btn:active { transform: translateY(1px); }
+/* Disabled (e.g. the filter modal's Clear when nothing is drafted): dim, no
+   hover lift, no pointer. Neutralise the hover rule above too. */
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn:disabled:hover { background: var(--bg-elev); border-color: var(--line); }
+.btn--ghost:disabled:hover { background: transparent; border-color: transparent; }
 /* Focus ring: a solid --olive ring (meets 3:1 non-text contrast on light and
    dark) with the pale --olive-soft demoted to a decorative outer halo. The old
    ring was --olive-soft only, which was near-invisible on the bone background. */
@@ -2760,14 +2765,14 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
    .lang-switch and .theme-toggle component styles verbatim so the affordance is
    identical to the in-app one. */
 .onboard-chrome { display: inline-flex; align-items: center; gap: var(--s-3); }
-/* Landing: pinned top-right of the full-page hero. */
-.onboard-chrome-slot--landing {
-  position: absolute; top: var(--s-4); right: var(--s-5); z-index: 2;
-}
-/* Auth card: pinned to the card's own top-right corner (card is positioned). */
+/* Sign-in chrome: pinned to the PAGE top-right (the .signin root is fixed +
+   full-viewport), so lang + theme sit in the same corner whether the visitor is
+   on the landing intro or has stepped into the auth card. `fixed` keeps it put
+   even as the landing scrolls; z-index clears the card + hero but stays under
+   the legal modals (which raise their own backdrop above .signin). */
 .signin__card { position: relative; }
-.onboard-chrome-slot--card {
-  position: absolute; top: var(--s-4); right: var(--s-4); z-index: 2;
+.onboard-chrome-slot--page {
+  position: fixed; top: var(--s-4); right: var(--s-5); z-index: 3;
 }
 /* First-run already lays its topbar out as a flex row (greeting · chrome ·
    sign-out); the chrome sits in the middle and pushes sign-out to the end. The
@@ -2784,10 +2789,10 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   .firstrun__greeting { display: none; }
 }
 @media (max-width: 480px) {
-  /* On a narrow phone the card chrome would collide with the brand logo; drop
-     it to a slightly smaller, tighter cluster. */
-  .onboard-chrome-slot--card { top: var(--s-3); right: var(--s-3); }
-  .onboard-chrome-slot--card .theme-toggle { width: 34px; height: 34px; }
+  /* Tuck the page chrome tighter into the corner on a narrow phone and shrink
+     the toggle so it never crowds the card brand or the landing hero logo. */
+  .onboard-chrome-slot--page { top: var(--s-3); right: var(--s-3); }
+  .onboard-chrome-slot--page .theme-toggle { width: 34px; height: 34px; }
 }
 
 /* "Back" from the auth card to the landing intro — a quiet ghost link in the

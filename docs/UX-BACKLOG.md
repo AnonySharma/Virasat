@@ -538,9 +538,28 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v32`).
+(currently `v33`).
 
-### Batch 14 — one search bar + search-scope popover (2026-08-14)
+### Batch 14 — one search bar + search-scope popover + staged filter apply + sign-in chrome (2026-08-14)
+
+- **[#118] The filter modal applied live, mid-edit, with no way to back out (user-reported).**
+  Every chip click mutated the global `filterState` immediately and repainted the views — but the
+  modal covers the grid, so the change was invisible until you closed, and the "Done" button
+  implied a commit step that didn't exist (closing without "applying" still kept every click).
+  Switched to **staged apply**: the modal edits an in-memory draft (seeded from the committed
+  facets, Status excluded — it stays a rail concern), the views underneath stay frozen, and the
+  footer is now **Clear · Cancel · Apply (N)**. Apply commits the draft in one shot; Cancel,
+  Escape, the backdrop, and the ✕ all **discard**. Clear resets the draft only (still undoable via
+  Cancel until you Apply) and disables itself when nothing is drafted; Apply carries a live count
+  of pending facets. The shared count/match/chip builders (`filterMatchesExcept`, `filterCountFor`,
+  `pruneFilterState`, `filterRow`, `filterListFacet`) gained an optional `state`/`dispatch` so the
+  rail keeps reading the committed filter while the modal drives the draft — one code path, two
+  states. New i18n (`rail.applyFilters`, `rail.applyFiltersN`) + a generic `.btn:disabled` style.
+  Verified via CDP (light+dark): a drafted chip leaves `Filter.get()` and the rail badge unchanged,
+  Escape discards, Apply commits + notifies the views, and Clear resets the draft without touching
+  the live filter. `app.js`, `i18n.js`, `components.css`.
+
+
 
 - **[#111] Two search bars showed at once on desktop (user-reported, Image #2).** The fixed
   header search (≥1024 px) and the People view's own in-view searchbar both painted at desktop
@@ -561,6 +580,15 @@ tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
   the static header bar. New i18n keys (`people.searchScope*`, EN+HI). Verified via CDP at 1400 px
   (light+dark) and 390 px: one visible bar each, popover opens with no viewport overflow, toggling
   persists + lights the dot. `people-view.js`, `app.js`, `components.css`, `i18n.js`.
+- **[#119] Sign-in theme/lang switcher was pinned to the card, not the page (user-requested).**
+  On the sign-in screen the theme toggle + EN/HI switch lived inside the auth card and jumped
+  between the marketing hero's corner and the card's corner as the user moved between the landing
+  and the auth step — two separate chrome instances swapping in and out. Consolidated to **one
+  page-level chrome slot** (`.onboard-chrome-slot--page`) pinned to the viewport's top-right corner
+  (`position: fixed`), present in both landing and auth-card modes, so the control never moves. On
+  phones it sits in the jali-background band above the card, clear of the "Back" link and brand
+  logo. `sign-in.js`, `components.css`. Verified via CDP (1400 px light+dark: one instance, top-right
+  corner, clears the card; 390 px: sits above the card without collision).
 
 ### Batch 13 — filter modal → faceted chips (2026-08-14)
 
