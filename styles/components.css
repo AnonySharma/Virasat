@@ -1450,6 +1450,25 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .viewer-banner__icon { flex-shrink: 0; opacity: .8; }
 .viewer-banner__msg { flex: 1; min-width: 0; }
 
+/* Cross-view lineage-focus cue. Shown at the top of .app-main on People /
+   Timeline while a sticky tree focus is active, so the "tracing X's line" lens
+   doesn't silently vanish off the tree. Tinted with the same accent the tree
+   uses for the in-stage "Viewing as" banner so the two read as one state. */
+.lineage-cue {
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+  padding: 8px 16px;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.lineage-cue__icon { flex-shrink: 0; opacity: .85; }
+.lineage-cue__msg { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lineage-cue__name { font-weight: 600; }
+/* The two action buttons hug the right edge; keep them from shrinking away. */
+.lineage-cue .btn { flex: 0 0 auto; }
+
 /* === Kebab overflow menu (phone-only header) ===
    Triggered by the .kebab-btn that's hidden ≥ 769 px. Anchored under
    the kebab; flush-right of the viewport. Same heritage tone as

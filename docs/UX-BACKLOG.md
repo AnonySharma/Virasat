@@ -401,9 +401,10 @@ mechanical sweep.
   `PeopleView.reset()` existed. Added `reset()` (clears `searchTerm`/`filterMode`/`missingFilter`
   + the input + card cache, no render) and call it in `switchTo` **before** `switchTree()` so the
   hydrate's `notifyAll`→render paints once with cleared filters.
-- **[M design] Lineage-focus mode has no representation outside Tree view.** `lineageFocusId`
-  is local to `tree-view.js`; switching to People/Timeline silently drops the mental model with
-  no banner/cue. Design call (how should other views reflect an active lineage focus?).
+- ✅ [FIXED — Batch 22] **[M design] Lineage-focus mode has no representation outside Tree view.**
+  `lineageFocusId` is local to `tree-view.js`; switching to People/Timeline silently drops the
+  mental model with no banner/cue. Design call (how should other views reflect an active lineage
+  focus?).
 - ✅ [FIXED — Batch 18] **[S copy] "Fit view" vs "Reset view" name-collide** (worse in Hindi:
   "पूरा वृक्ष" vs "पूरा दिखाएँ") though they do different things (viewport reset vs. clear
   lineage-focus dim). The lineage-clear affordance was renamed "Clear focus" / "ध्यान हटाएँ"
@@ -557,7 +558,31 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v41`).
+(currently `v42`).
+
+### Batch 22 — active lineage-focus surfaces outside the tree (2026-08-14)
+
+- **[M design] Lineage-focus mode had no representation outside Tree view.** Setting "Focus
+  descendants" / "Focus this lineage" dims the tree to one bloodline, but switching to
+  People or Timeline silently dropped that mental model — the grid/timeline showed everyone
+  with no hint a focus was even active, and the only way back to clearing it was to return to
+  the tree. Resolved the audit's open design question (how should other views reflect an
+  active focus?) with a **dismissible cross-view cue**: a slim accent banner atop `.app-main`,
+  shown **only off the tree** (the tree has its own in-stage lineage banner, so a second cue
+  there would be redundant), naming the focus person and carrying two actions — "View in tree"
+  (jumps back and reveals them) and "Clear focus" (drops the dim from anywhere). Wired through
+  a new `virasat:lineage-focus` event matching the existing decoupled-event idiom
+  (`virasat:reveal-in-tree` / `virasat:sync-state`), so `tree-view.js` stays the single owner
+  of `lineageFocusId` and `app.js` only listens. Emission is deduped (no repaint when the id
+  is unchanged) and only **sticky** focus is exported — a transient node tap that merely
+  highlights a path never raises the cue. `tree-view.js` gains `getLineageFocus`/
+  `clearLineageFocus` and the event; `app.js` gains `renderLineageFocusCue` (repainted from the
+  same FamilyStore-subscribe + `activate()` seams as the viewer banner). New `tree.focusCueLabel`
+  / `tree.focusCueView` keys (EN+HI). Verified via CDP: focus set in Tree → cue **absent** on
+  Tree (in-stage banner present instead), **present** on People naming "Mohan Kumar" with both
+  buttons, **persists** onto Timeline; "View in tree" re-activates the tree (focus intact, cue
+  gone); "Clear focus" from the People cue nulls the focus and removes the cue; Hindi labels
+  resolve. `tree-view.js`, `app.js`, `i18n.js`, `components.css`. CACHE_VERSION v41 → v42.
 
 ### Batch 21 — generation-row era labels on the tree canvas (2026-08-14)
 
