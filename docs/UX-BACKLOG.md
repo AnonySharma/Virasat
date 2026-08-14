@@ -13,7 +13,7 @@ change), **L** = large (broad sweep).
 > `feat/cloud-sync` (batches 1–5, below). **The original backlog is fully
 > cleared.** Everything is collected in **[✅ Shipped](#-shipped)** at the bottom
 > of this file. **CACHE_VERSION** is now bumped once per shipped commit (the earlier
-> hold has been lifted; currently `v49`). A fresh deep UX + usability review is being
+> hold has been lifted; currently `v50`). A fresh deep UX + usability review is being
 > run to surface anything new; net-new findings will be appended under
 > **[Follow-up review](#follow-up-review-2026-08-12)** as they come in.
 
@@ -568,7 +568,32 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v49`).
+(currently `v50`).
+
+### Batch 29 — redesign the printable family book (2026-08-14)
+
+- **[UX/polish] The "family book" PDF was bland.** It printed as flat black text on white:
+  a plain title, a run of person pages with no visual identity, no sense of occasion for
+  something meant to be spiral-bound and kept as an heirloom. Rebuilt it as a designed
+  keepsake. The **cover** now has a gold double-rule bookplate frame, a monogram roundel
+  (the family's initials), an "A family book" eyebrow, an editorial serif title, an italic
+  subtitle, a lozenge rule, and an at-a-glance stats strip (people · generations · stories,
+  each omitted when zero) above the printed date. Every **person page** gets a consistent
+  masthead: a circular photo in a gold ring, a small gold kicker ("Generation N" from
+  `buildGenerations()`, or "In memoriam" for the departed), the serif name, an olive italic
+  occupation, and a lifespan line that now shows birth/death places even without dates.
+  Section headings carry a gold tab, list items a gold diamond bullet, story blocks a gold
+  left border; **in-memoriam pages** get a soft panel background and a gold gradient top edge.
+- **Follows the app's light/dark theme automatically.** The book defines its own scoped
+  palette on `.print-book-root` (warm cream sheet / deep olive-black in dark) with a
+  `:root[data-theme="dark"] .print-book-root` override; since `data-theme` persists through
+  print, the book matches whatever theme is live when you print — no toggle. `print-color-adjust:
+  exact` + `@page { margin: 0 }` keep the background fills and full-bleed edges from being
+  dropped by the browser. Verified live in a real browser (structure + token flip) and via
+  print-emulated screenshots of the cover and a person page in both themes.
+- New i18n keys (EN+HI): `print.subtitle`, `print.statPeople/statGenerations/statStories`,
+  `print.gen`, `print.inMemoriam`. `print-book.js`, `styles/components.css`, `i18n.js`.
+  CACHE_VERSION v49 → v50.
 
 ### Batch 28 — hide "Private" contact fields from view-only members (2026-08-14)
 
