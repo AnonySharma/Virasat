@@ -538,7 +538,32 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v35`).
+(currently `v36`).
+
+### Batch 17 — account page: change password + reset (2026-08-14)
+
+- **[#115] "Edit profile" was name-only, there was no way to change your password, and
+  "Reset everything" sat one slip from Add in the rail Tools.** Broadened the account
+  surface into a proper **Account** page (`openAccountModal`) with three self-contained
+  sections: **Profile** (the existing display-name edit; email stays read-only), **Password**
+  (change it — current password verified server-side by re-authenticating, since Supabase's
+  `updateUser({password})` doesn't check the old one on its own), and a **Danger zone** that
+  now houses **Reset everything**. The change-password fields reuse the sign-in eye-affix, and
+  implement the "entered twice, or once if you can read it" rule: a confirm field appears while
+  the new password is masked and disappears (clearing itself) the moment the eye reveals it.
+  The password section is hidden for accounts with no email/password identity (a Google-only
+  user has nothing to change), gated on a new `Auth.hasPassword()`. Reset is **moved, not
+  duplicated**: when signed in the rail row is hidden and the account page owns it (the confirm
+  copy also switches to a cloud-aware variant — a reset syncs the empty tree to every member);
+  a local-only user, who has no account page, keeps the rail row so they're never stranded.
+  The account page is now reachable on phone too (a new kebab **Account** row — profile editing
+  was previously desktop-only). New `Auth.updatePassword()` + `hasPassword()`; new `auth.*`
+  keys + `rail.resetMsgCloud`, all EN+HI. Verified via CDP against a stubbed client (never the
+  live project): 3 sections render in light+dark+EN+HI with no key leak; reveal hides/clears the
+  confirm twin; wrong current password → coded error with `updateUser` never called; correct →
+  one `updateUser({password})` + fields cleared; Google-only drops the password section; the
+  rail Reset row is hidden when signed in and visible local-only. `app.js`, `auth-store.js`,
+  `i18n.js`, `components.css`, `sw.js`.
 
 ### Batch 16 — "How this app works" help guide (2026-08-14)
 

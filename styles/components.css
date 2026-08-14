@@ -78,10 +78,35 @@
   border-color: var(--danger);
   box-shadow: 0 0 0 3px var(--danger-soft);
 }
-/* Account > Edit profile dialog: stack the name/email fields with breathing
-   room (the wrapper isn't itself a flex column like .signin__form is). */
-.profile-edit { display: flex; flex-direction: column; gap: 16px; }
-.profile-edit .input:disabled { opacity: .6; cursor: not-allowed; }
+/* Account page: profile / password / danger, each a self-contained card with
+   its own inline action, stacked in the modal. Sections read as distinct
+   groups (surface panel + heading), so the destructive Reset can't be mistaken
+   for the profile save. */
+.account-page { display: flex; flex-direction: column; gap: var(--s-4); }
+.account-page .input:disabled { opacity: .6; cursor: not-allowed; }
+.account-section {
+  display: flex; flex-direction: column; gap: var(--s-3);
+  padding: var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+.account-section__title {
+  margin: 0;
+  font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-3);
+}
+/* The danger card is border- + heading-toned so "Reset everything" reads as
+   consequential before the confirm dialog ever appears. It deliberately keeps
+   the normal surface background (not a --danger-soft fill): that token is a
+   light parchment that dark mode doesn't override, so a filled slab would go
+   bright-on-dark — the memorial-card contrast bug. The red heading + red button
+   carry the signal; the border just frames it. */
+.account-section--danger { border-color: var(--danger); }
+.account-section--danger .account-section__title { color: var(--danger); }
+.account-section__note { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text-2); }
+.account-section__hint { margin-top: -4px; }
+.account-section__actions { display: flex; justify-content: flex-end; gap: var(--s-2); margin-top: var(--s-1); }
 .input, .select, .textarea {
   width: 100%;
   background: var(--bg-elev);
