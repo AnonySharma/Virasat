@@ -13,7 +13,7 @@
  * Cache version is part of the cache name, so bumping CACHE_VERSION on
  * a release activates a clean replacement during `activate`.
  */
-const CACHE_VERSION = "v58";
+const CACHE_VERSION = "v59";
 const SHELL_CACHE = "virasat-shell-" + CACHE_VERSION;
 const RUNTIME_CACHE = "virasat-runtime-" + CACHE_VERSION;
 const CDN_CACHE = "virasat-cdn-" + CACHE_VERSION;
@@ -86,8 +86,19 @@ self.addEventListener("install", (event) => {
             .catch(() => {})
         ))
       )
-    ]).then(() => self.skipWaiting())
+    ])
+    // Deliberately NOT skipWaiting() here. A fresh deploy parks this worker in
+    // `waiting` while the open tab keeps running the old code; the page shows a
+    // "new version ready" prompt and messages SKIP_WAITING (below) only when the
+    // user accepts — so we never hot-swap code out from under an in-progress
+    // edit (the app has no keystroke-level autosave).
   );
+});
+
+// The page requests takeover when the user accepts the update prompt. This is
+// the ONLY path to skipWaiting, so activation is always user-consented.
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
