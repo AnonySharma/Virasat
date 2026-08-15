@@ -2264,7 +2264,106 @@
   margin: 12px 0 0; font-size: 12px; line-height: 1.5; color: var(--text-3);
 }
 
+/* ── Family calendar (month grid marking birthdays & memorials) ─────────── */
+.cal-nav {
+  display: flex; align-items: center; gap: 10px;
+  margin: 4px 0 14px;
+}
+.cal-nav__btn {
+  flex: 0 0 auto;
+  width: 30px; height: 30px;
+  display: inline-grid; place-items: center;
+  border: 1px solid var(--line); background: var(--bg-elev);
+  border-radius: 50%;
+  color: var(--text-2); font-size: 12px;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+.cal-nav__btn:hover { background: var(--olive-soft); color: var(--olive-deep); border-color: var(--olive-deep); }
+.cal-nav__btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.cal-nav__label {
+  font-family: var(--font-display);
+  font-size: 18px; font-weight: 500; color: var(--text);
+  text-transform: capitalize;
+}
+.cal-nav__today {
+  margin-left: auto;
+  border: 0; background: transparent;
+  font: inherit; font-size: 12.5px; color: var(--accent-deep);
+  cursor: pointer; padding: 4px 2px;
+  transition: color var(--t-fast);
+}
+.cal-nav__today:hover { color: var(--olive-deep); text-decoration: underline; }
+.cal-nav__today:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--r-xs); }
+
+.cal-weekdays,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.cal-weekday {
+  text-align: center;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text-3);
+  padding-bottom: 6px;
+}
+.cal-grid { margin-top: 2px; }
+/* Each cell is a square-ish tile. Marked days are <button>s; plain days and
+   the leading blanks are inert spans that share the geometry. */
+.cal-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  min-height: 40px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px;
+  border: 1px solid transparent; border-radius: var(--r-xs);
+  font: inherit; color: var(--text-2);
+  background: transparent;
+}
+.cal-cell--blank { visibility: hidden; }
+.cal-cell__num { font-size: 13px; font-variant-numeric: tabular-nums; line-height: 1; }
+.cal-cell__dots { display: flex; gap: 3px; height: 6px; align-items: center; }
+.cal-dot { width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto; }
+.cal-dot--birth { background: var(--gold-deep); }
+.cal-dot--death { background: var(--olive-deep); }
+/* Today: a soft ring, whether or not it's marked. */
+.cal-cell.is-today { border-color: var(--accent-deep); }
+.cal-cell.is-today .cal-cell__num { font-weight: 700; color: var(--text); }
+/* Marked days are interactive. */
+.cal-cell--marked {
+  cursor: pointer;
+  background: var(--surface-2);
+  border-color: var(--line);
+  transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+}
+.cal-cell--marked:hover { background: var(--olive-soft); border-color: var(--olive-deep); }
+.cal-cell--marked:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.cal-cell--marked.is-selected {
+  background: var(--olive-soft);
+  border-color: var(--olive-deep);
+  box-shadow: inset 0 0 0 1px var(--olive-deep);
+}
+/* Day detail: the selected day's people, reusing the coming-up row styling. */
+.cal-detail {
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 4px;
+}
+.cal-nothing {
+  margin: 14px 0 0; font-size: 12.5px; font-style: italic; color: var(--text-3);
+}
+.cal-legend {
+  display: flex; flex-wrap: wrap; gap: 16px;
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12px; color: var(--text-3);
+}
+.cal-legend__item { display: inline-flex; align-items: center; gap: 6px; }
+
 @media (max-width: 640px) {
   .insights-body { padding: var(--s-5) 16px 24px; gap: var(--s-5); }
   .coming-up__actions .btn { flex: 1 1 auto; justify-content: center; }
+  .cal-cell { min-height: 34px; }
+  .cal-cell__num { font-size: 12px; }
 }
