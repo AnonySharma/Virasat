@@ -36,6 +36,7 @@ declare const ExportImport: any;
 declare const CollectForm: any;
 declare const PrintBook: any;
 declare const HelpGuide: any;
+declare const Anniversaries: any;
 declare const LegalPage: any;
 declare const VirasatConfig: any;
 declare const Auth: any;
@@ -74,7 +75,13 @@ interface Window {
   CollectForm: any;
   PrintBook: any;
   HelpGuide: any;
+  Anniversaries: any;
   LegalPage: any;
+  // Notification Triggers API — present only on Chromium PWAs; feature-detected
+  // by anniversaries.js before use. Declared any so both the guard and the
+  // `new TimestampTrigger(ts)` construction type-check on browsers/libs that
+  // don't ship it in their DOM types.
+  TimestampTrigger: any;
   VirasatConfig: any;
   Auth: any;
   CloudStore: any;

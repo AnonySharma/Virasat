@@ -13,7 +13,7 @@
  * Cache version is part of the cache name, so bumping CACHE_VERSION on
  * a release activates a clean replacement during `activate`.
  */
-const CACHE_VERSION = "v73";
+const CACHE_VERSION = "v74";
 const SHELL_CACHE = "virasat-shell-" + CACHE_VERSION;
 const RUNTIME_CACHE = "virasat-runtime-" + CACHE_VERSION;
 const CDN_CACHE = "virasat-cdn-" + CACHE_VERSION;
@@ -50,6 +50,7 @@ const SHELL = [
   "./lib/features/collect-form.js",
   "./lib/features/print-book.js",
   "./lib/features/help-guide.js",
+  "./lib/features/anniversaries.js",
   "./lib/legal-page.js",
   "./lib/auth/config.js",
   "./lib/auth/auth-store.js",
@@ -103,6 +104,22 @@ self.addEventListener("install", (event) => {
 // the ONLY path to skipWaiting, so activation is always user-consented.
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
+});
+
+// Anniversary reminders (lib/features/anniversaries.js) schedule notifications
+// through this worker. Tapping one focuses an open Virasat tab (or opens a new
+// one) at the tree — nothing here fires notifications, it only handles the tap.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || "./";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) {
+        if ("focus" in w) { w.focus(); if (w.navigate) { try { w.navigate(target); } catch (_) {} } return; }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(target);
+    })
+  );
 });
 
 self.addEventListener("activate", (event) => {
