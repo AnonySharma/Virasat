@@ -1880,36 +1880,30 @@
   font-size: 11.5px; color: var(--text-3);
 }
 
-.highlights__more {
-  display: flex; flex-direction: column; gap: 8px;
-  margin-top: 10px;
+/* A labelled block within Family Highlights — the family calendar, then the
+   Coming-up list. A quiet eyebrow head sets each apart. */
+.highlights__section {
+  display: flex; flex-direction: column; gap: 12px;
 }
-.highlights__mini {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--r-md);
-  cursor: pointer;
-  text-align: left;
-  font: inherit; color: var(--text);
-  transition: background var(--t-fast), border-color var(--t-fast);
-}
-.highlights__mini:hover { background: var(--surface-2); border-color: var(--line); }
-.highlights__mini:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.highlights__mini .avatar { flex-shrink: 0; }
-.highlights__mini-body { min-width: 0; }
-.highlights__mini-label {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 9.5px; font-weight: 600;
-  letter-spacing: 0.08em; text-transform: uppercase;
+.highlights__section-head {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--text-3);
 }
-.highlights__mini-label i { color: var(--gold); font-size: 10px; }
-.highlights__mini-name {
-  font-size: 14px; font-weight: 500; color: var(--text);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
+.highlights__section-head i { color: var(--gold); font-size: 12px; }
+
+/* The calendar + coming-up rows are built by the Anniversaries module and
+   shared with the Insights band, where they sit in a wide panel. In the narrow
+   inspector they fill the pane: drop the 360px cap and shrink the month label so
+   the nav row doesn't wrap. */
+.highlights .cal { display: flex; flex-direction: column; }
+.highlights .cal .cal-nav { margin: 0 0 10px; }
+.highlights .cal .cal-nav__label { font-size: 15px; }
+.highlights .cal .cal-weekdays,
+.highlights .cal .cal-grid { max-width: none; }
+.highlights .cal .cal-cell { min-height: 34px; }
+.highlights .cal .cal-legend { margin-top: 12px; }
 
 /* === Family-archive completion bar === */
 .completion {
@@ -2257,18 +2251,21 @@
   flex: 0 0 auto; font-size: 12.5px; color: var(--gold-deep);
   font-weight: 600; white-space: nowrap;
 }
-/* "+N more" is a <button> (it opens the full year ahead in a modal); reset the
-   UA chrome to the plain italic text-link it reads as, left-aligned under the list. */
+/* "+N more" is a <button> that opens the full year ahead in a modal. Styled as
+   a clear text-link — accent colour, a caret that nudges on hover — so it reads
+   as a control, not a static caption. */
 .coming-up__more {
-  display: block; width: 100%;
+  display: inline-flex; align-items: center; gap: 6px;
   padding: 10px 0 0; margin: 0;
   border: 0; background: transparent;
-  font: inherit; font-size: 12.5px; font-style: italic;
-  color: var(--text-3); text-align: left;
+  font: inherit; font-size: 12.5px; font-weight: 600;
+  color: var(--accent-deep); text-align: left;
   cursor: pointer;
   transition: color var(--t-fast);
 }
-.coming-up__more:hover { color: var(--accent-deep); }
+.coming-up__more-caret { font-size: 10px; transition: transform var(--t-fast); }
+.coming-up__more:hover { color: var(--olive-deep); }
+.coming-up__more:hover .coming-up__more-caret { transform: translateX(2px); }
 .coming-up__more:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--r-xs); }
 .coming-up__actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
 .coming-up__remind.is-on {
@@ -2301,15 +2298,21 @@
   font-size: 18px; font-weight: 500; color: var(--text);
   text-transform: capitalize;
 }
+/* "This month" resets the calendar to the current month. A bordered pill (not
+   bare text) so it reads as the button it is; the rotate-left icon reinforces
+   "go back to now". */
 .cal-nav__today {
   margin-left: auto;
-  border: 0; background: transparent;
-  font: inherit; font-size: 12.5px; color: var(--accent-deep);
-  cursor: pointer; padding: 4px 2px;
-  transition: color var(--t-fast);
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 1px solid var(--line); background: var(--bg-elev);
+  border-radius: var(--r-pill);
+  font: inherit; font-size: 11.5px; font-weight: 600; color: var(--accent-deep);
+  cursor: pointer; padding: 4px 10px;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
 }
-.cal-nav__today:hover { color: var(--olive-deep); text-decoration: underline; }
-.cal-nav__today:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--r-xs); }
+.cal-nav__today-icon { font-size: 10px; }
+.cal-nav__today:hover { background: var(--olive-soft); color: var(--olive-deep); border-color: var(--olive-deep); }
+.cal-nav__today:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 /* Compact, mac-style month widget: capped width so it reads as a glanceable
    calendar rather than a full-bleed field of giant squares. The weekday header
@@ -2360,9 +2363,6 @@
 }
 .cal-cell--marked:hover { background: var(--olive-soft); border-color: var(--olive-deep); }
 .cal-cell--marked:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
-.cal-nothing {
-  margin: 14px 0 0; font-size: 12.5px; font-style: italic; color: var(--text-3);
-}
 .cal-legend {
   display: flex; flex-wrap: wrap; gap: 16px;
   margin-top: 16px; padding-top: 12px;
