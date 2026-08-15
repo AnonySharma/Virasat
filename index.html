@@ -227,8 +227,11 @@
           <!-- Rare, high-consequence actions split below a divider so the
                everyday tools read first and Reset isn't one slip from Add.
                Both rows are edit-only, so the divider is too (else a viewer
-               sees a divider with nothing under it). -->
-          <li class="rail-divider js-edit-only" aria-hidden="true"></li>
+               sees a divider with nothing under it). Both REPLACE/WIPE the whole
+               tree, so app.js (refreshDestructiveTools) further hides them for a
+               non-owner on a shared cloud tree — an editor edits people, not the
+               whole blob. The divider carries an id so it can hide with them. -->
+          <li class="rail-divider js-edit-only" id="tools-danger-divider" aria-hidden="true"></li>
           <li class="js-edit-only"><button class="rail-item" id="tool-sample" type="button"><i class="fa-solid fa-wand-magic-sparkles"></i><span data-i18n="rail.trySample">Try sample family</span></button></li>
           <li class="js-edit-only"><button class="rail-item rail-item--danger" id="tool-reset" type="button"><i class="fa-solid fa-trash-can"></i><span data-i18n="rail.reset">Reset everything</span></button></li>
         </ul>
