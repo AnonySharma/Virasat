@@ -995,6 +995,40 @@
   text-align: center;
 }
 
+/* Documents & sources — scanned certificates/letters shown as a list of
+   citation cards: a tappable scan thumb opens the full-resolution image. */
+.inspector-docs { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.inspector-docs__cell {
+  margin: 0; display: flex; gap: 12px; align-items: flex-start;
+}
+.inspector-docs__thumb-btn {
+  flex: 0 0 auto; padding: 0; border: none; background: none;
+  cursor: pointer; border-radius: var(--r-sm);
+}
+.inspector-docs__thumb-btn:hover .inspector-docs__thumb { border-color: var(--gold); }
+.inspector-docs__thumb {
+  position: relative; width: 64px; height: 64px;
+  border-radius: var(--r-sm); overflow: hidden;
+  background: var(--surface-2); border: 1px solid var(--line);
+  transition: border-color .15s ease;
+}
+.inspector-docs__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.inspector-docs__thumb.is-empty::after {
+  content: "\f15c"; /* fa-file-lines */
+  font-family: "Font Awesome 6 Free"; font-weight: 900;
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-3); font-size: 20px; opacity: .5;
+}
+.inspector-docs__body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.inspector-docs__title {
+  display: flex; align-items: baseline; gap: 7px;
+  font-weight: 600; color: var(--text-1); line-height: 1.35;
+}
+.inspector-docs__icon { flex: 0 0 auto; color: var(--gold-deep); font-size: 13px; }
+.inspector-docs__meta { font-size: 11.5px; color: var(--text-3); }
+.inspector-docs__note { font-size: 12.5px; line-height: 1.45; color: var(--text-2); }
+
 .inspector-family-group { margin-top: 12px; }
 .inspector-family-group:first-child { margin-top: 0; }
 .inspector-family-group__label {
