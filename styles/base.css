@@ -235,6 +235,7 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 
 .app-inspector {
+  position: relative;   /* anchor the absolute .inspector-close (mobile re-sets to fixed) */
   background: var(--bg-elev);
   border-left: 1px solid var(--line);
   overflow-y: auto;
@@ -324,7 +325,10 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
    default here just needs to not hide it. */
 button.kebab-btn { display: none; }
 
-/* Inspector close button — always present, only visible when needed */
+/* Inspector close button — deselects the current person (Inspector.clear()).
+   Hidden when nobody's selected (the empty-state Family Highlights need no
+   close); shown on desktop only while a person is open (.is-open), and always
+   on mobile where the inspector is a slide-in drawer. */
 .inspector-close {
   display: none;
   position: absolute;
@@ -340,6 +344,7 @@ button.kebab-btn { display: none; }
   transition: background var(--t-fast), color var(--t-fast);
 }
 .inspector-close:hover { background: var(--surface-2); color: var(--text); }
+.app-inspector.is-open .inspector-close { display: inline-flex; }
 @media (max-width: 1100px) {
   .inspector-close { display: inline-flex; }
 }
