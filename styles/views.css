@@ -759,6 +759,48 @@
   .timeline-name-col { width: 120px; }
 }
 
+/* Timeline minimap — a compact overview strip under the scroll area with a
+   draggable viewport window. Shown by timeline-view.js only when the canvas
+   overflows. Height = MINIMAP_LANES(4) × MINIMAP_LANE_H(5) + top/bottom pad;
+   keep in sync with those constants in timeline-view.js. */
+.timeline-minimap {
+  position: relative;
+  height: 30px;
+  margin: 0 24px 20px;
+  padding: 2px 0;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  flex-shrink: 0;
+  touch-action: none;   /* pointer drag drives scroll; don't also pan the page */
+  overflow: hidden;
+}
+.timeline-minimap:focus-visible { outline: 2px solid var(--olive); outline-offset: 2px; }
+.timeline-minimap__track { position: absolute; inset: 2px 0; }
+.timeline-minimap__bar {
+  position: absolute; height: 3px;
+  background: var(--olive); border-radius: 2px;
+  opacity: 0.75;
+}
+.timeline-minimap__bar.is-deceased { background: var(--rust); }
+.timeline-minimap__now {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: var(--gold);
+}
+.timeline-minimap__window {
+  position: absolute; top: 0; bottom: 0;
+  min-width: 8px;
+  background: rgba(184, 154, 90, 0.16);   /* --gold at low alpha */
+  border: 1px solid var(--gold);
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(184, 154, 90, 0.15);
+  pointer-events: none;
+}
+@media (max-width: 720px) {
+  .timeline-minimap { margin: 0 16px 16px; }
+}
+
 /* ========== Inspector — biographical, photo-first ========== */
 [hidden] { display: none !important; }
 
