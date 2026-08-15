@@ -168,6 +168,23 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   min-width: 0;
 }
 
+/* Desktop rail collapse — the hamburger toggles this, reclaiming the left
+   third for the canvas (P3.9). Scoped ≥769px so it never fights the phone
+   slide-in drawer below (where the rail is position:fixed and the grid is a
+   single column). The rail keeps overflow-x:hidden, so its content clips
+   cleanly as the column animates to zero width. */
+@media (min-width: 769px) {
+  .app-body { transition: grid-template-columns var(--t-med); }
+  .app-body.rail-collapsed { grid-template-columns: 0 minmax(0, 1fr) var(--inspector-w); }
+  .app-body.rail-collapsed .app-rail { border-right: none; }
+}
+@media (min-width: 769px) and (max-width: 1100px) {
+  .app-body.rail-collapsed { grid-template-columns: 0 minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-body { transition: none; }
+}
+
 .app-rail {
   background: var(--bg-elev);
   border-right: 1px solid var(--line);
@@ -271,13 +288,13 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .app-title__text { font-size: 18px; }
 }
 
-/* Hamburger + kebab only visible on small screens.
+/* The hamburger is dual-purpose: on phone (≤768px) it opens the rail as a
+   slide-in drawer; on desktop it collapses/expands the docked rail column
+   (P3.9). So unlike the kebab it stays visible at all widths — the click
+   handler in app.js branches on the breakpoint. The kebab remains phone-only.
    The element carries class="btn btn--icon hamburger-btn"; .btn defines
-   `display: inline-flex` and loads in components.css *after* base.css,
-   so a plain `.hamburger-btn { display: none }` rule loses the cascade
-   tie-break to .btn. Bumping specificity to button.hamburger-btn (1
-   element + 1 class) wins cleanly without !important. */
-button.hamburger-btn { display: none; }
+   `display: inline-flex` and loads in components.css *after* base.css, so the
+   default here just needs to not hide it. */
 button.kebab-btn { display: none; }
 
 /* Inspector close button — always present, only visible when needed */

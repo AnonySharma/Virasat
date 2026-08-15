@@ -1728,56 +1728,74 @@
   line-height: 1.5;
   margin: 0;
 }
-.highlights__grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.highlights__card {
-  min-width: 0;
-  /* One-per-row layout: lay the label/eyebrow on its own row, then the
-     person row underneath, then the footer chip on the right of the
-     person row. Reads like a list of cards. */
-  flex-direction: column;
-}
-.highlights__label {
-  white-space: normal;
-  line-height: 1.25;
-}
-.highlights__card {
-  display: flex; flex-direction: column; gap: 8px;
-  padding: 12px 14px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  cursor: pointer;
-  text-align: left;
-  font: inherit; color: var(--text);
-  transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
-}
-.highlights__card:hover { background: var(--bg-elev); border-color: var(--gold); transform: translateY(-1px); }
-.highlights__card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+/* One hero highlight, then a quieter "more" row — a single focal point rather
+   than four equal cards (which, on a small tree, are often the same person). */
 .highlights__label {
   display: flex; align-items: center; gap: 6px;
   font-size: 10.5px; font-weight: 600;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--text-3);
+  white-space: normal; line-height: 1.25;
 }
 .highlights__label i { color: var(--gold); font-size: 11px; }
-.highlights__person {
-  display: flex; align-items: center; gap: 8px;
+
+.highlights__hero {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  text-align: left;
+  font: inherit; color: var(--text);
+  transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
 }
-.highlights__person .avatar { width: 32px; height: 32px; font-size: 12px; flex-shrink: 0; }
-.highlights__person-name {
+.highlights__hero:hover { background: var(--bg-elev); border-color: var(--gold); transform: translateY(-1px); }
+.highlights__hero:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.highlights__hero-person {
+  display: flex; align-items: center; gap: 12px; min-width: 0;
+}
+.highlights__hero-person .avatar { flex-shrink: 0; }
+.highlights__hero-name {
   font-family: var(--font-display);
-  font-size: 16px; font-weight: 500;
+  font-size: 20px; font-weight: 500;
   color: var(--text);
   letter-spacing: -0.01em;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .highlights__footer {
-  font-size: 11px; color: var(--text-3);
-  margin-top: 2px;
+  font-size: 11.5px; color: var(--text-3);
+}
+
+.highlights__more {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-top: 10px;
+}
+.highlights__mini {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  text-align: left;
+  font: inherit; color: var(--text);
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+.highlights__mini:hover { background: var(--surface-2); border-color: var(--line); }
+.highlights__mini:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.highlights__mini .avatar { flex-shrink: 0; }
+.highlights__mini-body { min-width: 0; }
+.highlights__mini-label {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 9.5px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-3);
+}
+.highlights__mini-label i { color: var(--gold); font-size: 10px; }
+.highlights__mini-name {
+  font-size: 14px; font-weight: 500; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
 /* === Family-archive completion bar === */
