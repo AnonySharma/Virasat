@@ -109,6 +109,12 @@
         <i class="fa-solid fa-moon theme-toggle__moon" aria-hidden="true"></i>
         <i class="fa-solid fa-sun theme-toggle__sun" aria-hidden="true"></i>
       </button>
+      <!-- High contrast — an accessibility axis independent of light/dark (see
+           tokens.css). Reuses the circular .theme-toggle chrome; app.js toggles
+           data-contrast on <html>, persists it, and reflects aria-pressed. -->
+      <button class="theme-toggle contrast-toggle btn--icon" id="contrast-toggle" type="button" aria-pressed="false" aria-label="High contrast" title="High contrast" data-i18n-aria-label="actions.contrast" data-i18n-title="actions.contrast">
+        <i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i>
+      </button>
       <div class="lang-switch" role="group" aria-label="Language" data-i18n-aria-label="actions.language">
         <button class="lang-switch__btn is-active" data-lang="en" type="button" aria-pressed="true" aria-label="English">EN</button>
         <button class="lang-switch__btn" data-lang="hi" type="button" aria-pressed="false" aria-label="हिन्दी">HI</button>

@@ -1687,6 +1687,23 @@
 .theme-toggle.is-dark .theme-toggle__moon { opacity: 0; transform: rotate(90deg); }
 .theme-toggle.is-dark .theme-toggle__sun  { opacity: 1; transform: rotate(0deg); color: var(--gold); }
 
+/* Contrast toggle — same circular chrome as the theme toggle, but a single
+   static half-disc icon (no sun/moon crossfade). When active it fills with the
+   accent so the on-state reads at a glance, mirroring how .is-dark flips the
+   theme button. In high-contrast mode the pressed fill uses the (now ink/white)
+   focus token so the active state stays unmistakable. */
+.contrast-toggle .fa-circle-half-stroke { font-size: 15px; }
+.contrast-toggle.is-active {
+  background: var(--olive); border-color: var(--olive); color: var(--on-accent);
+}
+.contrast-toggle.is-active:hover {
+  background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); color: var(--on-accent);
+}
+:root[data-contrast="high"] .contrast-toggle.is-active {
+  background: var(--focus); border-color: var(--focus);
+  color: var(--bg);
+}
+
 /* === Story-density badge on tree node === */
 .t-node-density-bg {
   fill: var(--olive);
