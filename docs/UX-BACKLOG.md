@@ -13,7 +13,7 @@ change), **L** = large (broad sweep).
 > `feat/cloud-sync` (batches 1–5, below). **The original backlog is fully
 > cleared.** Everything is collected in **[✅ Shipped](#-shipped)** at the bottom
 > of this file. **CACHE_VERSION** is now bumped once per shipped commit (the earlier
-> hold has been lifted; currently `v63`). A fresh deep UX + usability review is being
+> hold has been lifted; currently `v64`). A fresh deep UX + usability review is being
 > run to surface anything new; net-new findings will be appended under
 > **[Follow-up review](#follow-up-review-2026-08-12)** as they come in.
 
@@ -568,7 +568,7 @@ semantics and are logged for a decision, not fixed in this no-backend pass.
 
 All on `feat/cloud-sync`, verified per commit (`node -c` each file, smoke green,
 tsc 5.9.3 = 0 errors). `CACHE_VERSION` is now bumped once per shipped commit
-(currently `v63`).
+(currently `v64`).
 
 ### Batch 30 — discovery-synthesis bug sweep (2026-08-15)
 
@@ -605,8 +605,11 @@ lists above). One verified bug per commit; static battery green each time.
   the cache key and frees photos — **reference-counted**: IDB photo keys are flat bare photoIds
   two local trees can share (same backup imported twice), so a blob is freed only when no
   surviving cache key (or live state) still references it. Wired into both flows after the
-  network op succeeds, best-effort. Local half only; the cloud row + bucket stay off-limits.
-  `data-store.js`, `cloud-store.js`.
+  network op succeeds, best-effort. Local half only; the cloud row + bucket stay off-limits —
+  the reclaim frees blobs via a new local-only `PhotoStore.deleteLocal` (IDB + URL cache),
+  never the remote-firing `delete`, whose bucket path resolves from the *now-active* tree and
+  would otherwise issue a wrong-path (or, for a left shared tree, unauthorized) bucket remove.
+  `data-store.js`, `photo-store.js`, `cloud-store.js`.
 - **[Low, onboarding] First-run topbar overlapped the card on short viewports.** The centred
   card grew under the absolutely-positioned topbar on `max-height:640px`; the topbar now drops
   into normal flow and the column top-aligns so the two stack and scroll. `components.css`.
@@ -615,12 +618,18 @@ lists above). One verified bug per commit; static battery green each time.
   `icon.svg`, flattened onto the emblem's `#DAE2D5` field so iOS's composite-onto-black +
   rounded mask is seamless), pointed the link at it, precached it, and added a PNG manifest
   icon. `index.html`, `manifest.webmanifest`, `sw.js`, `assets/apple-touch-icon.png` (new).
-- Also folded in earlier this session: i18n leaks in the Insights/Timeline/Tree eyebrows +
+- **[High, cloud] `purgeLocalTree` fired remote bucket deletes against the wrong tree.** The
+  reclaim above initially freed photos via `PhotoStore.delete`, which also fires a best-effort
+  bucket remove whose path resolves from `getActiveTreeId()` (already repointed to the survivor
+  after switch, or still the doomed shared tree after leave). Narrow but real: it could delete a
+  survivor's real bucket photo (shared photoId) or issue unauthorized removes against a former
+  tree's owner. Fixed by a local-only `PhotoStore.deleteLocal` (IDB + URL cache, no `removePhoto`).
+  `photo-store.js`, `data-store.js`.
   Timeline Born/Died/age labels; HeritageSelect/datepicker `ariaLabel` support wired across the
   person form + path-finder; JSON/Backup export now scoped to the same lineage set as the PNG
   (via exposed `ImageExport.buildFocusSet`); a shared-tree import warning; a CropEditor unsaved-
   changes guard; touch-target sizing on the lang toggle; and inspector hero-name wrapping.
-  CACHE_VERSION v50 → v63.
+  CACHE_VERSION v50 → v64.
 
 ### Batch 29 — redesign the printable family book (2026-08-14)
 
