@@ -26,6 +26,31 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 ::selection { background: var(--olive-soft); color: var(--accent-deep); }
 
+/* ── Themed scrollbars ──────────────────────────────────────────────────────
+   App-wide default: a slim, heritage-olive thumb on a faint parchment track,
+   replacing the generic OS gray. Tokens (--scroll-*) are re-tuned per theme in
+   tokens.css, so this one block follows light / dark / high-contrast. Firefox
+   reads scrollbar-width/-color; Blink/WebKit use the ::-webkit pseudos below.
+   Scoped scrollers (rail, inspector, modal body, year-strip) inherit these and
+   just tweak width. Touch overlay scrollbars ignore all of this — no harm. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+}
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: var(--scroll-track); }
+::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 999px;
+  /* Transparent border carved from the thumb via background-clip leaves an
+     inset gap, so the pill reads as floating in the track rather than filling
+     the gutter edge-to-edge. */
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: padding-box; }
+::-webkit-scrollbar-corner { background: var(--scroll-track); }
+
 /* Scope the Devanagari pairing carefully: Font Awesome icons use the
    `Font Awesome 6 Free / Brands` font-family and we must NOT override that.
    Apply Devanagari only to text-bearing elements lower-specificity than
@@ -192,11 +217,11 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   overflow-x: hidden;
   padding: var(--s-5) var(--s-3);
   display: flex; flex-direction: column; gap: var(--s-6);
-  scrollbar-width: thin;
-  scrollbar-color: var(--ink-5) transparent;
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
 }
-.app-rail::-webkit-scrollbar { width: 6px; }
-.app-rail::-webkit-scrollbar-thumb { background: var(--ink-5); border-radius: 999px; }
+.app-rail::-webkit-scrollbar { width: 8px; }
+.app-rail::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+.app-rail::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: padding-box; }
 
 .app-main {
   position: relative;
@@ -213,11 +238,11 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   overflow-y: auto;
   overflow-x: hidden;
   display: flex; flex-direction: column;
-  scrollbar-width: thin;
-  scrollbar-color: var(--ink-5) transparent;
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
 }
-.app-inspector::-webkit-scrollbar { width: 6px; }
-.app-inspector::-webkit-scrollbar-thumb { background: var(--ink-5); border-radius: 999px; }
+.app-inspector::-webkit-scrollbar { width: 8px; }
+.app-inspector::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+.app-inspector::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: padding-box; }
 
 .view { display: none; flex: 1; min-height: 0; min-width: 0; overflow: hidden; }
 .view.is-active { display: flex; flex-direction: column; }

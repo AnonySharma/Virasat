@@ -775,6 +775,12 @@
   flex-shrink: 0;
   touch-action: none;   /* pointer drag drives scroll; don't also pan the page */
   overflow: hidden;
+  /* The lifespan bars + viewport window are absolutely positioned; overflow
+     hidden alone doesn't reliably clip abs-positioned descendants to a ROUNDED
+     corner in Blink/WebKit (they escape the left curve). Paint containment
+     forces a clip layer that honours the border-radius — cropping both the
+     bars and the window's squarer corners to the strip's rounding. */
+  contain: paint;
 }
 .timeline-minimap:focus-visible { outline: 2px solid var(--olive); outline-offset: 2px; }
 .timeline-minimap__track { position: absolute; inset: 2px 0; }

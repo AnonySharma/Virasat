@@ -1213,8 +1213,9 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   border-radius: var(--r-sm);
   scrollbar-width: thin;
 }
-.hdp__year-strip::-webkit-scrollbar { height: 6px; }
-.hdp__year-strip::-webkit-scrollbar-thumb { background: var(--ink-5); border-radius: 999px; }
+.hdp__year-strip::-webkit-scrollbar { height: 8px; }
+.hdp__year-strip::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+.hdp__year-strip::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: padding-box; }
 .hdp__year {
   flex: 0 0 auto;
   border: 0;
