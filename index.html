@@ -113,6 +113,19 @@
         <button class="lang-switch__btn is-active" data-lang="en" type="button" aria-pressed="true" aria-label="English">EN</button>
         <button class="lang-switch__btn" data-lang="hi" type="button" aria-pressed="false" aria-label="हिन्दी">HI</button>
       </div>
+      <!-- Undo / redo — a paired icon cluster driven by FamilyStore's snapshot
+           history. Editing-only (hidden for viewers) and disabled-reactive:
+           app.js toggles `disabled` off CloudStore/FamilyStore state on every
+           store change. Keyboard Cmd/Ctrl+Z / Shift+Z / Ctrl+Y hit the same
+           handlers. Start disabled — a fresh boot has nothing to undo. -->
+      <div class="undo-redo js-edit-only" role="group" aria-label="Undo and redo" data-i18n-aria-label="actions.undo">
+        <button class="btn btn--ghost btn--icon" id="undo-btn" type="button" disabled aria-keyshortcuts="Control+Z Meta+Z" aria-label="Undo last change" title="Undo" data-i18n-aria-label="actions.undoAria" data-i18n-title="actions.undo">
+          <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+        </button>
+        <button class="btn btn--ghost btn--icon" id="redo-btn" type="button" disabled aria-keyshortcuts="Control+Shift+Z Control+Y" aria-label="Redo" title="Redo" data-i18n-aria-label="actions.redoAria" data-i18n-title="actions.redo">
+          <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+        </button>
+      </div>
       <!-- Data menu — folds Collect / Import / Export (three secondary buttons
            that used to compete with the primary Share for attention) into one
            overflow. The menu rows handle their own edit-only visibility, so

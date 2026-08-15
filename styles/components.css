@@ -802,6 +802,12 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   box-shadow: var(--shadow-xs);
 }
 
+/* — Undo / redo cluster — two ghost icon buttons bound as one control. The
+   tighter 2px gap reads them as a pair (vs the header's 8px between groups),
+   and the shared .btn:disabled rule (opacity .45) already greys them when
+   there's no history to walk. */
+.undo-redo { display: inline-flex; align-items: center; gap: 2px; }
+
 /* — Form pair (English + Hindi twin) — */
 .field-pair {
   display: grid; grid-template-columns: 1fr; gap: 8px;
