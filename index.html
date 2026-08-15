@@ -105,33 +105,31 @@
     </label>
 
     <div class="app-header__actions">
-      <button class="theme-toggle btn--icon" id="theme-toggle" type="button" aria-label="Toggle theme" title="Toggle theme" data-i18n-aria-label="actions.theme" data-i18n-title="actions.theme">
+      <!-- Appearance toggles (theme + high contrast). In a signed-in cloud
+           session these move into the account (avatar) menu — app.js adds
+           `has-account-menu` to .app-header__actions, and CSS hides anything
+           marked data-appearance-toggle. In LOCAL-ONLY mode there is no avatar,
+           so they stay here as the only desktop path. The pre-login sign-in /
+           first-run screens carry their own copies (UI.onboardChrome). -->
+      <button class="theme-toggle btn--icon" id="theme-toggle" type="button" data-appearance-toggle aria-label="Toggle theme" title="Toggle theme" data-i18n-aria-label="actions.theme" data-i18n-title="actions.theme">
         <i class="fa-solid fa-moon theme-toggle__moon" aria-hidden="true"></i>
         <i class="fa-solid fa-sun theme-toggle__sun" aria-hidden="true"></i>
       </button>
       <!-- High contrast — an accessibility axis independent of light/dark (see
            tokens.css). Reuses the circular .theme-toggle chrome; app.js toggles
            data-contrast on <html>, persists it, and reflects aria-pressed. -->
-      <button class="theme-toggle contrast-toggle btn--icon" id="contrast-toggle" type="button" aria-pressed="false" aria-label="High contrast" title="High contrast" data-i18n-aria-label="actions.contrast" data-i18n-title="actions.contrast">
+      <button class="theme-toggle contrast-toggle btn--icon" id="contrast-toggle" type="button" data-appearance-toggle aria-pressed="false" aria-label="High contrast" title="High contrast" data-i18n-aria-label="actions.contrast" data-i18n-title="actions.contrast">
         <i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i>
       </button>
       <div class="lang-switch" role="group" aria-label="Language" data-i18n-aria-label="actions.language">
         <button class="lang-switch__btn is-active" data-lang="en" type="button" aria-pressed="true" aria-label="English">EN</button>
         <button class="lang-switch__btn" data-lang="hi" type="button" aria-pressed="false" aria-label="हिन्दी">HI</button>
       </div>
-      <!-- Undo / redo — a paired icon cluster driven by FamilyStore's snapshot
-           history. Editing-only (hidden for viewers) and disabled-reactive:
-           app.js toggles `disabled` off CloudStore/FamilyStore state on every
-           store change. Keyboard Cmd/Ctrl+Z / Shift+Z / Ctrl+Y hit the same
-           handlers. Start disabled — a fresh boot has nothing to undo. -->
-      <div class="undo-redo js-edit-only" role="group" aria-label="Undo and redo" data-i18n-aria-label="actions.undo">
-        <button class="btn btn--ghost btn--icon" id="undo-btn" type="button" disabled aria-keyshortcuts="Control+Z Meta+Z" aria-label="Undo last change" title="Undo" data-i18n-aria-label="actions.undoAria" data-i18n-title="actions.undo">
-          <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
-        </button>
-        <button class="btn btn--ghost btn--icon" id="redo-btn" type="button" disabled aria-keyshortcuts="Control+Shift+Z Control+Y" aria-label="Redo" title="Redo" data-i18n-aria-label="actions.redoAria" data-i18n-title="actions.redo">
-          <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
-        </button>
-      </div>
+      <!-- Undo / redo live in the tree-canvas control cluster (tree-view.js),
+           not the header — they're editing actions that belong beside zoom/fit.
+           app.js keeps the Cmd/Ctrl+Z / Shift+Z / Ctrl+Y shortcuts (global, all
+           views) and exposes doUndo/doRedo via the virasat:undo / virasat:redo
+           events the toolbar buttons dispatch. -->
       <!-- Data menu — folds Collect / Import / Export (three secondary buttons
            that used to compete with the primary Share for attention) into one
            overflow. The menu rows handle their own edit-only visibility, so

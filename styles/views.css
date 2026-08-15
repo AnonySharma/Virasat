@@ -1367,6 +1367,9 @@
   }
   .tree-controls .btn { width: 32px; height: 32px; }
   .tree-controls__pct { padding: 0 6px; font-size: 11px; min-width: 36px; }
+  /* Undo/redo live in the kebab on phone (reachable from every view); drop the
+     canvas copies so the cluster isn't a duplicated, wrapping row. */
+  .tree-controls__hist { display: none; }
 }
 
 /* === iOS safe-area for floating elements that sit at the bottom ===
@@ -1703,6 +1706,15 @@
   background: var(--focus); border-color: var(--focus);
   color: var(--bg);
 }
+
+/* Cloud session: the header carries an account (avatar) menu, and Theme +
+   High-contrast move INTO it (app.js adds .has-account-menu once signed in).
+   Hide the standalone header toggles then — they'd be a redundant, crowding
+   duplicate. Local-only mode never gets .has-account-menu (no avatar), so the
+   toggles stay visible there as the only desktop path to appearance settings.
+   The buttons remain in the DOM and functional; the account-menu rows click
+   them, so applyTheme/applyContrast keep working through the hidden controls. */
+.app-header__actions.has-account-menu [data-appearance-toggle] { display: none; }
 
 /* === Story-density badge on tree node === */
 .t-node-density-bg {
