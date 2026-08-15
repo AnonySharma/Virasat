@@ -1980,6 +1980,29 @@
 }
 .insight-name-chip__name { font-weight: 500; color: var(--text); }
 .insight-name-chip__count { font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.insight-name-chip__pin { font-size: 11px; color: var(--gold-deep); align-self: center; }
+
+/* Roots: a quiet lead line above the birthplace chips */
+.insight-panel__lead { margin: 0 0 12px 0; font-size: 13.5px; color: var(--text-2); }
+
+/* Elders: eldest / youngest living, one row each */
+.insight-elders { display: flex; flex-direction: column; gap: 12px; }
+.insight-elders__row {
+  display: flex; align-items: baseline; gap: 10px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--line);
+}
+.insight-elders__row:last-child { padding-bottom: 0; border-bottom: none; }
+.insight-elders__label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--text-3); min-width: 68px;
+}
+.insight-elders__name {
+  flex: 1; min-width: 0; font-weight: 500; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.insight-elders__age {
+  color: var(--gold-deep); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 13px;
+}
 
 @media (max-width: 640px) {
   .insights-body { padding: 0 16px 24px; gap: var(--s-5); }
