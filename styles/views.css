@@ -2080,12 +2080,16 @@
   letter-spacing: .02em;
 }
 
-/* Panels — gender / decades / names */
+/* Panels — gender / decades / names.
+   Masonry-style packing via CSS multi-column. Cards of very different heights
+   (a 6-chip "roots" panel beside a one-line "names" panel) leave big holes in a
+   row-based grid with align-items:start, and a full-width panel forces an
+   orphaned half-empty row. Multicol balances the stat panels into columns with
+   no vertical dead space; the wide "coming up" panel (last child) spans all
+   columns and sits full-width beneath them. */
 .insight-panels {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--s-4);
-  align-items: start;
+  columns: 320px 3;
+  column-gap: var(--s-4);
 }
 .insight-panel {
   padding: 20px 22px 22px;
@@ -2093,6 +2097,11 @@
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-sm);
+  /* Keep each card whole within its column; margin gives the vertical rhythm
+     (multicol has no row-gap, so the gap between stacked cards is a margin). */
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  margin: 0 0 var(--s-4);
 }
 .insight-panel__title {
   font-family: var(--font-display);
@@ -2191,13 +2200,26 @@
 }
 
 /* Coming up: the year's birthdays & memorials, plus calendar/reminder actions.
-   Spans the full panel row so its two-column rows and action buttons have room. */
-.insight-panel--wide { grid-column: 1 / -1; }
+   Spans every column so its rows and action buttons have full width, and sits
+   as a band beneath the balanced stat columns. column-span:all also closes the
+   multicol balancing above it, so the shorter panels pack tight with no hole. */
+.insight-panel--wide { column-span: all; }
 .coming-up__list { display: flex; flex-direction: column; }
+/* Rows are <button>s (each opens its person), so reset the UA button chrome
+   back to the full-width flex row they replaced, then add a clear clickable
+   affordance: a hover wash that bleeds to the panel padding edge (via the
+   negative margin) and a focus ring. */
 .coming-up__row {
   display: flex; align-items: center; gap: 12px;
-  padding: 10px 0; border-bottom: 1px solid var(--line);
+  width: calc(100% + 16px); margin: 0 -8px;
+  padding: 10px 8px;
+  border: 0; border-bottom: 1px solid var(--line);
+  background: transparent; color: inherit; text-align: left;
+  cursor: pointer; font: inherit;
+  transition: background var(--t-fast);
 }
+.coming-up__row:hover { background: var(--surface-2); }
+.coming-up__row:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
 .coming-up__row:last-child { border-bottom: none; }
 .coming-up__icon {
   flex: 0 0 auto; width: 20px; text-align: center; font-size: 15px;
@@ -2214,7 +2236,19 @@
   flex: 0 0 auto; font-size: 12.5px; color: var(--gold-deep);
   font-weight: 600; white-space: nowrap;
 }
-.coming-up__more { padding: 10px 0 0; font-size: 12.5px; color: var(--text-3); font-style: italic; }
+/* "+N more" is a <button> (it toggles the full year in place); reset the UA
+   chrome to the plain italic text-link it reads as, left-aligned under the list. */
+.coming-up__more {
+  display: block; width: 100%;
+  padding: 10px 0 0; margin: 0;
+  border: 0; background: transparent;
+  font: inherit; font-size: 12.5px; font-style: italic;
+  color: var(--text-3); text-align: left;
+  cursor: pointer;
+  transition: color var(--t-fast);
+}
+.coming-up__more:hover { color: var(--accent-deep); }
+.coming-up__more:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--r-xs); }
 .coming-up__actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
 .coming-up__remind.is-on {
   background: var(--gold); border-color: var(--gold); color: #fff;
