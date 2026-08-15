@@ -67,12 +67,12 @@
   --focus:        var(--olive);
 
   /* Scrollbars — heritage-tinted, not the default OS gray. A muted olive thumb
-     on a faint parchment track; deepens toward the accent on hover. One set of
-     tokens drives every scoped bar (rail, inspector, modals, year-strip) plus
-     the app-wide default, and each theme block below re-tunes them. */
-  --scroll-thumb:       rgba(94, 125, 99, 0.38);   /* olive, translucent */
-  --scroll-thumb-hover: rgba(94, 125, 99, 0.62);
-  --scroll-track:       rgba(94, 125, 99, 0.07);
+     on a fully TRANSPARENT track (no gutter fill), so the bar reads as a lone
+     floating pill over whatever surface it scrolls; deepens toward the accent
+     on hover. One thumb-token set drives every scoped bar (rail, inspector,
+     modals, year-strip) plus the app-wide default, re-tuned per theme below. */
+  --scroll-thumb:       rgba(94, 125, 99, 0.48);   /* olive, translucent */
+  --scroll-thumb-hover: rgba(94, 125, 99, 0.7);
 
   --alive:        var(--olive);
   --alive-soft:   var(--olive-soft);
@@ -212,10 +212,9 @@
     --accent-fill-hover: #6E9173;
 
     /* Scrollbars on the dark page: a brighter mint thumb so it's visible on the
-       near-black surfaces, over a barely-there light track. */
-    --scroll-thumb:       rgba(155, 198, 161, 0.28);
-    --scroll-thumb-hover: rgba(155, 198, 161, 0.52);
-    --scroll-track:       rgba(240, 235, 221, 0.05);
+       near-black surfaces (track is transparent app-wide). */
+    --scroll-thumb:       rgba(155, 198, 161, 0.34);
+    --scroll-thumb-hover: rgba(155, 198, 161, 0.6);
 
     /* Deep forest jewel for the hero stage. It must stay genuinely DARK for a
        dark theme — an earlier pass lightened it toward mid-sage, which read as a
@@ -264,10 +263,10 @@
   --focus:        #000000;
 
   /* High contrast (light): a solid, unmistakable thumb — no translucency to
-     wash it out — on a visible track. */
+     wash it out. Track stays transparent (app-wide) but the ink thumb reads
+     unambiguously against any surface. */
   --scroll-thumb:       #37332B;
   --scroll-thumb-hover: #000000;
-  --scroll-track:       #DBD8CE;
 }
 /* Dark base. Dark mode sets the SEMANTIC vars directly (not via the ink
    aliases), so the boost has to restate them here: pure-black surfaces + white
@@ -298,10 +297,9 @@
 
   --focus:        #FFFFFF;
 
-  /* High contrast (dark): solid light thumb on a visible dark track. */
+  /* High contrast (dark): solid light thumb (track is transparent app-wide). */
   --scroll-thumb:       #C8C2B1;
   --scroll-thumb-hover: #FFFFFF;
-  --scroll-track:       #232019;
 }
 /* One crisp, unmistakable focus indicator in high contrast: a solid ring in the
    theme's focus colour (pure ink on light, pure white on dark), overriding the
