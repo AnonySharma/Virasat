@@ -578,6 +578,12 @@
   color: var(--text-3); margin-top: 2px;
   letter-spacing: 0;
 }
+/* Quiet gold memoriam feather beside a deceased person's name — a marker,
+   not a banner. Sized well below the name so it reads as a grace note. */
+.person-card__memoriam {
+  font-size: 0.62em; color: var(--gold-deep);
+  margin-right: 6px; vertical-align: 0.14em;
+}
 .person-card__dates {
   font-size: 11.5px; color: var(--text-3);
   font-variant-numeric: tabular-nums; letter-spacing: .04em;

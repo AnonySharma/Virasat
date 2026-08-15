@@ -36,6 +36,12 @@ straight into `ROADMAP.md` P1/P2 with a day of scoping.
 #### 1. Structured interview prompts
 *A picker of gentle, specific questions that feeds straight into the existing Notes / Stories flow.*
 
+> **✅ Shipped.** The Stories editor has a collapsed "Need an idea?" toggle that
+> reveals one rotating heritage prompt at a time (15 human-written EN+HI
+> questions); "Use this prompt" fills the body without overwriting, "Show
+> another" rotates through a shuffled queue. See `buildPromptHelper` in
+> `inspector.js`.
+
 - **What it does:** A small "Need an idea?" affordance beside the Stories editor
   and the (planned) voice-memo button, offering rotating prompts — *"What did a
   Sunday look like in your childhood home?"*, *"What's a phrase your grandfather
@@ -99,27 +105,55 @@ straight into `ROADMAP.md` P1/P2 with a day of scoping.
 #### 4. In Memoriam mode
 *A tasteful, distinct treatment for records once a death date is set — not just a rust-colored chip.*
 
-- **What it does:** When `deathDate` is set, the profile gets a quiet visual
-  marker (a small gold-outlined candle or leaf glyph beside the name — not a
-  banner, not a color change to the whole page) and destructive actions get one
-  extra confirm step: *"[Name] is recorded as passed. Delete their memorial
-  record anyway?"* Today `deletePerson` treats a deceased grandparent exactly
-  like a duplicate test entry.
-- **Value:** For a family archive specifically, the record of someone who has
-  died is the highest-stakes data in the tree — the person can't be
-  re-interviewed, re-photographed, or corrected by asking them. An accidental
-  delete of a living person is annoying; an accidental delete of the only
-  digitized record of a deceased great-grandmother is a real loss.
-- **Fit:** This is exactly the kind of feature a heritage app should have and a
-  generic CRM never would — treating death as a data event worth handling with
-  care is the whole premise of Virasat.
-- **Effort:** S/M. Reuses the existing `--rust` token and `isDeceased()` helper;
-  the extra confirm step is a copy/config change to the existing
-  `UI.confirm({ danger: true })` call in `deletePerson`'s caller.
-- **Tier: Now.**
+The **core of this idea has shipped** — treating a death date as a data event
+worth handling with care, not like a duplicate test entry. What's live today,
+plus the new ideas that grew out of it, are split below.
+
+**✅ Shipped:**
+
+- **Quiet memorial marker.** Deceased records get an "In loving memory" eyebrow
+  and a parchment wash in the inspector hero (`.inspector-hero--memoriam`), a
+  gold `fa-feather` glyph beside the name in the People list
+  (`.person-card__memoriam`), a `--deceased` photo ring in the tree, a
+  `chip--deceased` age chip, and a fade-right on the timeline for imprecise
+  death dates. All keyed off the single `FamilyStore.isDeceased()` helper.
+- **Memorial-grade delete confirm.** Deleting a record with a death date now
+  raises a distinct, heavier confirm — *"[Name] is recorded as passed. Deleting
+  removes the only digitised record of their life — this can't be undone."* —
+  instead of the ordinary remove dialog, at all three delete call sites
+  (People, inspector, tree node menu). Copy is EN+HI, human-written.
+- **A "remembered" count** on the Insights page counts the deceased with dignity
+  rather than as a raw statistic.
+
+**Still open — new ideas that extend this:**
+
+- **Punya-tithi remembrance (opt-in).** On a death anniversary, a gentle
+  *"Remembering [Name] today"* surface — the remembrance counterpart to
+  ROADMAP P1's birthday/anniversary notifications, but distinct in intent
+  (remembrance, not celebration) and always opt-in. Reuses the same date-scan
+  and notification opt-in machinery; no new dependency.
+- **Resting-place / memorial-location field.** An optional field for where the
+  family can pay respects — a samadhi, ghat, cemetery, or memorial. Culturally
+  resonant for the Indian-heritage audience and a natural companion to the
+  Memorial poster (ROADMAP P1); purely additive, one optional field.
+- **"Protected record" flag.** Let a family mark *any* record irreplaceable —
+  not only the deceased — so an irreplaceable living elder's record also gets
+  the memorial-grade confirm. Generalises the delete-guard above from
+  `isDeceased()` to an explicit, opt-in flag.
+- **Cascade/merge guard.** Ensure any future bulk or merge operation (ROADMAP
+  P3 Tree merge, a hypothetical bulk-delete) routes deceased/protected records
+  through the same heavier confirm rather than silently absorbing them.
+- **Effort:** S each. All reuse the `isDeceased()` helper, the `--gold`/`--rust`
+  tokens, and existing opt-in/notification and field-rendering patterns.
+- **Tier: Now** (remembrance + resting-place); protected-record and cascade
+  guard are **Next**, gated on the bulk/merge features they protect.
 
 #### 5. Read-aloud narration
 *A speaker-icon button that reads a profile's About/Stories aloud via the browser's built-in voice.*
+
+> **✅ Shipped.** A "Read aloud" action in the inspector narrates the profile via
+> the native `SpeechSynthesis` API, language-aware (Hindi voice for Hindi text
+> when available), with a stop toggle. See `readAloudAction` in `inspector.js`.
 
 - **What it does:** Adds a small "Read aloud" toggle beside the About section
   and each story card, using the native `SpeechSynthesis` API (`window.speechSynthesis`,
