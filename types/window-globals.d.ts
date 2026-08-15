@@ -36,6 +36,7 @@ declare const ExportImport: any;
 declare const CollectForm: any;
 declare const PrintBook: any;
 declare const HelpGuide: any;
+declare const LegalPage: any;
 declare const VirasatConfig: any;
 declare const Auth: any;
 declare const CloudStore: any;
@@ -73,6 +74,7 @@ interface Window {
   CollectForm: any;
   PrintBook: any;
   HelpGuide: any;
+  LegalPage: any;
   VirasatConfig: any;
   Auth: any;
   CloudStore: any;

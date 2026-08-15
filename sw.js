@@ -13,7 +13,7 @@
  * Cache version is part of the cache name, so bumping CACHE_VERSION on
  * a release activates a clean replacement during `activate`.
  */
-const CACHE_VERSION = "v66";
+const CACHE_VERSION = "v67";
 const SHELL_CACHE = "virasat-shell-" + CACHE_VERSION;
 const RUNTIME_CACHE = "virasat-runtime-" + CACHE_VERSION;
 const CDN_CACHE = "virasat-cdn-" + CACHE_VERSION;
@@ -21,6 +21,8 @@ const CDN_CACHE = "virasat-cdn-" + CACHE_VERSION;
 const SHELL = [
   "./",
   "./index.html",
+  "./privacy.html",
+  "./terms.html",
   "./manifest.webmanifest",
   "./assets/icon.svg",
   "./assets/apple-touch-icon.png",
@@ -48,6 +50,7 @@ const SHELL = [
   "./lib/features/collect-form.js",
   "./lib/features/print-book.js",
   "./lib/features/help-guide.js",
+  "./lib/legal-page.js",
   "./lib/auth/config.js",
   "./lib/auth/auth-store.js",
   "./lib/auth/cloud-store.js",
