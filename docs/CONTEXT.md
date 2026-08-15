@@ -11,19 +11,30 @@ This is the long-form reference: data model, module relationships, sequence flow
      │
      │ loads in order:
      │
-     ├── styles/tokens.css        — CSS variables, light + dark themes
+     ├── styles/tokens.css        — CSS variables; light/dark × normal/high-contrast
      ├── styles/base.css          — layout, typography reset
      ├── styles/components.css    — buttons, chips, cards, modal, picker
-     ├── styles/views.css         — view-specific (tree / people / timeline)
+     ├── styles/views.css         — view-specific (tree / people / timeline / insights)
+     │
+     ├── (CDN) Supabase JS SDK            — UMD <script>, only when cloud is configured
      │
      ├── lib/core/
      │   ├── i18n.js                      — EN/HI strings + DOM applier
      │   ├── data-store.js                — FamilyStore (the single API surface)
-     │   └── photo-store.js               — IDB-backed photo blobs
+     │   └── photo-store.js               — IDB blobs + cloud Storage adapter
      │
      ├── lib/ui/
      │   └── dom.js                       — UI.el, UI.openModal, UI.toast, UI.confirm,
-     │                                      UI.emptyState, UI.cancelBtn, UI.saveBtn, UI.clamp
+     │                                      UI.emptyState, UI.cancelBtn, UI.saveBtn, UI.clamp …
+     │
+     ├── lib/auth/                        — cloud layer; inert when config is blank
+     │   ├── config.js                    — VirasatConfig: supabaseUrl / anonKey / bucket
+     │   ├── auth-store.js                — client + sign-in (password / OAuth / magic-link)
+     │   ├── cloud-store.js               — tree load/push, version guard, realtime
+     │   ├── sign-in.js                   — splash gate + sign-in screen + account menu
+     │   ├── tree-list.js                 — tree switcher + create
+     │   ├── sharing.js                   — invite-by-email + member / role list
+     │   └── first-run.js                 — one-time local→cloud tree migration
      │
      ├── lib/components/
      │   ├── heritage-datepicker.js       — calendar popover with year-only mode
@@ -35,21 +46,26 @@ This is the long-form reference: data model, module relationships, sequence flow
      ├── lib/views/
      │   ├── people-view.js               — list / search / form
      │   ├── tree-view.js                 — SVG tree + lineage focus
-     │   ├── timeline-view.js             — horizontal lifespan bars
-     │   └── profile-view.js              — fallback full-page profile
+     │   ├── timeline-view.js             — horizontal lifespan bars + minimap
+     │   └── insights-view.js             — stats dashboard + coming-up + calendar
      │
      ├── lib/features/
      │   ├── image-export.js              — tree → PNG, profile → poster
      │   ├── export-import.js             — JSON export modal + CSV import
      │   ├── collect-form.js              — Google Form template + import
-     │   └── print-book.js                — print-stylesheet driven family book
+     │   ├── print-book.js                — print-stylesheet driven family book
+     │   ├── help-guide.js                — in-app "How Virasat works" guide
+     │   └── anniversaries.js             — birthdays/memorials, .ics, reminders
      │
-     ├── lib/app.js                       — view router, rail wiring, theme toggle
+     ├── lib/legal-page.js                — in-app privacy / terms overlay renderer
+     ├── lib/app.js                       — view router, rail wiring, boot gate
      ├── manifest.webmanifest             — PWA install metadata
      └── sw.js                            — service worker (offline-first)
 ```
 
-Every JS file is an IIFE attaching to `window.<Namespace>`. There's no module bundler. Initialization flow is "load all scripts → `app.js` runs → mounts each view's container".
+Every JS file is an IIFE attaching to `window.<Namespace>`. There's no module bundler. Initialization flow is "load all scripts → `app.js` wires the DOM synchronously → **boot gate** (`Auth.ready()`): in cloud mode it waits for a session and the first remote tree load before mounting views; in local mode it mounts immediately". See §14 for the cloud layer and boot sequence.
+
+The two standalone pages `privacy.html` / `terms.html` are plain static HTML (also reachable in-app via `legal-page.js` overlays), so a link shared to someone who never opens the app still resolves.
 
 ---
 
@@ -75,6 +91,8 @@ This is the load-bearing module. Every view, every feature, every export reads o
       photoId: string | null,          // IDB blob key (post-migration)
       photoCropAvatar: { x, y, scale } | null,
       photoCropHero: { x, y, scale } | null,
+      gallery: [{ id: "g_xxx", photoId, photo, caption, caption_hi }, ...],  // extra photos
+      documents: [{ id: "doc_xxx", photoId, photo, title, title_hi, kind }, ...], // scanned sources
       birthDate: "YYYY[-MM[-DD]]" | null,
       birthDatePrecision: "exact" | "about" | "before" | "after" | null,
       deathDate, deathDatePrecision,   // same shape
@@ -93,6 +111,8 @@ This is the load-bearing module. Every view, every feature, every export reads o
       isPet: bool,
       petOwners: string[],             // ids of bonded humans
       parents: string[],
+      unknownParents: ("father"|"mother")[],  // a known-missing parent slot, so the form
+                                               // can show "father unknown" without a node
       spouses: string[],
       createdAt: ISO, updatedAt: ISO
     }
@@ -105,34 +125,60 @@ This is the load-bearing module. Every view, every feature, every export reads o
 }
 ```
 
-### Public API (≈30 methods)
+### Public API
 
 Categorised by what they do:
 
 **Pure helpers (no state, no IO)** — `parseDate`, `getYear`, `isAlive`, `isDeceased`, `calcAge`, `formatDateRange`, `fileToDataURL`, `initials`, `getField`, `marriageKey`, `relationLabel`. Move these between modules freely; they're functions of their args.
 
-**Reads (sync, over local snapshot)** — `getState`, `getPeople`, `getPerson`, `getChildrenOf`, `getSiblingsOf`, `buildGenerations`, `getMarriage`, `getFamilyName`, `getFamilyTitle`, `searchStories`, `upcomingAnniversaries`, `maintenanceStats`, `peopleMissing`, `findRelationPath`. These will stay sync after a cloud-sync migration; the local snapshot is the cache.
+**Reads (sync, over the in-memory snapshot)** — `getState`, `getPeople`, `getPerson`, `getChildrenOf`, `getSiblingsOf`, `buildGenerations`, `getMarriage`, `getFamilyName`, `getFamilyTitle`, `searchStories`, `upcomingAnniversaries`, `maintenanceStats`, `peopleMissing`, `findRelationPath`. **All reads stay synchronous even in cloud mode** — the snapshot is the source of truth; the cloud layer only ever *hydrates* it (§14). Nothing in the view layer became async.
 
-**Mutations (call `persist()`)** — `addPerson`, `updatePerson`, `deletePerson`, `replaceAll`, `clearAll`, `setFamilyName`, `setFamilyTitle`, `setMarriage`, `deleteMarriage`, `addStory`, `updateStory`, `deleteStory`. These are the swap points for cloud sync.
+**Mutations (call `persist()`)** — `addPerson`, `updatePerson`, `deletePerson`, `replaceAll`, `clearAll`, `setFamilyName`, `setFamilyTitle`, `setMarriage`, `deleteMarriage`, `addStory`, `updateStory`, `deleteStory`. Every one funnels through `persist()` — the single seam the cloud pusher and the undo timeline both hook.
+
+**Undo / redo** — `undo`, `redo`, `canUndo`, `canRedo` (§2a). A ring of whole-tree JSON snapshots; not persisted, per-device.
+
+**Cloud hydrate / active-tree** — `hydrateFromRemote(data, version)`, `setActiveTree(treeId)`, `getActiveTreeId`, `getVersion`, `setVersion`, `onDirty(fn)`, `purgeLocalTree`. These are the cloud layer's only entry points into the store; `data-store.js` itself never imports the SDK. `hydrateFromRemote` deliberately does **not** `markDirty()` — server data isn't a local edit, and flagging it would loop push→echo→hydrate.
+
+**Read-only gate** — `setReadOnly(bool)`, `isReadOnly()`. A viewer-role tree flips this on; mutations become no-ops and the UI hides edit affordances (§14).
 
 **Plumbing** — `subscribe(fn)`, `setMute`, `notifyAll`, `flushPersist`. `subscribe` returns an unsubscribe function. `setMute(true)` lets bulk operations (photo migration on first load) skip per-call notifications.
 
-**Sample fixture** — `sampleData()`. 14-person 4-generation Sharma family with a beagle. Stable IDs (`p_anil`, `p_g_rs`, etc.) — known footgun if a user imports the sample then a public-shared user clicks the sample CTA on top of it.
+**Sample fixture** — the sample family lives in `tests/sample-data.js` (`window.SampleData.build()`), not in the store. Stable IDs (`p_anil`, etc.) — known footgun if the sample CTA is clicked on top of an existing tree, so the CTA is gated on `role === 'owner' && getPeople().length === 0` (§13).
 
 ### `persist()` lifecycle
 
+`persist()` splits into three concerns but still notifies **synchronously**, so the sync-read contract holds:
+
 ```
-mutation API → mutates `state` → calls persist({silent?}) → 
-  ├── schedules debounced flushPersist (250 ms)
+mutation API → mutates `state` → persist({silent?, mute?}) →
+  ├── records an undo snapshot (unless silent/mute — see §2a)
+  ├── schedules debounced local-cache write (per-tree localStorage)
+  ├── markDirty()  — flags the cloud pusher (no-op in local mode)
   └── synchronously notifies listeners (unless `mute` flag)
 
-flushPersist → JSON.stringify(state) → localStorage.setItem
-              (also fires on beforeunload, pagehide, visibilitychange=hidden)
+debounced write → JSON.stringify(state) → localStorage.setItem(cacheKey)
+              (also flushed on beforeunload, pagehide, visibilitychange=hidden)
 
-cross-tab `storage` event → state = load() → notifies listeners
+cross-tab `storage` event  ─┐
+realtime remote UPDATE     ─┴─→ if clean: hydrateFromRemote(); notify
+                                if dirty:  fire virasat:cross-tab-conflict (§14)
 ```
 
-Listeners are 5 today: app.js (view re-render + rail counts), inspector.js (panel re-render), profile-view.js (modal re-render), and two local subscribers in story / family blocks.
+The cache key is **per active tree** (`familyTree.<treeId>.v1`) in cloud mode, or the legacy `familyTree.v1` in local mode — so two cloud trees never overwrite each other's offline snapshot.
+
+Listeners today: `app.js` (view re-render + rail counts), `inspector.js` (panel re-render), and `cloud-store.js` (dirty-flag / push). `subscribe` is also used ad-hoc by feature blocks.
+
+### 2a · Undo / redo
+
+A ring of **whole-tree JSON snapshots** — the exact payload `flushPersist()` already produces, so serializing is free work the store does anyway.
+
+- `baselineStr` is the serialized present. `undoStack` holds prior states (oldest→newest), `redoStack` holds undone states. `HISTORY_LIMIT` caps the ring; the oldest undo step drops when full.
+- `captureHistory()` runs inside `persist()` **after** the mute/silent gate — so bulk photo migration doesn't fragment the timeline (it re-baselines at the end instead). A serialized no-op (Save with nothing changed) is ignored so it can't push a dead step or wrongly clear redo. Any genuine edit clears `redoStack` (no redo past a fork).
+- `undo()`/`redo()` move the present between stacks, then `applySnapshot()` installs the string **without** re-normalizing (it's our own already-normalized output). Stacks + baseline update *before* `notifyAll()`, so a listener like the header's undo/redo enable-state reads the final `canUndo()`/`canRedo()`.
+- The stack is **per-device and not persisted**; `resetHistory()` clears it on boot, tree switch, and remote hydrate — no undo can cross those boundaries, so undo never fights sync. In cloud mode `applySnapshot()` *does* `markDirty()`, so an undo pushes as a new LWW version rather than silently diverging from the server.
+- **Footgun:** a delete/reset frees photo blobs asynchronously (fire-and-forget), so undoing a delete restores the person record but the photo may already be gone from IDB — the render falls back to initials.
+
+The UI is a two-button trio (Undo / Redo + divider, `.tree-controls__hist`) in the tree-controls cluster, plus global `Cmd/Ctrl+Z` / `Cmd/Ctrl+Shift+Z` (and `Ctrl+Y`) shortcuts wired in `app.js`, ignored while a text field is focused (the browser's native text-undo owns Z there). Buttons dispatch `virasat:undo` / `virasat:redo` events; `app.js` calls the store and both views sync their disabled state on the next notify.
 
 ---
 
@@ -154,8 +200,18 @@ Sample data ships with photos already inlined as base64 (`tests/inline-sample-ph
 
 - `PhotoStore.put(blob)` — async, returns a promise of `photoId`. Picks a random key inside the IDB transaction (with retry on collision), so concurrent puts can't collide.
 - `PhotoStore.putWithKey(id, blob)` — async, writes at a specific id. Used by the cloud-download path to repopulate the IDB cache under a photo's original id.
-- `PhotoStore.fileToPhotoId(file)` — pipeline: read → resize to 512 px JPEG @ 0.85 → put → return id.
-- `PhotoStore.delete(id)` — drops the blob and revokes the cached Object URL.
+- `PhotoStore.fileToPhotoId(file)` — pipeline: read → resize to 512 px JPEG @ 0.85 → put → return id. In cloud mode it also uploads the blob to Storage (best-effort, after the IDB put).
+- `PhotoStore.delete(id)` — drops the blob and revokes the cached Object URL. In cloud mode it also fires a best-effort Storage `remove()`.
+
+### Cloud adapter (cloud mode only)
+
+When `VirasatConfig` is set, the same blobs are mirrored to a **private** Supabase Storage bucket at object path `<treeId>/<photoId>.jpg`:
+
+- **Upload** happens inside `fileToPhotoId`, after the IDB put — fire-and-forget, `upsert: true` (idempotent). A failed upload leaves the photo in IDB and visible locally; it just isn't durable cross-device until a later sync. Never throws into the caller.
+- **Download fallback** is a middle step inside `getUrl`: IDB miss → `storage.download()` (RLS-checked by the caller's JWT) → repopulate IDB via `putWithKey(id, blob)` under the photo's *original* id → objectURL. Every render site already does `getUrlSync() → null → getUrl()`, so a freshly-loaded remote tree paints initials first, then swaps photos in — transparent.
+- **IDB keys stay FLAT** (the bare `photoId`), **not** compound `<treeId>|<photoId>` as an earlier plan proposed. The treeId lives only in the Storage object path, resolved fresh per call from `getActiveTreeId()`. `resetCache()` revokes and drops all cached object URLs on a tree switch so one tree's photos can't bleed into another's render (see §13, now resolved this way).
+
+Print/export await note: `image-export.js` and `print-book.js` must `await` every `getUrl()` before rendering — on a cold remote tree the blobs aren't in IDB yet, and a `.then`-after-`print()` path would produce blank photos.
 
 ### IDB transaction wrapper (`txValue`)
 
@@ -277,27 +333,49 @@ The right-side panel. Two modes:
 
 Section collapse state persists in `localStorage["familyTree.inspector.sections"]` keyed by section id. When the user opens story-search results via header search, `Inspector.show(personId, { scrollToStoryId })` force-opens the Stories section, scrolls the matching `.story-card` into view, and adds a brief `.is-flash` class for a gold-halo animation.
 
+A deceased person's header renders an **In Memoriam** treatment (`.inspector-hero--memoriam`: a "in loving memory" eyebrow + parchment wash). This is a render treatment keyed off `isDeceased(person)`, **not** a stored field — the People list and tree node show the same quiet feather glyph the same way.
+
+---
+
+## 5a · Insights view
+
+`insights-view.js` is a read-only dashboard computed entirely from `getPeople()` (filter-aware — the shared `window.Filter` narrows the set, and `setFilter()` is just a full re-render). Layout in `render()`:
+
+1. **Headline stat cards** (`.insight-cards`) — people, generations, average lifespan, living, remembered.
+2. **Stat panels** (`.insight-panels`) — gender split, born-by-decade histogram, recurring first names, roots (birthplaces), eldest/youngest. Packed with **CSS multi-column** (`columns: 320px 3`) so panels of very different heights balance into columns with no row-based dead space; `break-inside: avoid` keeps each panel whole.
+3. **Full-width bands** (`.insight-bands`, a flex column) — the whole-family **Coming up** list and the **Family calendar**. These live *outside* the multicol on purpose: a `column-span:all` child inside it forced the balancer to leave a tall gap beside the last short column (a bug fixed by pulling the wide bands into their own flow).
+
+**Coming up** and the **calendar** both read from `Anniversaries.events()` and share one `eventRow()` builder and one `openEventsModal()` (a scrollable modal of clickable person rows). Coming up shows the first 6, then a "+N more" that opens the whole year ahead in that modal. The calendar is a compact month grid; a marked day carries a small type icon (cake = birthday, feather = memorial) and opens the same modal for that day. Clicking any row dispatches `virasat:reveal-in-tree` (the same seam Timeline/People use) to reveal the person on the canvas.
+
+## 5c · Anniversaries
+
+`lib/features/anniversaries.js` is the single source for date-derived events. `events()` returns birthdays and memorials over `HORIZON_DAYS = 365`, each `{ person, kind: "birth"|"death", date, daysAway, ageOrYears }`, emitting exactly one entry per (person, kind) — no calendar-day duplicates. Helpers: `eventTitle`, `eventMeta`, `relLabel`, `dateLabel` (locale `hi-IN`/`en-GB`), plus `exportIcs()` (a `.ics` any calendar app imports) and the reminder opt-in (`remindersEnabled`/`setReminders`, backed by `localStorage["virasat.anniversaryReminders"]` and same-day Notifications delivered through the service worker's `notificationclick`). Deliberately whole-family and **never filtered** — a reminder you'd want shouldn't disappear because a facet is active.
+
 ---
 
 ## 6 · Service worker
 
-`sw.js` precaches the app shell on install (`SHELL` array) plus Google Fonts CSS + Font Awesome CSS via a `CDN_SHELL` array (with `mode: "no-cors"` because the CDN doesn't always send permissive CORS).
+`sw.js` precaches the app shell on install (`SHELL` array — every HTML/CSS/JS file, now including the `lib/auth/*` scripts and the two legal pages) plus the Google Fonts CSS and Font Awesome CSS via a `CDN_SHELL` array.
 
-Fetch handler:
-- `sw.js` itself: bypass cache (network direct). Otherwise update detection breaks.
-- Cross-origin font/icon requests: cache-first (CDN_CACHE).
-- Same-origin GET: stale-while-revalidate (RUNTIME_CACHE serves cached + refreshes in background).
-- Non-GET, navigation fallback to `./index.html` if offline.
+The CDN CSS is fetched in **CORS mode (the default), NOT `no-cors`** — the page loads Font Awesome's CSS with `integrity=… crossorigin`, and Subresource Integrity **cannot** be verified against an opaque (`no-cors`) response, so a cached opaque body would make the browser reject the stylesheet and icons would silently vanish until a hard refresh. Both CDNs send `access-control-allow-origin: *`, so a normal CORS fetch yields a verifiable 200. The handler only ever caches a real `200` whose `type !== "opaque"`.
 
-`CACHE_VERSION` is part of every cache name (`virasat-shell-v2`, etc.). Bump it whenever the SHELL list changes — the activate handler deletes any cache starting with `virasat-` that isn't in the current version's set.
+Fetch handler, in order:
+- **`*.supabase.co` → return early, never cache.** Auth / data / Storage responses are per-user, auth'd, and change constantly. (The cross-origin bail below would already let these through; this explicit guard makes the intent survive any reordering.)
+- **CDN hosts** (`fonts.googleapis.com`, `fonts.gstatic.com`, `cdnjs.cloudflare.com`, `cdn.jsdelivr.net` for the Supabase SDK) → cache-first, never storing an opaque response.
+- Any other cross-origin → pass through.
+- `sw.js` itself → network direct (a cached copy would freeze the version number).
+- Same-origin GET → stale-while-revalidate (RUNTIME_CACHE serves cached + refreshes in background), only caching a `type === "basic"` 200.
+- Navigation fallback to `./index.html` when offline on an unvisited URL.
 
-When the cloud-sync work lands, the fetch handler will need a Supabase-bypass branch (any URL ending `.supabase.co` → pass through to network, no caching).
+`CACHE_VERSION` is part of every cache name (`virasat-shell-v87`, etc.). **Bump it once per shipped commit** that changes any shell file — the activate handler deletes every cache starting with `virasat-` that isn't in the current version's set.
+
+**Update model:** install does *not* `skipWaiting()`. A fresh deploy parks the new worker in `waiting` while the open tab keeps the old code; the page shows a "new version ready" prompt and posts `SKIP_WAITING` only when the user accepts — so code is never hot-swapped out from under an in-progress edit (there's no keystroke-level autosave). `notificationclick` (anniversary reminders, §12/anniversaries) focuses or opens a Virasat tab at the tree.
 
 ---
 
 ## 7 · Theme tokens
 
-`tokens.css` exposes the light theme as `:root` variables and a dark theme override under `:root[data-theme="dark"]`. Key tokens:
+`tokens.css` exposes the light theme as `:root` variables. Key tokens:
 
 - `--bg`, `--bg-elev`, `--bg-sunken`, `--surface`, `--surface-2`, `--surface-3` — backgrounds.
 - `--text`, `--text-2`, `--text-3`, `--text-4` — text shades.
@@ -306,9 +384,19 @@ When the cloud-sync work lands, the fetch handler will need a Supabase-bypass br
 - `--rust` — destructive / death markers.
 - `--av-{peach,sage,lavender,sky,rose,butter,clay,mist}` + matching `-ink` — name-hashed avatar pastels.
 
-The dark theme **brightens `--olive-deep` and `--gold-deep`** rather than overriding component CSS per-by-per. This is intentional — any "color: olive-deep on bg: olive-soft" pairing in the codebase reads correctly in both modes without per-component dark-mode rules.
+### Two independent axes → four surfaces
 
-Theme persists in `localStorage["virasat.theme"]`. Toggle is a sun/moon pill in the header.
+Appearance is **two orthogonal attributes on `<html>`**, giving four distinct palettes:
+
+| | normal contrast | high contrast |
+|---|---|---|
+| **light** | `:root` | `:root[data-contrast="high"]:not([data-theme="dark"])` |
+| **dark** | `:root[data-theme="dark"]` | `:root[data-theme="dark"][data-contrast="high"]` |
+
+- **Dark** brightens `--olive-deep` and `--gold-deep` at the *token* level rather than per-component — so any "color: olive-deep on bg: olive-soft" pairing reads correctly in both modes with no per-component dark rule. Persists in `localStorage["virasat.theme"]`.
+- **High contrast** is a separate accessibility axis (`data-contrast="high"`, stored in `localStorage["virasat.contrast"]`) that thickens lines, deepens text, and adds a visible focus outline on interactive elements. The light HC block is scoped `:not([data-theme="dark"])` so it can't leak its light values onto the dark base; a dedicated `[data-theme="dark"][data-contrast="high"]` block covers dark HC.
+
+Both toggles live in the **account / appearance menu** (the avatar button), not the header — decluttered there so the header stays a title + view switcher. Neither follows system preference; the heritage look is tuned for warm light and only flips on the explicit attribute. Both attributes are applied before first paint to avoid a flash.
 
 ---
 
@@ -338,12 +426,15 @@ Import path: `replaceAll(parsed)` flushes any pending debounce, normalises marri
 
 ## 9 · Naming + ID conventions
 
-- Person ids: `crypto.randomUUID().slice(0, 12)` prefixed with `p_` (e.g., `p_a1b2c3d4e5f6`). Sample data uses stable hand-written ids for screenshots.
-- Story ids: same pattern, prefixed `s_`.
-- Photo ids: `ph_<random6><dateB36-4><counter>`. Counter prevents same-millisecond collisions on the fallback path.
+- Person ids: `genId()` = prefix `p_` + `crypto.randomUUID()` hex, dashes stripped, first 12 chars (with a non-crypto fallback). Sample data uses stable hand-written ids for screenshots.
+- Story ids `s_`, gallery ids `g_`, document ids `doc_`, photo ids `ph_…` — same `genId(prefix)` helper.
 - Marriage keys: `<sortedIdA>|<sortedIdB>` — always re-keyed via `marriageKey()` to keep lookup deterministic.
-- Storage keys (localStorage): `familyTree.v1` (legacy state), `familyTree.lang`, `familyTree.inspector.sections`, `virasat.theme`, `virasat.showPets`, `virasat.showStoryCount`, `virasat.showDates`, `virasat.timelinePxPerYear`. Sessionstorage: `virasat.filter`, `virasat.persistWarned`.
-- IDB databases: `familyTree.photos` (one bucket today; needs scoping for multi-tree).
+- Storage keys:
+  - **Tree state (localStorage):** `familyTree.v1` (local-first) or `familyTree.<treeId>.v1` (per cloud tree); `virasat.activeTreeId` points at the current one.
+  - **Preferences (localStorage):** `familyTree.lang`, `familyTree.inspector.sections`, `virasat.theme`, `virasat.contrast`, `virasat.showPets`, `virasat.showStoryCount`, `virasat.showDates`, `virasat.showEras`, `virasat.timelinePxPerYear`, `virasat.railCollapsed`, `virasat.searchScope`, `virasat.anniversaryReminders`.
+  - **sessionStorage:** `virasat.filter`, `virasat.persistWarned`, `virasat.touchMenuHintShown`.
+  - Preference keys are **global**, not per-tree (a deliberate MVP scope; see §13).
+- IDB databases: `familyTree.photos` — one store; blobs are keyed by the bare `photoId` and isolated across trees by the Storage object path + `resetCache()` on switch, not by compound keys (§3).
 
 ---
 
@@ -384,12 +475,52 @@ The form has paired EN/HI inputs side-by-side. There's no auto-translate — emp
 
 ## 13 · Open architectural questions (worth thinking about before they bite)
 
-1. **Tree layout doesn't lay out pets consistently when they have multiple owners.** Today we anchor on `petOwners[0]` for the riser. If owners are in different generations, the placement is the deeper one and the connection looks weird from the shallower owner's view.
-2. **`sampleData()` IDs are stable across all users.** A public-share collision bug. Mitigated by gating the sample CTA on `role === 'owner'` once auth lands.
-3. **Schema versioning never had to do work yet.** When the first breaking change comes (likely splitting `parents[]` into `father`/`mother` if relationship-tagging lands), we'll need a real migration path. Today every additive field defaults via `||` in `normalizePerson`.
-4. **Per-tree state scoping** is needed before the multi-tenant cloud sync ships. Inspector section state, timeline zoom, view toggles, filter — all currently global. List in `docs/ROADMAP.md` § P3.5.
-5. **IDB photo bucket leaks across trees.** One DB for all. Will need per-tree scoping (one DB per tree, or compound `${treeId}|${photoId}` keys) before multi-tree.
+1. **Tree layout doesn't lay out pets consistently when they have multiple owners.** Today we anchor on `petOwners[0]` for the riser. If owners are in different generations, the placement is the deeper one and the connection looks weird from the shallower owner's view. *(Still open.)*
+2. **Schema versioning never had to do work yet.** When the first breaking change comes (likely splitting `parents[]` into `father`/`mother` if relationship-tagging lands), we'll need a real migration path. Today every additive field defaults via `||` in `normalizePerson`. *(Still open.)*
+3. **Viewer privacy is UI-only in MVP.** With whole-blob LWW, RLS hands the entire `data` JSONB to every member including viewers, so per-field/photo privacy for viewers is enforced only in the UI — a determined viewer could read hidden fields via DevTools. Proper enforcement is a `SECURITY DEFINER` RPC returning a redacted blob for viewer-role callers — a documented fast-follow, not MVP. "View access" today means: **cannot edit** (enforced server-side by RLS) and sees a read-only UI.
+4. **Preference keys are global, not per-tree.** Inspector section state, timeline zoom, view toggles, filter, theme all persist per-device across every tree. Low harm; scoping per-tree is a fast-follow. *(Partially by-design for MVP.)*
+
+### Resolved since this doc was first written
+
+- **Sample-CTA id collision** — gated on `role === 'owner' && getPeople().length === 0`, so it never lands on a tree you don't own or that already has people (§ data-store, sign-in).
+- **IDB photo bucket across trees** — resolved by flat keys + Storage object path scoping + `resetCache()` on switch, *not* compound keys (§3).
+- **Reads staying sync under cloud sync** — confirmed: the cloud layer only hydrates the in-memory snapshot; no view became async (§2, §14).
 
 ---
 
-— Last updated 2026-06-19. When making changes that contradict this file, update the file in the same commit.
+## 14 · The cloud layer (`lib/auth/`)
+
+The whole cloud stack is **opt-in and inert by default**. `config.js` holds `VirasatConfig = { supabaseUrl, supabaseAnonKey, bucket }`; `Auth.ready()` resolves `{ cloud: false }` when either credential is blank, and the app runs exactly as the local-first PWA it always was. Fill both in and it becomes multi-user. The anon key is public-safe — **row-level security in Postgres is the enforcement point**, not the client. Backend schema + setup live in `docs/SUPABASE-SETUP.md` and `docs/CLOUD-SYNC-PLAN.md`.
+
+No build step: the Supabase JS SDK loads as a **UMD `<script>` with SRI** from `cdn.jsdelivr.net` (`window.supabase.createClient`) — the classic ordered-IIFE script chain is preserved, nothing became `type=module`. `flowType: 'pkce'` so OAuth / magic-link return `?code=` in the *query* (stripped after exchange), leaving the `#tree/#people/#timeline` hash router untouched.
+
+### Boot gate (`app.js`)
+
+DOM + listener wiring stays synchronous. Only the mount/activate/sample-offer tail is gated:
+
+```
+Auth.ready() →
+  { cloud:false }        → bootApp()            // local-only, unchanged
+  { session }            → bootWithCloud()      // already signed in
+  no session             → SignIn.show() → bootWithCloud()   // gate, then load+boot
+  (Auth absent / throws) → bootApp()            // never strand on a blank page
+```
+
+`bootWithCloud()` resolves the active tree, `await`s the first remote load (hydrate) behind a splash, *then* mounts views — so first paint is data-complete.
+
+### Modules
+
+- **`auth-store.js`** (`window.Auth`) — creates the client (`persistSession`, `autoRefreshToken`, PKCE), `ready()`, sign-in via password / Google OAuth / magic-link, `signOut`, `onAuthChange`. Calls the `claim_invites` RPC on every login so an invite sent before signup is picked up.
+- **`cloud-store.js`** (`window.CloudStore`) — the sync engine. `start()`/`stop()`; `loadInto(treeId)` fetches the row and `hydrateFromRemote`s it; `push()` is a **version-guarded LWW** update (`.eq('version', loaded).update({ data, version: loaded+1 })`) debounced `PUSH_DEBOUNCE_MS = 1500`. On a guard miss it fetches latest, hydrates, and fires the **existing** `virasat:cross-tab-conflict` event (same banner + backup offer the `storage`-event path used). A realtime channel on the active row delivers other devices' pushes; `POLL_MS = 60000` is the fallback heartbeat + offline-replay when the WebSocket is blocked. `subscribe(FamilyStore.onDirty)` is how a local edit flags a push. `syncState()` drives the header pip (`synced`/`pending`/`offline`) via `virasat:sync-state`.
+- **`sign-in.js`** — splash gate + sign-in screen + the account/appearance menu (theme, contrast, sign-out).
+- **`tree-list.js`** — tree switcher + create. Switching repoints `activeTreeId` and triggers a fresh cloud load; the load path (`cloud-store.loadInto`) calls `PhotoStore.resetCache()` so one tree's photo object-URLs can't bleed into another's render, and `app.js` clears the Inspector selection on the switch.
+- **`sharing.js`** — invite-by-email dialog + member/role list; owner-checked `invite_to_tree` / `revoke_access` RPCs (which also double as role change).
+- **`first-run.js`** — one-time: detects a returning local user's `familyTree.v1`, offers to upload it as a new cloud tree (inlining base64 photos to Storage), keeps the local copy as a fallback.
+
+### Roles
+
+`owner` / `editor` / `viewer`, enforced server-side by RLS. A `viewer` load flips `FamilyStore.setReadOnly(true)` (mutations no-op) and `body.is-viewer` hides every `.js-edit-only` affordance. **Viewer privacy is UI-only in MVP** — see §13.3.
+
+---
+
+— Last updated 2026-08-16. When making changes that contradict this file, update the file in the same commit.
