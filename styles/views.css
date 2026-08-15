@@ -759,18 +759,35 @@
   .timeline-name-col { width: 120px; }
 }
 
-/* Timeline minimap — a compact overview strip under the scroll area with a
-   draggable viewport window. Shown by timeline-view.js only when the canvas
-   overflows. Height = MINIMAP_LANES(4) × MINIMAP_LANE_H(5) + top/bottom pad;
-   keep in sync with those constants in timeline-view.js. */
+/* Timeline minimap — a compact overview strip ABOVE the scroll area (under the
+   zoom controls) with a captioned label and a draggable viewport window. Shown
+   by timeline-view.js only when the canvas overflows. The group carries the
+   page margin + caption→strip spacing; the strip itself sits margin-free inside
+   it. Strip height = MINIMAP_LANES(4) × MINIMAP_LANE_H(5) + top/bottom pad; keep
+   in sync with those constants in timeline-view.js. */
+.timeline-minimap-group {
+  margin: 0 24px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.timeline-minimap__caption {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  color: var(--text-3);
+  padding-left: 2px;
+}
 .timeline-minimap {
   position: relative;
   height: 30px;
-  margin: 0 24px 20px;
-  padding: 2px 0;
   background: var(--bg-elev);
   border: 1px solid var(--line);
-  border-radius: var(--r-md);
+  /* A calm radius (not the near-pill --r-md) so the tiny bars and the viewport
+     window clear the corners; paired with the track's horizontal inset below,
+     nothing jams into the curve. */
+  border-radius: var(--r-xs);
   cursor: pointer;
   flex-shrink: 0;
   touch-action: none;   /* pointer drag drives scroll; don't also pan the page */
@@ -778,12 +795,16 @@
   /* The lifespan bars + viewport window are absolutely positioned; overflow
      hidden alone doesn't reliably clip abs-positioned descendants to a ROUNDED
      corner in Blink/WebKit (they escape the left curve). Paint containment
-     forces a clip layer that honours the border-radius — cropping both the
-     bars and the window's squarer corners to the strip's rounding. */
+     forces a clip layer that honours the border-radius — a backstop behind the
+     track inset so a full-width window never bleeds past the rounding. */
   contain: paint;
 }
 .timeline-minimap:focus-visible { outline: 2px solid var(--olive); outline-offset: 2px; }
-.timeline-minimap__track { position: absolute; inset: 2px 0; }
+/* Horizontal inset keeps the bars, the "now" tick, and the viewport window a
+   few px clear of the rounded ends. All three are positioned as a fraction of
+   THIS track, so insetting it just narrows the shared coordinate space — they
+   stay mutually consistent. */
+.timeline-minimap__track { position: absolute; inset: 3px 8px; }
 .timeline-minimap__bar {
   position: absolute; height: 3px;
   background: var(--olive); border-radius: 2px;
@@ -794,17 +815,21 @@
   position: absolute; top: 0; bottom: 0; width: 1px;
   background: var(--gold);
 }
+/* Viewport window — a see-through olive-deep frame (theme-aware: deep green on
+   light, mint on dark), deliberately NOT gold so it never reads as the gold
+   "now" tick it used to match. The faint fill + lift make it obvious as "your
+   current view" without hiding the bars beneath it. */
 .timeline-minimap__window {
   position: absolute; top: 0; bottom: 0;
-  min-width: 8px;
-  background: rgba(184, 154, 90, 0.16);   /* --gold at low alpha */
-  border: 1px solid var(--gold);
-  border-radius: 3px;
-  box-shadow: 0 0 0 1px rgba(184, 154, 90, 0.15);
+  min-width: 10px;
+  background: rgba(94, 125, 99, 0.12);       /* faint olive lens */
+  border: 1.5px solid var(--accent-deep);
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(34, 31, 26, 0.18);
   pointer-events: none;
 }
 @media (max-width: 720px) {
-  .timeline-minimap { margin: 0 16px 16px; }
+  .timeline-minimap-group { margin: 0 16px 12px; }
 }
 
 /* ========== Inspector — biographical, photo-first ========== */
