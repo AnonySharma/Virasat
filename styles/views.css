@@ -4,10 +4,15 @@
   padding: 28px 32px 20px;
   gap: var(--s-4);
   flex-shrink: 0;
-  /* An opaque band with a hairline foot, so tiles in the scrolling body below
-     clip at a clear boundary instead of dissolving against the page as they
-     pass under the masthead. Same "fixed bar over scrolling content" treatment
-     the timeline axis and profile topbar already use. */
+}
+/* Opaque band + hairline foot ONLY on the two views whose scroll body is a
+   full-bleed field of tiles (People cards, Insights panels): there a tile
+   passing under the masthead would otherwise dissolve against the page and its
+   clipped top would read as broken. Tree and Timeline put an INSET, rounded
+   frame below the head, so a full-bleed straight line would collide with those
+   rounded top corners — they keep the plain transparent head. */
+#view-people .view-head,
+#view-insights .view-head {
   background: var(--bg);
   border-bottom: 1px solid var(--line);
 }
@@ -2089,13 +2094,21 @@
 /* Panels — gender / decades / names.
    Masonry-style packing via CSS multi-column. Cards of very different heights
    (a 6-chip "roots" panel beside a one-line "names" panel) leave big holes in a
-   row-based grid with align-items:start, and a full-width panel forces an
-   orphaned half-empty row. Multicol balances the stat panels into columns with
-   no vertical dead space; the wide "coming up" panel (last child) spans all
-   columns and sits full-width beneath them. */
+   row-based grid with align-items:start. Multicol balances the stat panels into
+   columns with no vertical dead space. The full-width "coming up" and calendar
+   bands live OUTSIDE this container (in .insight-bands) — a column-span:all
+   child would otherwise force the balancer to leave a tall gap beside the last
+   short column. */
 .insight-panels {
   columns: 320px 3;
   column-gap: var(--s-4);
+}
+/* Full-width bands (Coming up, Family calendar) stacked below the stat columns,
+   each carrying its own panel chrome. Their own flow means no multicol balancing
+   gap above them; the parent .insights-body gap sets the rhythm between them. */
+.insight-bands {
+  display: flex; flex-direction: column;
+  gap: var(--s-6);
 }
 .insight-panel {
   padding: 20px 22px 22px;
@@ -2206,11 +2219,13 @@
 }
 
 /* Coming up: the year's birthdays & memorials, plus calendar/reminder actions.
-   Spans every column so its rows and action buttons have full width, and sits
-   as a band beneath the balanced stat columns. column-span:all also closes the
-   multicol balancing above it, so the shorter panels pack tight with no hole. */
-.insight-panel--wide { column-span: all; }
+   A full-width band in .insight-bands; the container's flex gap sets the spacing,
+   so drop the stat-panel's bottom margin that would otherwise double it up. */
+.insight-panel--wide { margin: 0; }
 .coming-up__list { display: flex; flex-direction: column; }
+/* Same row list, reused inside a modal (the full year-ahead, or one calendar
+   day). The modal body already scrolls and pads, so the list just fills it. */
+.coming-up__list--modal { min-width: min(360px, 78vw); }
 /* Rows are <button>s (each opens its person), so reset the UA button chrome
    back to the full-width flex row they replaced, then add a clear clickable
    affordance: a hover wash that bleeds to the panel padding edge (via the
@@ -2242,8 +2257,8 @@
   flex: 0 0 auto; font-size: 12.5px; color: var(--gold-deep);
   font-weight: 600; white-space: nowrap;
 }
-/* "+N more" is a <button> (it toggles the full year in place); reset the UA
-   chrome to the plain italic text-link it reads as, left-aligned under the list. */
+/* "+N more" is a <button> (it opens the full year ahead in a modal); reset the
+   UA chrome to the plain italic text-link it reads as, left-aligned under the list. */
 .coming-up__more {
   display: block; width: 100%;
   padding: 10px 0 0; margin: 0;
@@ -2296,66 +2311,61 @@
 .cal-nav__today:hover { color: var(--olive-deep); text-decoration: underline; }
 .cal-nav__today:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--r-xs); }
 
+/* Compact, mac-style month widget: capped width so it reads as a glanceable
+   calendar rather than a full-bleed field of giant squares. The weekday header
+   and the grid share one width and a 7-column geometry. */
 .cal-weekdays,
 .cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: 3px;
+  max-width: 360px;
 }
 .cal-weekday {
   text-align: center;
   font-size: 10.5px; font-weight: 600; letter-spacing: .06em;
   text-transform: uppercase; color: var(--text-3);
-  padding-bottom: 6px;
+  padding-bottom: 4px;
 }
 .cal-grid { margin-top: 2px; }
-/* Each cell is a square-ish tile. Marked days are <button>s; plain days and
-   the leading blanks are inert spans that share the geometry. */
+/* Each cell is a small tile: the day number, and (when marked) a row of type
+   icons under it. Marked days are <button>s; plain days and the leading blanks
+   are inert spans that share the geometry. */
 .cal-cell {
   position: relative;
-  aspect-ratio: 1 / 1;
   min-height: 40px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 3px;
+  gap: 2px;
   border: 1px solid transparent; border-radius: var(--r-xs);
   font: inherit; color: var(--text-2);
   background: transparent;
 }
 .cal-cell--blank { visibility: hidden; }
-.cal-cell__num { font-size: 13px; font-variant-numeric: tabular-nums; line-height: 1; }
-.cal-cell__dots { display: flex; gap: 3px; height: 6px; align-items: center; }
-.cal-dot { width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto; }
-.cal-dot--birth { background: var(--gold-deep); }
-.cal-dot--death { background: var(--olive-deep); }
+.cal-cell__num { font-size: 12.5px; font-variant-numeric: tabular-nums; line-height: 1; }
+/* Type icons: a small cake for a birthday, a feather for a memorial. One of
+   each at most per day; a day with both shows the pair side by side. */
+.cal-cell__icons { display: flex; gap: 4px; align-items: center; line-height: 1; }
+.cal-cell__icon { font-size: 10px; }
+.cal-cell__icon--birth { color: var(--gold-deep); }
+.cal-cell__icon--death { color: var(--olive-deep, var(--text-3)); }
 /* Today: a soft ring, whether or not it's marked. */
 .cal-cell.is-today { border-color: var(--accent-deep); }
 .cal-cell.is-today .cal-cell__num { font-weight: 700; color: var(--text); }
-/* Marked days are interactive. */
+/* Marked days are interactive: a filled tile that opens the day's people. */
 .cal-cell--marked {
   cursor: pointer;
   background: var(--surface-2);
   border-color: var(--line);
-  transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+  transition: background var(--t-fast), border-color var(--t-fast);
 }
 .cal-cell--marked:hover { background: var(--olive-soft); border-color: var(--olive-deep); }
 .cal-cell--marked:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
-.cal-cell--marked.is-selected {
-  background: var(--olive-soft);
-  border-color: var(--olive-deep);
-  box-shadow: inset 0 0 0 1px var(--olive-deep);
-}
-/* Day detail: the selected day's people, reusing the coming-up row styling. */
-.cal-detail {
-  margin-top: 14px;
-  border-top: 1px solid var(--line);
-  padding-top: 4px;
-}
 .cal-nothing {
   margin: 14px 0 0; font-size: 12.5px; font-style: italic; color: var(--text-3);
 }
 .cal-legend {
   display: flex; flex-wrap: wrap; gap: 16px;
-  margin-top: 14px; padding-top: 12px;
+  margin-top: 16px; padding-top: 12px;
   border-top: 1px solid var(--line);
   font-size: 12px; color: var(--text-3);
 }
@@ -2363,7 +2373,10 @@
 
 @media (max-width: 640px) {
   .insights-body { padding: var(--s-5) 16px 24px; gap: var(--s-5); }
+  .insight-bands { gap: var(--s-5); }
   .coming-up__actions .btn { flex: 1 1 auto; justify-content: center; }
-  .cal-cell { min-height: 34px; }
+  .cal-weekdays,
+  .cal-grid { max-width: none; }
+  .cal-cell { min-height: 36px; }
   .cal-cell__num { font-size: 12px; }
 }
