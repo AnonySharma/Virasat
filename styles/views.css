@@ -2229,6 +2229,31 @@
 .coming-up__row:hover { background: var(--surface-2); }
 .coming-up__row:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
 .coming-up__row:last-child { border-bottom: none; }
+/* Lead row — the soonest event, promoted into the list's focal point. A soft
+   olive-tinted card with the person's avatar (a kind badge on it) instead of the
+   small type glyph, so the next date reads at a glance. The negative side margin
+   still bleeds the row to the panel edge; a matching inset keeps its rounded card
+   clear of the padding. */
+.coming-up__row--lead {
+  gap: 14px;
+  margin: 0 -8px 6px; padding: 12px 12px;
+  border: 1px solid var(--olive-soft);
+  border-radius: var(--r-md);
+  background: linear-gradient(180deg, var(--olive-soft), transparent);
+}
+.coming-up__row--lead:hover { background: var(--olive-soft); border-color: var(--olive); }
+.coming-up__row--lead .coming-up__title { font-size: 15px; font-weight: 600; }
+.coming-up__row--lead .coming-up__when { color: var(--olive-deep); }
+.coming-up__lead-avatar { position: relative; flex: 0 0 auto; }
+.coming-up__lead-badge {
+  position: absolute; right: -3px; bottom: -3px;
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: #fff;
+  border: 2px solid var(--bg-elev);
+}
+.coming-up__lead-badge--birth { background: var(--gold-deep); }
+.coming-up__lead-badge--death { background: var(--olive-deep, var(--text-3)); }
 .coming-up__icon {
   flex: 0 0 auto; width: 20px; text-align: center; font-size: 15px;
 }
