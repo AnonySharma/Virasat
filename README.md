@@ -107,6 +107,8 @@ A *Companion animal* checkbox on the form marks a person as a pet, and a separat
 
 A path-finder modal under Tools — pick any two people, see the shortest relationship chain rendered as avatars + relation chips (*mother / wife / son / nephew*). BFS over parents / children / spouses, so it works across blended families and multiple marriages.
 
+When the two people are close kin, the result also names the **exact vernacular relation** — *chacha* vs *mama*, *bua* vs *mausi*, *tau* vs *chacha*, *dada* vs *nana*, and the four cousin kinds (*chachera / fufera / mamera / mausera bhai-behen*) — the words English "uncle / aunt / grandfather / cousin" collapse by side and seniority. It shows as a gold chip in the modal and inline in the tree's Compare bar. The elder/younger split (*tau* vs *chacha*) shows only when both birth years are known, and a cousin is only named by kind when both linking relatives' sides are known — otherwise it falls back to a neutral term rather than guess.
+
 ### Print family book
 
 Tools → *Print family book* builds a hidden DOM with one A4 page per relative (cover page + per-person bio with hero photo, lifespan, About, Achievements, Education, Stories, Notes), then opens the system print dialog. Pick *Save as PDF* and you've got a multi-page heirloom ready for spiral binding at any local print shop.

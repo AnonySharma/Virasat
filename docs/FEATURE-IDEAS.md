@@ -633,8 +633,23 @@ rather than as a batch.
   social-categorization territory.
 - **Effort:** M. **Verdict: KEEP (with scope-fix).** **Tier: Next.**
 
-#### 25. Vernacular kinship terms on Find-a-relation
+#### 25. Vernacular kinship terms on Find-a-relation ✅ SHIPPED
 *Name the exact relation — chacha vs mama, bua vs mausi, tau vs chacha — as a chip in the PathFinder result and the Compare bar.*
+
+> **Shipped** as a standalone, reusable resolver: `lib/features/kin-terms.js`
+> (`KinTerms.forPath(idArray)` / `KinTerms.label(idArray)`) classifies the path
+> *shape* (up/down/side hops + target gender + linking-relative side + birth-order)
+> over `findRelationPath`, with unit coverage in `tests/kin-terms.mjs`. Chip renders
+> in `path-finder.js` and the Compare bar (`tree-view.js`). Both scope-fixes honored:
+> the seniority split (tau/chacha, elder/younger sibling) resolves only when both
+> birth years exist and otherwise falls back to a neutral term / English gloss —
+> never a guess — and the same rule governs the four cousin kinds (chachera /
+> fufera / mamera / mausera bhai-behen), which are only named by kind when both
+> linking relatives' sides are known, else plain "cousin". Lexicon is limited to
+> close-kin signatures with one unambiguous Hindi word (spouse's-siblings /
+> second cousins / longer chains → no chip).
+> Built deliberately standalone so the roadmapped P2 "pin a self" labeling engine
+> can consume the same resolver instead of re-deriving it.
 
 - **What / value:** English "uncle/aunt" collapses four words that encode side and
   seniority; the app already computes the topology but can only say the flat term.

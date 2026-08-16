@@ -25,7 +25,7 @@ These move the heritage product forward the most for the effort.
 - **Detailed vs compact tree views.** A toggle on the Tree view:
   - *Compact* — only direct lineage (default focus on whoever is set as "self"), good at-a-glance.
   - *Detailed* — shows every person who married into the family + their parents, children, and grandchildren as long as the chain stays connected.
-- **Pin a "self" person.** All views can then highlight relationship paths and label everyone with how they relate to you ("paternal grandmother", "spouse's brother"). Pairs naturally with the path-finder that already exists.
+- **Pin a "self" person.** All views can then highlight relationship paths and label everyone with how they relate to you ("paternal grandmother", "spouse's brother"). Pairs naturally with the path-finder that already exists. **The labeling engine is already built:** `lib/features/kin-terms.js` (`KinTerms.forPath`/`.label`) turns any `findRelationPath` chain into the exact vernacular term (chacha/mama/bua/tau/dada/nana…). This item is now just the persisted "self" anchor + relabeling all views vs. that anchor — reuse `KinTerms`, don't re-derive it.
 - **Auto-tag who's in a group photo** by clicking faces and assigning a person — useful for old family albums.
 - **Date precision: BCE / month-only.** Today `parseDate` accepts `YYYY[-MM[-DD]]` only. Negative years and "March (year unknown)" are real for ancient genealogies. Defer until someone needs it.
 - **Calendar systems** — record dates in Vikram Samvat / Hijri / etc. alongside Gregorian, with a per-tree default.
