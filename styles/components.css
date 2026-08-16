@@ -1790,6 +1790,44 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 /* Desktop account chip — an avatar-only button in the header action row.
    The avatar span carries its own colour; keep the button chrome minimal. */
 .account-btn { padding: 4px; }
+
+/* Appearance row inside the account menu — theme + high-contrast as two
+   compact circular icon toggles on one line (moon, half-disc), rather than two
+   full-width text rows. Same chrome as the header .theme-toggle so the idiom
+   carries over; the row sits with the same horizontal padding as a menu item. */
+.account-menu__appearance {
+  display: flex;
+  gap: 8px;
+  padding: 4px 12px 6px;
+}
+.account-menu__appearance-btn {
+  width: 34px; height: 34px;
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  border-radius: 50%;
+  display: inline-grid; place-items: center;
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 14px;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+.account-menu__appearance-btn:hover {
+  background: var(--surface-2); border-color: var(--gold); color: var(--gold-deep);
+}
+.account-menu__appearance-btn:focus-visible {
+  outline: 2px solid var(--gold); outline-offset: 2px;
+}
+/* Pressed = that axis is on. Fill with the accent so the on-state reads at a
+   glance, mirroring how .contrast-toggle.is-active flips in the header. */
+.account-menu__appearance-btn[aria-pressed="true"] {
+  background: var(--olive); border-color: var(--olive); color: var(--on-accent);
+}
+.account-menu__appearance-btn[aria-pressed="true"]:hover {
+  background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); color: var(--on-accent);
+}
+:root[data-contrast="high"] .account-menu__appearance-btn[aria-pressed="true"] {
+  background: var(--focus); border-color: var(--focus); color: var(--bg);
+}
 .account-btn .avatar { cursor: pointer; }
 
 /* — Sync pip — a quiet "Saved / Saving… / Offline" chip in the header, shown
