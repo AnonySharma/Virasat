@@ -477,6 +477,196 @@ enough to a product-values line that it needs an explicit decision first.
 
 ---
 
+## Deep review — 2026-08 (multi-agent sweep)
+
+A structured multi-agent pass (Ground → Ideate → Synthesize → Verify) added the
+eight ideas below. Each was checked against a full dedup ledger built from *this
+file* plus `ROADMAP.md` and the shipped code, then put through an adversarial
+skeptic that tried to kill it on four axes — **duplicate / crosses-ethos /
+not-buildable-without-a-dependency / low-value**. All eight survived; none
+duplicates a shipped or ledgered item, none crosses the heirloom line, all are
+buildable as a `<script>` IIFE with no new dependency. Where the skeptic found a
+real trap it's recorded as a **Scope-fix** — treat those as load-bearing, not
+optional polish. Tiers are per-item; promote individually into `ROADMAP.md`
+rather than as a batch.
+
+> **Coverage gap:** two of the five ideation lenses — *preservation & 30-year
+> longevity* (places / heirlooms / recipes / traditions as first-class records)
+> and *the elder / low-tech relative* (capture UX & reach) — stalled and produced
+> nothing this run. A future sweep should re-cover them; the eight below lean
+> cultural-depth, integrity, and contemplative.
+
+#### 18. Remembrance line — the one sentence they're held by
+*One optional short phrase per person (+ Hindi twin) — "Never turned away a guest" — a chosen essence, not a biography.*
+
+- **What / value:** Surfaced under the name on deceased records, on the memorial
+  poster, and on each print-book page; quiet and absent otherwise. This is the
+  "museum wall label / carved inscription" the ethos keeps invoking — the highest
+  emotional-payoff-per-effort item in the set, lighting up three *already-shipped*
+  remembrance surfaces that today carry only styling, never a chosen human line.
+  Distinct from the multi-sentence `description` bio and from the styling-only
+  In-Memoriam mode.
+- **Seam:** `remembrance`/`remembrance_hi` via `||""` in `normalizePerson`
+  (`data-store.js:263`, no SCHEMA bump; `getField` resolves HI→EN); paired EN/HI
+  inputs mirroring `birthPlace`/`_hi` (`people-view.js` ~L1139); render near the
+  name in `inspector.js`; wrap-text insertion into **`exportMemorialPoster`**
+  (`image-export.js` ~L1518 — *not* `exportProfileCard`) and the print-book person
+  page. Full JSON export round-trips automatically.
+- **Effort:** M (two canvas functions each get a small `wrapText` + vertical-budget
+  insertion). **Verdict: KEEP (clean).** **Tier: Now.**
+
+#### 19. Points to review — chronology contradictions + malformed links
+*A calm parchment Insights panel from two read-only scans: impossible dates, and structurally broken links.*
+
+- **What / value:** Scan one flags impossible/implausible dates (death before
+  birth, child before parent, >120-yr lifespan, born-after-both-parents-died,
+  soft under-13-parent). Scan two flags structural defects (ancestor
+  cycles/self-ancestors, dangling parent/spouse/petOwner ids, one-sided spouse
+  links). Each row names the person + the specific clash with a View-in-tree jump;
+  never edits, counts, or badges. Verified-real bug class: `buildGenerations`
+  (`data-store.js:1156`) silently forces a self-ancestor to gen 0, and the person
+  arrays only `filter(Boolean)` (L329/L340), so CSV/JSON/cloud/GEDCOM/merge imports
+  install silent, null-check-invisible corruption. Highest trust-payoff in the set.
+- **Seam:** pure `chronologyIssues()`/`structuralIssues()` beside
+  `maintenanceStats` (`data-store.js:1056`) — cycle DFS mirrors the existing
+  visiting-set (L1151-1166), dangling scan against a Set of all ids; panel copies
+  `eldersPanel` (`insights-view.js:287`) pushed into `render()`'s array
+  (L383-389); reuses `virasat:reveal-in-tree`. No persist/export change.
+- **Scope-fix:** the date scan **must be precision-aware** — honor
+  `birthDatePrecision`/`deathDatePrecision` and compare by *year* (as the shipped
+  death-before-birth check already does), or it cries wolf on exactly the fuzzy
+  "c. 1850" legacy records it targets, turning a calm surface into a nag. De-dup
+  the death-before-birth message against the form's existing write-time block.
+- **Effort:** S. **Verdict: KEEP (with scope-fix).** **Tier: Now / Next.**
+
+#### 20. How to say it — name pronunciation hint
+*An optional `pronounce` (+ `_hi`) respelling, shown subtly beside the name.*
+
+- **What / value:** A diaspora grandchild who can read the name but not *say* it
+  gets a human-readable hint. A stored corrective input distinct from Devanagari
+  `name_hi` (a transliteration of the same legal name), from output-only
+  Read-aloud, and from the roadmapped voice-memo blob (this is text).
+- **Seam:** `pronounce`/`pronounce_hi` via `||""` in `normalizePerson`; twin form
+  input (`people-view.js` ~L1139); display near the name; optionally one line in
+  `narrationParts` (`inspector.js:1063`) to prefer it over `p.name` in TTS.
+- **Scope-fix:** if fed to SpeechSynthesis it **must be a pure respelling with no
+  inline prose cues** — "Sh-REY-aa, long final a" fed verbatim makes the TTS speak
+  the words "long final a" aloud, a regression. And Web Speech has no portable
+  stress/length control, so "stops mangling names" is best-effort; the durable,
+  reliable payoff is the *displayed* hint, not the audio fix.
+- **Effort:** S (light per-field template). **Verdict: KEEP (with scope-fix).**
+  **Tier: Now.**
+
+#### 21. Ghar ka naam — the name they were called at home
+*An optional `calledName` (+ `_hi`) for the affectionate home name — Guddu, Babli, Chhotu.*
+
+- **What / value:** Rendered as a quiet italic "known at home as —" line under the
+  inspector name and a Personal-section row; blank by default, invisible when
+  empty. The pukaar-naam is on no document, so CSV/GEDCOM import never carries it
+  and it dies with the generation that used it — exactly the heirloom datum a
+  document-only tool silently deletes. Sharply distinct from `name_hi` (same legal
+  name, other script): this is a *different* informal name.
+- **Seam:** `calledName`/`calledName_hi` via `||""` — draft init (L683), paired
+  inputs (L1139), `pair()` (L1815), `hasMoreData` (L1839), save (L2007) are all
+  straight `birthPlace` clones; Personal row copies the occupation row
+  (`inspector.js:451`); optional hero italic line copies the `name-hi` subtitle
+  pattern. JSON round-trips automatically.
+- **Effort:** M (light end — single scalar + `_hi`). **Verdict: KEEP (clean).**
+  **Tier: Now / Next.**
+
+#### 22. Namesakes — the same name, down the generations
+*A per-person inspector section, shown only when another member shares the name, listing them with lifespan + a reveal-in-tree link.*
+
+- **What / value:** Naming a child for a departed elder is one of the deepest
+  continuity threads in an Indian family. States the fact plainly ("Others in the
+  family named Kamla") and lets the family read the meaning in — never asserts they
+  were named for each other. A per-record, navigational continuity surface,
+  distinct from the shipped aggregate "Name trends" frequency chart.
+- **Seam:** pure fn over `getPeople()`; `makeSection` block (`inspector.js:398`)
+  reusing the family-chip template (L503-513: avatar + name + date-range +
+  reveal); one i18n key pair. Pure-read, no persist/export.
+- **Scope-fix:** match on the **given/first name** (normalized, as name-trends does
+  at L137), **not** the full name — the child-named-for-elder case almost always
+  differs in surname/suffix ("Kamla" → "Kamla Devi"), so full-name matching hides
+  the section in exactly the case that justifies it. (A compound relation chip like
+  "great-grandmother" is *not* free — `relationLabel` is direct-edge only; ship
+  name + lifespan + reveal first.)
+- **Effort:** S. **Verdict: KEEP (with scope-fix).** **Tier: Next.**
+
+#### 23. Life & Times — a lifespan set against history
+*A collapsed inspector section listing the few curated heritage markers whose year falls inside a person's lifespan: "Independence, 1947 — they were 12."*
+
+- **What / value:** Turns a name into a life — seeing a great-grandmother was a
+  schoolgirl at Independence. A fixed in-code table means no network, no AI, no
+  dependency; it only states dated facts against a real lifespan. Distinct from the
+  tree's *derived* generation-decade labels (internal family clustering) — this
+  intersects an *external* hand-authored table with one lifespan.
+- **Seam:** new `lib/features/heritage-eras.js` IIFE — a `{year|range, i18nKey}`
+  table + pure `select(person)` using `getYear` + `calcAge(person, atDate)`
+  (both exported, `atDate` makes age-at-event a one-liner); labels as a bilingual
+  array mirroring the shipped `inspector.prompts` pattern; ~5-line conditional
+  `makeSection` insert. Read-only.
+- **Scope-fix:** a hand-authored India-heritage markers table is an editorial
+  landmine in a memorial context — **constrain it to neutral civic/cultural markers
+  with human-written HI, avoiding recent politically-charged events** (Partition,
+  Emergency 1975 carry valence). Payoff also thins sharply for anyone born after
+  ~1970 (markers repeat identically across a generation).
+- **Effort:** M (really S). **Verdict: KEEP (with scope-fix).** **Tier: Next.**
+
+#### 24. Gotra / kul — clan lineage field + a Lineages panel
+*An optional `gotra` (+ `_hi`) Personal-section row, plus a read-only "Lineages" Insights panel grouping members by gotra.*
+
+- **What / value:** Gotra/kul is a patrilineal clan identity central to Hindu (with
+  community analogues) custom — load-bearing for marriage exogamy and puja
+  sankalpa — that a Western tool has no slot for, and that is *not* derivable from
+  surname or birthplace. Empty and invisible until a family uses it. The panel is a
+  new instance of the sanctioned `rootsPanel`/`namesPanel` census pattern over a
+  distinct dimension.
+- **Seam:** `gotra`/`gotra_hi` via `||""`; paired input (~L1139); row in
+  `buildPersonalInfo` (`inspector.js:451`); `gotraPanel` modeled on `rootsPanel`
+  (`insights-view.js:266`) fed from a counter in `computeStats` (L64), pushed at
+  L383-389. JSON round-trips automatically.
+- **Scope-fix:** scope to **gotra/kul only — explicitly never caste / varna / jati**
+  and never a "community" label; neutral clan-lineage / exogamy / ritual framing in
+  human-written EN+HI; render the panel as a plain census with **no ranking or
+  "largest clan" superlatives**. Sloppy framing drags a calm heritage tool into
+  social-categorization territory.
+- **Effort:** M. **Verdict: KEEP (with scope-fix).** **Tier: Next.**
+
+#### 25. Vernacular kinship terms on Find-a-relation
+*Name the exact relation — chacha vs mama, bua vs mausi, tau vs chacha — as a chip in the PathFinder result and the Compare bar.*
+
+- **What / value:** English "uncle/aunt" collapses four words that encode side and
+  seniority; the app already computes the topology but can only say the flat term.
+  Delivers precision the codebase fundamentally can't express today, and the
+  vernacular word *is* the Hindi copy. Highest cultural novelty in the set.
+- **Seam:** a static bilingual kin-term table + resolver over `findRelationPath`
+  (`data-store.js:1082` — returns a plain id array, *not* a precomputed
+  hop-signature; the pitch overstated that) using `relationLabel`'s per-edge
+  parent/child/spouse+gender classification, `getSiblingsOf`, and `getYear` for
+  birth-order; render the chip in `path-finder.js` + the Compare bar's
+  `updateCompareBanner` (`tree-view.js:2943`). Read-only, `relation.*` i18n exists.
+- **Scope-fix (two):** (1) **Coordination** — this re-implements ~80% of the
+  roadmapped "pin a self" engine (P2); per the don't-build-over-a-roadmapped-item
+  rule, the owner should decide whether to fold it into pin-a-self rather than ship
+  a parallel resolver. (2) **Correctness** — the elder/younger split (tau vs
+  chacha) needs birthDates on *both* siblings, often missing on the oldest records;
+  it **must fall back to a neutral term / English gloss when a year is unknown,
+  never guess**, and keep the lexicon to close-kin signatures with one unambiguous
+  Hindi word. The gender+side split (chacha vs mama, bua vs mausi) is always
+  resolvable, so headline value stays high.
+- **Effort:** M (from-scratch resolver, no persisted shape). **Verdict: KEEP (with
+  scope-fixes).** **Tier: Next / Later.**
+
+**Merged or cut in synthesis** (recorded so they aren't re-proposed): a standalone
+*structural-integrity check* (folded into #19); a *gap finder* for probably-missing
+children (softest of the scans, false-positive-prone); *shared years* /
+overlapping-lifespans (overlaps the shipped Timeline + #22); *provenance /
+verification status* (overlaps ROADMAP-P1 Documents/sources); and a *Book of
+Remembrance* collective roll (overlaps the shipped print book + #18).
+
+---
+
 ## Considered and deliberately rejected
 
 Ideas that came up while brainstorming across the "collaboration" and
