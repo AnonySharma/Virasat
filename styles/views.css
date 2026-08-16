@@ -2285,12 +2285,14 @@
 .coming-up__more:hover { color: var(--olive-deep); }
 .coming-up__more:hover .coming-up__more-caret { transform: translateX(2px); }
 .coming-up__more:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--r-xs); }
-/* "Keep these dates" — the calendar-export + reminder controls live at the foot
-   of the events modal (their single home), set off from the scrollable row list
-   above by a hairline. */
-.coming-up__keep {
-  margin-top: 16px; padding-top: 16px;
-  border-top: 1px solid var(--line);
+/* "Keep these dates" — the calendar-export + reminder controls live in the
+   events-modal footer (their single home), always visible beside Close instead
+   of buried beneath the scrolling row list. The footer stacks the hint over a
+   row that pushes the utility actions left and Close right. */
+.coming-up__footer { flex: 1 1 100%; display: flex; flex-direction: column; gap: 12px; }
+.coming-up__footer-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  justify-content: space-between;
 }
 .coming-up__actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .coming-up__remind.is-on {
@@ -2298,7 +2300,7 @@
 }
 .coming-up__remind.is-on:hover { background: var(--gold-deep); border-color: var(--gold-deep); }
 .coming-up__hint {
-  margin: 12px 0 0; font-size: 12px; line-height: 1.5; color: var(--text-3);
+  margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-3);
 }
 
 /* ── Family calendar (month grid marking birthdays & memorials) ─────────── */
@@ -2399,7 +2401,9 @@
 @media (max-width: 640px) {
   .insights-body { padding: var(--s-5) 16px 24px; gap: var(--s-5); }
   .insight-bands { gap: var(--s-5); }
+  .coming-up__footer-row { flex-direction: column; align-items: stretch; }
   .coming-up__actions .btn { flex: 1 1 auto; justify-content: center; }
+  .coming-up__footer-row > .btn { justify-content: center; }
   .cal-weekdays,
   .cal-grid { max-width: none; }
   .cal-cell { min-height: 36px; }
