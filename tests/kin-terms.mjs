@@ -195,6 +195,47 @@ check("Ankit→Aditya = chacheraBhai", term("Ankit Sharma", "Aditya Sharma") ===
   check("SELF→SON = son",    kk("M_SELF", "M_SON") === "son");
 })();
 
+// ==== dedicated in-law tree: HUSBAND + WIFE, his siblings & their families ===
+// Wife's-eye view (she married in) AND husband's-eye view (his sibling's
+// spouse). Reciprocal spouse edges throughout (the app's real invariant).
+(function inLaws() {
+  const P = (pid, o) => Object.assign({ id: pid, name: pid, parents: [], spouses: [] }, o);
+  const sp = (a, b) => { a.spouses = [b.id]; b.spouses = [a.id]; };
+  const GF = P("L_GF", { gender: "m", birthDate: "1935" });
+  const GM = P("L_GM", { gender: "f", birthDate: "1938" });
+  const HUS = P("L_HUS", { gender: "m", birthDate: "1988", parents: ["L_GF", "L_GM"] }); // my husband
+  const ELDERBRO = P("L_EB", { gender: "m", birthDate: "1984", parents: ["L_GF", "L_GM"] }); // jeth
+  const YOUNGBRO = P("L_YB", { gender: "m", birthDate: "1991", parents: ["L_GF", "L_GM"] }); // devar
+  const SIS = P("L_SIS", { gender: "f", birthDate: "1986", parents: ["L_GF", "L_GM"] });      // nanad
+  const WIFE = P("L_WIFE", { gender: "f", birthDate: "1990" }); // SELF (married in)
+  const EB_W = P("L_EBW", { gender: "f", birthDate: "1985" });  // jethani (elder bro's wife)
+  const YB_W = P("L_YBW", { gender: "f", birthDate: "1992" });  // devrani (younger bro's wife)
+  const SIS_H = P("L_SISH", { gender: "m", birthDate: "1985" }); // nandoi (sister's husband)
+  const EB_KID = P("L_EBKID", { gender: "m", birthDate: "2010", parents: ["L_EB"] }); // husband's bro's son → bhatija
+  sp(GF, GM); sp(HUS, WIFE); sp(ELDERBRO, EB_W); sp(YOUNGBRO, YB_W); sp(SIS, SIS_H);
+  FamilyStore.replaceAll({ people: [GF, GM, HUS, ELDERBRO, YOUNGBRO, SIS, WIFE, EB_W, YB_W, SIS_H, EB_KID] });
+  const kk = (a, b) => { const t = KinTerms.forPath(FamilyStore.findRelationPath(a, b)); return t ? t.key : null; };
+  // wife's-eye view — spouse's siblings (SUD), keyed by husband's gender + seniority
+  check("WIFE→husband's elder brother = jeth",   kk("L_WIFE", "L_EB") === "jeth");
+  check("WIFE→husband's younger brother = devar", kk("L_WIFE", "L_YB") === "devar");
+  check("WIFE→husband's sister = nanad",          kk("L_WIFE", "L_SIS") === "nanad");
+  // spouse's sibling's spouse (SUDS) — co-in-laws
+  check("WIFE→jethani (elder bro's wife)",  kk("L_WIFE", "L_EBW") === "jethani");
+  check("WIFE→devrani (younger bro's wife)", kk("L_WIFE", "L_YBW") === "devrani");
+  check("WIFE→nandoi (sister's husband)",   kk("L_WIFE", "L_SISH") === "nandoi");
+  // spouse's sibling's child (SUDD) → own nephew term
+  check("WIFE→husband's brother's son = bhatija", kk("L_WIFE", "L_EBKID") === "bhatija");
+  // husband's-eye view — his own sibling's spouse (UDS)
+  check("HUS→brother's wife = bhabhi",  kk("L_HUS", "L_EBW") === "bhabhi");
+  check("HUS→sister's husband = jija",  kk("L_HUS", "L_SISH") === "jija");
+  // never-guess: blank the elder brother's year → jeth/devar can't be told → gloss
+  const noYear = FamilyStore.getPeople().map((p) => Object.assign({}, p));
+  noYear.find((p) => p.id === "L_EB").birthDate = null;
+  FamilyStore.replaceAll({ people: noYear });
+  check("no-year husband's brother → husbandsBrother (not jeth/devar)",
+    kk("L_WIFE", "L_EB") === "husbandsBrother");
+})();
+
 // ==== never-guess: unknown linking gender → plain "cousin", not a kind ======
 (function cousinFallback() {
   const P = (pid, o) => Object.assign({ id: pid, name: pid, parents: [], spouses: [] }, o);
