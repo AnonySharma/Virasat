@@ -287,6 +287,9 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .chip--deceased { background: var(--deceased-soft); color: var(--deceased-ink); border-color: transparent; }
 .chip--gold     { background: var(--gold-soft); color: var(--gold-deep); border-color: transparent; }
 .chip--muted    { color: var(--text-3); }
+/* Icon inside a chip (e.g. the inspector's self-relation chip) — sized down to
+   sit with the 11.5px label rather than dominate it. Inherits the chip colour. */
+.chip i { font-size: 10.5px; }
 
 /* — Card — soft, generous radius — */
 .card {

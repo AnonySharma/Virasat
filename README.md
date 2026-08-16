@@ -109,6 +109,8 @@ A path-finder modal under Tools — pick any two people, see the shortest relati
 
 When the two people are close kin, the result also names the **exact vernacular relation** — *chacha* vs *mama*, *bua* vs *mausi*, *tau* vs *chacha*, *dada* vs *nana*, and the four cousin kinds (*chachera / fufera / mamera / mausera bhai-behen*) — the words English "uncle / aunt / grandfather / cousin" collapse by side and seniority. It shows as a gold chip in the modal and inline in the tree's Compare bar. The elder/younger split (*tau* vs *chacha*) shows only when both birth years are known, and a cousin is only named by kind when both linking relatives' sides are known — otherwise it falls back to a neutral term rather than guess.
 
+**"This is me."** Right-click any node → *This is me* to pin yourself. From then on, opening anyone's profile shows a gold chip naming **their exact relation to you** — the same vernacular vocabulary as above (your father's younger brother reads *chacha*, your mother's brother *mama*). The pin is personal and stays on your device only — it's never shared with others viewing the same cloud tree, and each tree remembers its own — so on a family-shared tree everyone sees relations from their own vantage point. Right-click again → *Not me* to clear it.
+
 ### Print family book
 
 Tools → *Print family book* builds a hidden DOM with one A4 page per relative (cover page + per-person bio with hero photo, lifespan, About, Achievements, Education, Stories, Notes), then opens the system print dialog. Pick *Save as PDF* and you've got a multi-page heirloom ready for spiral binding at any local print shop.
