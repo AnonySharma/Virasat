@@ -208,6 +208,24 @@
            each group rendered only when it carries options, with live
            in-context counts. The single home for narrowing the family — the
            People grid hides non-matches, Tree & Timeline dim them. -->
+      <!-- "You" — a per-viewer personal lens (local-only, never synced). Pick
+           yourself and the tree marks you with a gold ring while every relative
+           shows their kin term to you. Available to viewers too (it edits no
+           tree data), so it sits above the edit-gated Tools. Populated by
+           app.js (renderSelfPicker) with a HeritageSelect person picker. -->
+      <section class="rail-block" id="rail-you-block">
+        <div class="rail-you-head">
+          <h3 class="rail-heading" data-i18n="rail.you">You</h3>
+          <!-- Info affordance: hover shows the hint (native title, never clipped
+               by the rail's overflow); tap toasts it on touch where title can't. -->
+          <button type="button" class="rail-you-info" id="rail-you-info"
+                  data-i18n-title="rail.youHint" data-i18n-aria-label="rail.youHint">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div id="rail-you-panel" class="rail-you-panel"></div>
+      </section>
+
       <section class="rail-block">
         <h3 class="rail-heading" data-i18n="rail.filter">Filter</h3>
         <div id="rail-filter-panel" class="rail-filter-panel"></div>
@@ -220,7 +238,9 @@
           <li><button class="rail-item" id="tool-edit" type="button"><i class="fa-regular fa-pen-to-square"></i><span data-i18n="rail.editTree">Manage people</span></button></li>
           <li><button class="rail-item" id="tool-path" type="button"><i class="fa-solid fa-route"></i><span data-i18n="rail.findRelation">Find relation</span></button></li>
           <li><button class="rail-item" id="tool-print" type="button"><i class="fa-solid fa-print"></i><span data-i18n="rail.printBook">Print family book</span></button></li>
-          <li><button class="rail-item" id="tool-help" type="button"><i class="fa-solid fa-circle-question"></i><span data-i18n="rail.help">How this app works</span></button></li>
+          <!-- "How this app works" moved to the header menu (person/avatar icon
+               → Help), where it opens the standalone help.html page in a new
+               tab. -->
           <li><button class="rail-item" id="tool-about" type="button"><i class="fa-solid fa-seedling"></i><span data-i18n="actions.about">About Virasat</span></button></li>
           <!-- Rare, high-consequence actions split below a divider so the
                everyday tools read first and Reset isn't one slip from Add.
@@ -312,7 +332,6 @@
   <script src="lib/features/export-import.js"></script>
   <script src="lib/features/collect-form.js"></script>
   <script src="lib/features/print-book.js"></script>
-  <script src="lib/features/help-guide.js"></script>
   <script src="lib/features/anniversaries.js"></script>
 
   <!-- cloud auth: gated on lib/auth/config.js. This build ships real

@@ -1784,27 +1784,32 @@
   pointer-events: none;
 }
 
-/* "This is you" — the pinned self node. A gold photo ring plus a small gold
-   person-disc badge (bottom-left, mirroring the add-"+" at bottom-right).
+/* "This is you" — the pinned self node, marked ONLY by a gold photo ring (a
+   thicker gold stroke). No on-node icon badge: self is set and seen from the
+   rail "You" picker, whose hint tells the viewer the gold ring marks them.
    Defined after .is-selected / .is-lineage at equal specificity, so the gold
    ring PERSISTS through selection and lineage focus — "me" is a standing
    identity marker, not a transient state. A faded node still dims (.is-faded
-   drives opacity, an independent property). Personal lens: stripped from
-   exports. */
+   drives opacity, an independent property). Personal lens: the .is-self class
+   is stripped from exports so it never bakes into a shared image. */
 .t-node.is-self .t-node-photo-ring { stroke: var(--gold); stroke-width: 3; }
-.t-node-self-badge-bg {
-  fill: var(--gold);
-  stroke: var(--bone);
-  stroke-width: 2;
-}
-.t-node-self-badge-glyph {
-  fill: var(--ink);
-  pointer-events: none;
+/* The pet-paw is a Font Awesome glyph drawn as an SVG <text>. Its font-family
+   is set as a presentation ATTRIBUTE — the weakest source — so in Hindi the
+   :lang(hi) pairing in base.css overrides it to Devanagari and the glyph
+   becomes a tofu box. Force the icon font back with the same !important
+   belt-and-braces base.css uses for FA. */
+.t-node-pet-paw {
+  font-family: "Font Awesome 6 Free" !important;
+  font-weight: 900;
 }
 /* Relation-to-me chip — olive pill in the subtitle slot (chacha, bua…). Same
    olive/bone treatment as the story-count badge so the two read as one family
-   of node chips. pointer-events off: it's a label, taps pass to the node. */
-.t-node-relpill { pointer-events: none; }
+   of node chips. The pill DOES take pointer events so hovering it surfaces the
+   native <title> tooltip with the full, untruncated relation (the chip text is
+   ellipsized to fit the node). Clicks still select the person: SVG events
+   bubble to the .t-node <g> behind it. The <text> stays inert so only the
+   pill area (not glyph gaps) is the hover/hit target. */
+.t-node-relpill { cursor: pointer; }
 .t-node-relpill-bg {
   fill: var(--olive);
   stroke: var(--bone);

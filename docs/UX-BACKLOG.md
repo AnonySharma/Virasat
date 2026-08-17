@@ -924,6 +924,44 @@ lists above). One verified bug per commit; static battery green each time.
   rail Reset row is hidden when signed in and visible local-only. `app.js`, `auth-store.js`,
   `i18n.js`, `components.css`, `sw.js`.
 
+### Batch 17 — self-marker rework, help as a real page, always-present user menu (2026-08-17)
+
+- **The on-node person icon for "self" read as clutter; the self-marker moved to the rail.** Removed
+  the `fa-user` corner disc and the tree-node right-click *"This is me"*. The gold ring
+  (`.t-node.is-self`) is now the **only** on-node marker; "me" is picked from a new **You** dropdown
+  in the left rail (`renderSelfPicker()` — a `HeritageSelect` person picker with a "— No one —" clear
+  row, hidden when there's no one to pin). A `fa-circle-info` hint line under it explains the gold
+  ring. Export clones now strip the `is-self` class too (not just `.t-node-selfdeco`). `app.js`,
+  `tree-view.js`, `image-export.js`, `index.html`, `views.css`, `components.css`, i18n `rail.you*`.
+- **Relation pill overflowed onto the adjacent node** (e.g. "husband's younger brother's wife"). The
+  text was drawn full-length while only the background rect was capped. Now ellipsized to the node
+  width; the full relation lives in a `<title>` on the node group, so hovering shows it in full and
+  clicks still bubble to the node. `tree-view.js`, `views.css`.
+- **[#114 follow-up] The help guide became a real, shareable page.** Retired the in-app modal
+  (`lib/features/help-guide.js` **deleted**) in favour of a standalone **`help.html`** +
+  `lib/help-page.js`, modelled on privacy.html/terms.html (early-theme guard, shared onboard chrome,
+  no app.js/cloud). It reuses the exact same bilingual `help.*` i18n as the old modal (now the single
+  source of truth), laid out as a hero + 3-step quick-start + a 2-up card grid per section, each card
+  carrying a **screenshot placeholder** (`.help-card__ph`) to be swapped for real images later. Opens
+  in a **new tab** via `openHelpPage()`. New keys `help.eyebrow/imgSoon/start/step1-3` (EN+HI).
+- **The account menu is now always present — offline too.** It used to build only in a signed-in
+  cloud session, so offline users had no menu (and theme toggles lived loose in the header). Now
+  `setupAccountMenu()` always runs (idempotent), painting a `fa-circle-user` icon offline; the menu
+  hosts theme/appearance + a **Help** row always, and shows Account-settings / Your-trees / Sign-out
+  **only when signed in**. `app.js`.
+- **Privacy / Terms / Help open in a new tab.** `footAnchor()` (sign-in) and the legal-page sibling
+  cross-link now set `target="_blank" rel="noopener"`; "Back to Virasat" stays same-tab.
+  `sign-in.js`, `legal-page.js`.
+- **CI now guards EN/HI label parity.** `tests/i18n-parity.mjs` flattens every dot-path in both
+  languages and fails on any key present in one but missing (or object-vs-leaf divergent) in the
+  other — 1023 keys × 2 languages, all present. Auto-discovered by `ci.yml`'s `tests/*.mjs` loop.
+- **Hindi fixes:** पुत्र/पुत्री → **बेटा/बेटी** (`kin-terms.js`, `i18n.js`, `KINSHIP-TERMS.md`); and
+  the Devanagari tofu on the removed self-badge glyph is moot now, but the FA-font `!important`
+  hardening stays on `.t-node-pet-paw`. `views.css`.
+- **Hardcoded-string audit (3 subagents): catalogued, not fixed** — recorded in `ISSUES.md` Tier C at
+  the user's direction. The one worth doing is the exported "Family Tree" text (poster + JSON default
+  + filename) that ships English into a Hindi user's shared file.
+
 ### Batch 16 — "How this app works" help guide (2026-08-14)
 
 - **[#114] There was no in-app guide to what the app does or how to use each feature.** A new

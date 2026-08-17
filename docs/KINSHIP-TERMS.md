@@ -35,8 +35,8 @@ instead of inventing a word.
 | `U`  | father  | पिता  | your parent, male |
 | `U`  | mother  | माता  | your parent, female |
 | `U`  | parent  | अभिभावक | parent, gender unknown |
-| `D`  | son     | पुत्र  | your child, male |
-| `D`  | daughter| पुत्री | your child, female |
+| `D`  | son     | बेटा  | your child, male |
+| `D`  | daughter| बेटी | your child, female |
 | `D`  | child   | संतान | child, gender unknown |
 | `S`  | husband | पति   | your spouse, male |
 | `S`  | wife    | पत्नी  | your spouse, female |

@@ -367,6 +367,25 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
    hover / .is-active / the count pill all come for free; only the group
    scaffolding + the show-more / clear-all affordances are new here. */
 .rail-filter-panel { display: flex; flex-direction: column; gap: 10px; }
+
+/* "You" rail picker — the per-viewer self-anchor. A HeritageSelect person
+   dropdown, with an info icon beside the heading whose native title explains
+   that the gold ring on the tree marks you (hover on desktop, tap→toast on
+   touch). */
+.rail-you-head { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; padding: 0 12px; }
+.rail-you-head .rail-heading { margin: 0; padding: 0; }
+.rail-you-info {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; padding: 0;
+  border: 0; background: transparent; cursor: pointer;
+  color: var(--text-4); font-size: 12px; line-height: 1;
+  border-radius: 50%;
+  transition: color .15s ease;
+}
+.rail-you-info:hover { color: var(--gold-deep, var(--gold)); }
+.rail-you-info:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--olive-soft); }
+.rail-you-panel { display: flex; flex-direction: column; gap: 8px; padding: 0 12px; }
+.rail-you-panel .hsel { width: 100%; }
 .rail-fgroup { display: flex; flex-direction: column; gap: 2px; }
 .rail-fgroup__title {
   margin: 2px 0 2px; padding: 0 12px;
@@ -2806,6 +2825,13 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
    but framed as a full web page (bar + centred article + footer) rather than a
    modal, since these are the public, no-login URLs Google's OAuth consent
    screen links to. */
+/* Standalone pages (privacy/terms/help) are full documents, not the SPA — undo
+   the app-shell lockdown (base.css sets body{height:100dvh;overflow:hidden} so
+   only the in-app panes scroll). Without this a long page like help.html clips
+   at the fold with no way to scroll. Scoped via :has so it only fires on the
+   standalone pages, never the app. */
+body:has(> .legal-page) { height: auto; min-height: 100dvh; overflow-y: auto; overflow-x: hidden; }
+
 .legal-page {
   min-height: 100vh;
   display: flex;
@@ -2852,6 +2878,155 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   max-width: 72ch;
   padding-top: var(--s-4);
   border-top: 1px solid var(--line);
+}
+
+/* ── Help page (help.html) ──────────────────────────────────────────────────
+   Shares the legal-page frame (bar + centred column + footer) but is wider —
+   it carries a 2-up card grid of features, each with a screenshot slot — and
+   leads with a hero + numbered quick-start. Everything reads from the help.*
+   i18n namespace via lib/help-page.js. */
+.help-page { gap: var(--s-5); }
+.help-page__bar,
+.help-hero,
+.help-start,
+.help-section,
+.help-page__foot { width: 100%; max-width: 72ch; }
+
+.help-hero { text-align: left; }
+.help-hero__eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+  margin: 0 0 var(--s-2);
+}
+.help-hero__title { margin-bottom: var(--s-3); }
+.help-hero__lede {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--text-2);
+  margin: 0;
+  max-width: 60ch;
+}
+
+/* Quick-start: three numbered steps in a soft parchment plate. */
+.help-start {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  padding: var(--s-5) var(--s-6);
+}
+.help-steps {
+  margin: var(--s-3) 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: help-step;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.help-steps__item {
+  counter-increment: help-step;
+  position: relative;
+  padding-left: calc(var(--s-6) + 6px);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--text-2);
+  min-height: 24px;
+  display: flex;
+  align-items: flex-start;
+}
+.help-steps__item::before {
+  content: counter(help-step);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--olive-soft);
+  color: var(--gold-deep);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.help-section__title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 var(--s-4);
+}
+.help-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+.help-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.help-card__media { width: 100%; }
+.help-card__shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-bottom: 1px solid var(--line);
+}
+/* Screenshot placeholder — a soft, clearly-empty box until a real image lands. */
+.help-card__ph {
+  aspect-ratio: 16 / 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
+  background:
+    repeating-linear-gradient(
+      45deg,
+      var(--bg) 0, var(--bg) 10px,
+      var(--surface-2, var(--bg)) 10px, var(--surface-2, var(--bg)) 20px
+    );
+  border-bottom: 1px solid var(--line);
+  color: var(--text-4, var(--text-3));
+}
+.help-card__ph-icon { font-size: 26px; opacity: 0.6; }
+.help-card__ph-cap { font-size: 11.5px; letter-spacing: 0.02em; }
+.help-card__body { padding: var(--s-4); }
+.help-card__title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--font-display);
+  font-size: 16.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 var(--s-2);
+}
+.help-card__icon { color: var(--gold-deep); font-size: 15px; width: 20px; text-align: center; }
+.help-card__desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-2);
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .help-grid { grid-template-columns: 1fr; }
+  .help-start { padding: var(--s-4) var(--s-4); }
 }
 
 /* ── Featured plates ────────────────────────────────────────────────────────
