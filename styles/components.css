@@ -14,14 +14,26 @@
 }
 .btn:hover { background: var(--surface-2); border-color: var(--line-2); }
 .btn:active { transform: translateY(1px); }
-.btn:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--olive-soft); }
+/* Disabled (e.g. the filter modal's Clear when nothing is drafted): dim, no
+   hover lift, no pointer. Neutralise the hover rule above too. */
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn:disabled:hover { background: var(--bg-elev); border-color: var(--line); }
+.btn--ghost:disabled:hover { background: transparent; border-color: transparent; }
+/* Focus ring: a solid --olive ring (meets 3:1 non-text contrast on light and
+   dark) with the pale --olive-soft demoted to a decorative outer halo. The old
+   ring was --olive-soft only, which was near-invisible on the bone background. */
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--olive), 0 0 0 5px var(--olive-soft); }
 
 .btn--primary {
-  background: var(--olive); color: var(--bone); border-color: var(--olive);
+  /* Cream label + hover are FIXED (not --bone/--olive-deep): those tokens flip
+     in dark mode (--bone→charcoal, --olive-deep→light mint), which turned this
+     button into dark-on-olive / light-on-light. The olive fill itself is stable
+     across themes, so a fixed cream reads correctly on both. */
+  background: var(--olive); color: var(--on-accent); border-color: var(--olive);
   font-weight: 500;
   box-shadow: var(--shadow-glow-olive);
 }
-.btn--primary:hover { background: var(--olive-deep); border-color: var(--olive-deep); }
+.btn--primary:hover { background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); color: var(--on-accent); }
 
 .btn--gold {
   background: var(--gold); color: #2A1E05; border-color: var(--gold);
@@ -35,16 +47,102 @@
 .btn--danger { color: var(--danger); border-color: var(--danger-soft); background: transparent; }
 .btn--danger:hover { background: var(--danger-soft); }
 .btn--icon { width: 38px; padding: 0; justify-content: center; }
+/* Dropdown caret on a menu-opening button (e.g. header "Data ▾"). Quieter and
+   smaller than the leading icon so it reads as an affordance, not a second
+   glyph competing for weight. */
+.btn__caret { font-size: 9px; opacity: .55; margin-left: -2px; }
 .btn--sm { height: 32px; padding: 0 12px; font-size: 12.5px; }
 .btn--block { width: 100%; justify-content: center; }
 
 /* — Inputs — */
 .field { display: flex; flex-direction: column; gap: 6px; }
+/* display:flex above outranks the [hidden] attribute's UA display:none, so a
+   `field.hidden = true` (e.g. sign-in's first-name field) wouldn't hide
+   without this. */
+.field[hidden] { display: none; }
 .field__label {
+  font-size: 11px; font-weight: 600; color: var(--text-2);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.field__hint { font-size: 12px; color: var(--text-2); }
+
+/* Structured interview prompts — the "Need an idea?" affordance under the
+   story body. Collapsed: a quiet ghost link. Open: a soft dashed card holding
+   one heritage question + Use / Show-another actions. Deliberately understated
+   so it reads as a gentle offer, not a required step. */
+.story-prompt { margin-top: -2px; }
+.story-prompt__toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer;
+  padding: 2px 0;
+  font-size: 12.5px; font-weight: 600;
+  color: var(--gold-deep);
+  transition: color var(--t-fast);
+}
+.story-prompt__toggle:hover { color: var(--olive-deep); text-decoration: underline; }
+.story-prompt__toggle:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: var(--r-sm); }
+.story-prompt.is-open .story-prompt__toggle .fa-lightbulb { color: var(--gold); }
+.story-prompt__panel {
+  margin-top: 8px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px dashed var(--gold);
+  border-radius: var(--r-md);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.story-prompt__label {
   font-size: 11px; font-weight: 600; color: var(--text-3);
   text-transform: uppercase; letter-spacing: .08em;
 }
-.field__hint { font-size: 12px; color: var(--text-3); }
+.story-prompt__question {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 16px; line-height: 1.45;
+  color: var(--text);
+}
+.story-prompt__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Inline validation error, tied to the input via aria-describedby. Hidden
+   until the save handler sets a message; danger-toned and slightly emphasised
+   so it reads as a correction, not a hint. */
+.field__error {
+  font-size: 12px; font-weight: 600; color: var(--danger);
+  display: none;
+}
+.field__error.is-shown { display: flex; align-items: center; gap: 6px; }
+.field__error .fa-circle-exclamation { font-size: 11px; }
+.input.is-invalid, .input[aria-invalid="true"] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px var(--danger-soft);
+}
+/* Account page: profile / password / danger, each a self-contained card with
+   its own inline action, stacked in the modal. Sections read as distinct
+   groups (surface panel + heading), so the destructive Reset can't be mistaken
+   for the profile save. */
+.account-page { display: flex; flex-direction: column; gap: var(--s-4); }
+.account-page .input:disabled { opacity: .6; cursor: not-allowed; }
+.account-section {
+  display: flex; flex-direction: column; gap: var(--s-3);
+  padding: var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+.account-section__title {
+  margin: 0;
+  font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-3);
+}
+/* The danger card is border- + heading-toned so "Reset everything" reads as
+   consequential before the confirm dialog ever appears. It deliberately keeps
+   the normal surface background (not a --danger-soft fill): that token is a
+   light parchment that dark mode doesn't override, so a filled slab would go
+   bright-on-dark — the memorial-card contrast bug. The red heading + red button
+   carry the signal; the border just frames it. */
+.account-section--danger { border-color: var(--danger); }
+.account-section--danger .account-section__title { color: var(--danger); }
+.account-section__note { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text-2); }
+.account-section__hint { margin-top: -4px; }
+.account-section__actions { display: flex; justify-content: flex-end; gap: var(--s-2); margin-top: var(--s-1); }
 .input, .select, .textarea {
   width: 100%;
   background: var(--bg-elev);
@@ -62,9 +160,40 @@
 .input:focus, .select:focus, .textarea:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 4px var(--olive-soft);
+  box-shadow: 0 0 0 3px var(--olive-soft);
+}
+/* Keyboard focus gets the stronger solid ring; :focus (incl. mouse/programmatic)
+   keeps the softer border+halo above so clicking into a field isn't loud. */
+.input:focus-visible, .select:focus-visible, .textarea:focus-visible {
+  border-color: var(--olive);
+  box-shadow: 0 0 0 2px var(--olive), 0 0 0 5px var(--olive-soft);
 }
 .textarea { min-height: 92px; resize: vertical; line-height: 1.6; }
+
+/* Trailing in-field control (the sign-in password reveal eye). The wrapper is
+   the positioning context; the input reserves right padding so text never runs
+   under the button, and the button sits inside the field's right edge. */
+.input-affix-wrap { position: relative; display: block; }
+.input--with-affix { padding-right: 44px; }
+.input-affix {
+  position: absolute;
+  top: 50%; right: 6px;
+  transform: translateY(-50%);
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; background: transparent;
+  color: var(--text-3);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: color var(--t-fast), background var(--t-fast);
+}
+.input-affix:hover { color: var(--text); background: var(--surface-2); }
+.input-affix:focus-visible {
+  outline: none;
+  color: var(--text);
+  box-shadow: 0 0 0 2px var(--olive);
+}
+.input-affix[aria-pressed="true"] { color: var(--accent); }
 
 /* Single-select gets a custom chevron — matches heritage feel and clears the
    browser's default arrow which clashed with rounded corners. */
@@ -155,9 +284,12 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   white-space: nowrap;
 }
 .chip--alive    { background: var(--olive-soft); color: var(--olive-deep); border-color: transparent; }
-.chip--deceased { background: var(--deceased-soft); color: var(--ink-2); border-color: transparent; }
+.chip--deceased { background: var(--deceased-soft); color: var(--deceased-ink); border-color: transparent; }
 .chip--gold     { background: var(--gold-soft); color: var(--gold-deep); border-color: transparent; }
 .chip--muted    { color: var(--text-3); }
+/* Icon inside a chip (e.g. the inspector's self-relation chip) — sized down to
+   sit with the 11.5px label rather than dominate it. Inherits the chip colour. */
+.chip i { font-size: 10.5px; }
 
 /* — Card — soft, generous radius — */
 .card {
@@ -193,7 +325,11 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   text-align: left;
 }
 .rail-item i { width: 16px; font-size: 14px; color: var(--text-3); }
-.rail-item span { flex: 1; }
+/* Only the label span flexes to fill; the count pill must stay hugged to its
+   content (it has its own flex:0 0 auto, but this selector's equal specificity
+   + source order would otherwise let a bare `span` rule stretch it into a wide
+   bar). Excluding .rail-count keeps the pill compact. */
+.rail-item span:not(.rail-count) { flex: 1; }
 .rail-item:hover { background: var(--surface-2); color: var(--text); }
 .rail-item:hover i { color: var(--text-2); }
 .rail-item.is-active { background: var(--olive-soft); color: var(--olive-deep); }
@@ -217,23 +353,215 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .rail-item--danger:hover { background: var(--danger-soft); color: var(--danger); }
 .rail-item--danger:hover i { color: var(--danger); opacity: 1; }
 
-.rail-stats {
-  margin: 6px 12px 0; padding: 0;
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+/* Divider between everyday and destructive tools in the rail list. A hairline
+   with a little breathing room; it's a non-interactive <li>, so it never picks
+   up .rail-item hover/focus affordances. */
+.rail-divider {
+  height: 1px; margin: 6px 12px;
+  background: var(--line); list-style: none;
 }
-.rail-stat {
-  padding: 12px;
-  background: var(--surface-2);
+
+/* === Faceted filter panel (built by app.js renderFilterPanel) ===
+   An ecommerce-style stack of facet groups (Status / Gender / Era / Birthplace
+   / Occupation / Needs attention). Rows reuse .rail-item + .rail-count, so
+   hover / .is-active / the count pill all come for free; only the group
+   scaffolding + the show-more / clear-all affordances are new here. */
+.rail-filter-panel { display: flex; flex-direction: column; gap: 10px; }
+
+/* "You" rail picker — the per-viewer self-anchor. A HeritageSelect person
+   dropdown, with an info icon beside the heading whose native title explains
+   that the gold ring on the tree marks you (hover on desktop, tap→toast on
+   touch). */
+.rail-you-head { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; padding: 0 12px; }
+.rail-you-head .rail-heading { margin: 0; padding: 0; }
+.rail-you-info {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; padding: 0;
+  border: 0; background: transparent; cursor: pointer;
+  color: var(--text-4); font-size: 12px; line-height: 1;
+  border-radius: 50%;
+  transition: color .15s ease;
+}
+.rail-you-info:hover { color: var(--gold-deep, var(--gold)); }
+.rail-you-info:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--olive-soft); }
+.rail-you-panel { display: flex; flex-direction: column; gap: 8px; padding: 0 12px; }
+.rail-you-panel .hsel { width: 100%; }
+.rail-fgroup { display: flex; flex-direction: column; gap: 2px; }
+.rail-fgroup__title {
+  margin: 2px 0 2px; padding: 0 12px;
+  font-size: 11px; font-weight: 600;
+  color: var(--text-4);
+}
+/* Filter rows sit a touch tighter than tool rows. Facet values (a birthplace,
+   an occupation) can be long — clamp the label to one line with an ellipsis so
+   it can't wrap and overflow the fixed-height row into its neighbours. The
+   min-width:0 lets the flex child shrink below its content width (without it
+   text-overflow never triggers); the full value stays available via title. */
+.rail-item--filter { height: 34px; font-weight: 500; }
+.rail-item--filter span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* "Show all (N)" / "Show less" toggle under a capped list facet. */
+.rail-showmore {
+  align-self: flex-start;
+  margin: 2px 0 0; padding: 4px 12px;
+  border: 0; background: transparent;
+  color: var(--accent);
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; border-radius: var(--r-sm);
+}
+.rail-showmore:hover { text-decoration: underline; }
+.rail-showmore:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--olive); }
+/* Clear-all, shown at the top of the panel only when something is narrowed. */
+.rail-clear-filters {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 6px 12px;
+  border: 0; background: transparent;
+  color: var(--accent);
+  font-size: 12.5px; font-weight: 600;
+  cursor: pointer; border-radius: var(--r-sm);
+  text-align: left;
+}
+.rail-clear-filters i { font-size: 12px; }
+.rail-clear-filters:hover { background: var(--surface-2); }
+.rail-clear-filters:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--olive); }
+
+/* "More filters (N)" — opens the facet modal. A calm bordered row that sits
+   under the Status list; a filled dot/badge appears when non-status facets are
+   active so a narrowed-but-collapsed state is never invisible. */
+.rail-more-filters {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; margin-top: 6px; padding: 8px 12px;
+  border: 1px solid var(--line); background: transparent;
   border-radius: var(--r-sm);
-  display: flex; flex-direction: column; gap: 2px;
+  color: var(--text-2); font-size: 13px; font-weight: 500;
+  cursor: pointer; text-align: left;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
 }
-.rail-stat dt { font-size: 11px; color: var(--text-3); margin: 0; }
-.rail-stat dd {
-  margin: 0; font-family: var(--font-display);
-  font-size: 26px; font-weight: 500; color: var(--text);
+.rail-more-filters i { width: 16px; font-size: 13px; color: var(--text-3); }
+.rail-more-filters span { flex: 1; }
+.rail-more-filters:hover { background: var(--surface-2); color: var(--text); border-color: var(--line-strong, var(--line)); }
+.rail-more-filters:hover i { color: var(--text-2); }
+.rail-more-filters:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--olive); }
+.rail-more-filters.has-active { border-color: var(--olive); color: var(--olive-deep); }
+.rail-more-filters.has-active i { color: var(--olive-deep); }
+.rail-more-filters__badge { flex: 0 0 auto; background: var(--olive-soft); color: var(--olive-deep); }
+
+/* Facet modal body — the gender / era / birthplace / occupation / needs groups
+   moved out of the rail. Each facet is a titled section whose values are
+   wrapping pill-chips (the ecommerce faceted-filter idiom): the count rides
+   INSIDE each chip so it can never be clipped, and chips wrap onto new lines
+   instead of forcing a horizontal scroll. This reads as filters, not a form. */
+.filter-modal { display: flex; flex-direction: column; gap: 18px; min-width: min(88vw, 320px); max-width: 560px; }
+.filter-modal__empty { margin: 8px 2px; color: var(--text-3); font-size: 13px; }
+.filter-fgroup { display: flex; flex-direction: column; gap: 9px; }
+.filter-fgroup__title {
+  margin: 0; font-size: 11px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-4);
+}
+.filter-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* A single facet value. Pill shape, label + inline count, toggles active. The
+   count sits inside so it travels with the chip and never overflows a track. */
+.filter-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  max-width: 100%;
+  padding: 6px 12px;
+  border: 1px solid var(--line-2, var(--line));
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+}
+/* On the near-black dark surface the resting --line-2 border nearly vanishes;
+   lift it to a slightly brighter hairline so each chip still reads as a tappable
+   pill rather than floating text. */
+:root[data-theme="dark"] .filter-chip { border-color: var(--line-strong, #4E4C42); background: var(--surface-2); }
+.filter-chip i { font-size: 12px; color: var(--text-3); transition: color var(--t-fast); }
+.filter-chip__label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.filter-chip__count {
+  flex: 0 0 auto;
+  min-width: 18px; padding: 0 6px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--text-3);
+  font-size: 11px; font-weight: 600; line-height: 18px; text-align: center;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em; line-height: 1;
 }
+.filter-chip:hover { background: var(--surface-2); border-color: var(--line-strong, var(--line-2)); color: var(--text); }
+:root[data-theme="dark"] .filter-chip:hover { background: var(--surface-3); }
+.filter-chip:hover i { color: var(--text-2); }
+.filter-chip:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--olive); }
+.filter-chip.is-active {
+  background: var(--olive-soft); border-color: var(--olive); color: var(--olive-deep);
+}
+.filter-chip.is-active i { color: var(--olive-deep); }
+.filter-chip.is-active .filter-chip__count { background: rgba(255,255,255,.7); color: var(--olive-deep); }
+:root[data-theme="dark"] .filter-chip.is-active .filter-chip__count { color: #3F5944; }
+
+/* "Needs attention" chips carry a warm danger accent so a maintenance facet
+   reads distinctly from a plain value facet. */
+.filter-chip--needs { color: var(--danger); }
+.filter-chip--needs i { color: var(--danger); opacity: .85; }
+.filter-chip--needs:hover { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+.filter-chip--needs:hover i { color: var(--danger); opacity: 1; }
+.filter-chip--needs.is-active { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+.filter-chip--needs.is-active i { color: var(--danger); }
+
+/* "Show all (N)" / "Show less" — a ghost chip that wraps inline with the rest. */
+.filter-chip--more { color: var(--accent); font-weight: 600; border-style: dashed; }
+.filter-chip--more:hover { background: var(--surface-2); border-color: var(--accent); color: var(--accent-deep); }
+
+/* ===========================================================
+   Help guide — the "How this app works" modal (HelpGuide.open).
+   A single scrollable sheet of grouped feature → how-to rows.
+   =========================================================== */
+.help-guide {
+  display: flex; flex-direction: column; gap: 22px;
+  min-width: min(90vw, 340px); max-width: 560px;
+}
+.help-guide__intro {
+  margin: 0; color: var(--text-2); font-size: 14px; line-height: 1.55;
+}
+.help-guide__section { display: flex; flex-direction: column; gap: 12px; }
+.help-guide__heading {
+  display: flex; align-items: center; gap: 9px;
+  margin: 0; font-size: 11px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-4);
+}
+.help-guide__heading-icon { font-size: 12px; color: var(--olive); }
+.help-guide__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.help-guide__item { display: flex; align-items: flex-start; gap: 12px; }
+.help-guide__item-icon {
+  flex: 0 0 auto;
+  width: 30px; height: 30px; margin-top: 1px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--olive-soft); color: var(--olive-deep);
+  font-size: 13px;
+}
+:root[data-theme="dark"] .help-guide__item-icon { background: var(--surface-2); color: var(--olive); }
+.help-guide__item-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.help-guide__term { font-size: 14px; font-weight: 600; color: var(--text); }
+.help-guide__how { font-size: 13px; line-height: 1.5; color: var(--text-3); }
+
+/* Tree statistics, demoted from two number tiles to one quiet reference line
+   (the Tree-view subtitle already shows these prominently). The count spans
+   inherit tabular numerals so single/double-digit values don't jitter. */
+.rail-statline {
+  margin: 0; padding: 0 12px;
+  font-size: 12px; color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.rail-statline span[id] { color: var(--text-2); font-weight: 600; }
+.rail-statline__sep { margin: 0 6px; color: var(--text-4); }
 
 .rail-cta {
   margin: var(--s-3) 4px 0;
@@ -406,7 +734,66 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .searchbar:focus-within { background: var(--bg-elev); border-color: var(--accent); box-shadow: 0 0 0 4px var(--olive-soft); }
 .searchbar input { border: 0; outline: 0; background: transparent; flex: 1; color: var(--text); font-size: 13px; }
 .searchbar input::placeholder { color: var(--text-3); }
+.searchbar input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
 .searchbar__icon { color: var(--text-3); font-size: 13px; }
+/* One search bar at any width. The header carries search on desktop (≥1024),
+   so the People view's own bar would double it there — hide it. Below 1024 the
+   header search is retired (base.css), so this in-view bar becomes the sole
+   search, and the Add button reclaims the row on its own. */
+@media (min-width: 1024px) {
+  .view-head .searchbar { display: none; }
+}
+.searchbar__clear {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; padding: 0; margin: 0;
+  border: 0; border-radius: 50%; cursor: pointer;
+  background: var(--surface-3); color: var(--text-2);
+  font-size: 12px; line-height: 1;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.searchbar__clear[hidden] { display: none; }
+.searchbar__clear:hover { background: var(--olive-soft); color: var(--text); }
+
+/* Scope toggle — the little sliders button that opens the "search in…"
+   checklist. Lives inside both search bars (in-view + header). A dot rides its
+   corner whenever the scope is narrowed (not all fields on), so a collapsed
+   scope is discoverable without opening the menu. */
+.searchbar__scope {
+  position: relative; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; padding: 0; margin: 0 -4px 0 0;
+  border: 0; border-radius: 50%; cursor: pointer;
+  background: transparent; color: var(--text-3);
+  font-size: 12px; line-height: 1;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.searchbar__scope:hover { background: var(--surface-3); color: var(--text); }
+.searchbar__scope[aria-expanded="true"] {
+  background: var(--olive-soft); color: var(--accent-deep);
+}
+.searchbar__scope-dot {
+  position: absolute; top: 2px; right: 2px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent-hi); border: 1.5px solid var(--surface-2);
+}
+.searchbar__scope-dot[hidden] { display: none; }
+
+/* Scope popover — reuses the .kebab-menu shell (fixed, elevated, dismiss on
+   outside-click/Escape); these rules just lay out its checklist rows. */
+.scope-menu { min-width: 220px; padding: 8px; }
+.scope-menu__head {
+  font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-3); padding: 4px 10px 8px;
+}
+.scope-menu__item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: var(--r-sm); cursor: pointer;
+  font-size: 14px; color: var(--text); user-select: none;
+  transition: background var(--t-fast);
+}
+.scope-menu__item:hover { background: var(--surface-2); }
+.scope-menu__cb { flex: none; width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; margin: 0; }
+.scope-menu__icon { flex: none; width: 16px; text-align: center; color: var(--text-3); font-size: 13px; }
 
 .sr-only {
   position: absolute !important; width: 1px; height: 1px;
@@ -457,14 +844,108 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   padding: 2px 7px; border-radius: var(--r-pill);
   text-transform: uppercase; letter-spacing: .1em;
 }
+/* Hindi collapsed — drop the two-up card chrome so an English-only field
+   reads as a plain field, not a padded dashed box with an empty second half.
+   Placed AFTER the @media two-column rule so it wins the ≥600px tie. */
+.field-pair--solo {
+  display: block;
+  padding: 0; background: transparent; border: 0; border-radius: 0;
+}
+.field-pair__add-hi {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 6px; padding: 4px 10px;
+  border: 1px dashed var(--line-2); border-radius: var(--r-pill);
+  background: transparent; color: var(--olive-deep);
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+.field-pair__add-hi:hover { background: var(--olive-soft); border-color: var(--olive); }
+.field-pair__add-hi i { font-size: 10px; }
 
 /* Form helpers */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
 @media (max-width: 520px) { .form-grid { grid-template-columns: 1fr; } }
 .form-stack { display: flex; flex-direction: column; gap: var(--s-3); }
 
+/* "More details" disclosure — a native <details> so it's keyboard-accessible
+   with zero JS. The summary reads as a quiet section divider; its chevron
+   rotates when open. Essentials sit above it, always visible. */
+.form-more { border-top: 1px solid var(--line); padding-top: var(--s-3); }
+.form-more__summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; color: var(--text-2);
+  padding: 6px 2px; user-select: none;
+  border-radius: var(--r-sm);
+}
+.form-more__summary::-webkit-details-marker { display: none; }
+.form-more__summary:hover { color: var(--text); }
+.form-more__summary:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--olive); }
+.form-more__chev { font-size: 11px; transition: transform var(--t-fast); }
+.form-more[open] .form-more__chev { transform: rotate(90deg); }
+.form-more > .form-stack { margin-top: var(--s-3); }
+
 .photo-uploader { display: flex; align-items: center; gap: var(--s-4); padding: var(--s-4); background: var(--surface-2); border-radius: var(--r-md); }
 .photo-uploader__buttons { display: flex; flex-direction: column; gap: 6px; }
+
+/* Gallery editor — thumbnail grid + add tile in the person form */
+.gallery-editor__grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+}
+.gallery-editor__cell { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.gallery-editor__thumb {
+  position: relative; aspect-ratio: 1/1; border-radius: var(--r-md);
+  overflow: hidden; background: var(--surface-2); border: 1px solid var(--line);
+}
+.gallery-editor__thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gallery-editor__remove {
+  position: absolute; top: 4px; right: 4px;
+  background: rgba(0,0,0,0.55); color: #fff; border: none;
+  width: 24px; height: 24px; border-radius: 50%;
+}
+.gallery-editor__remove:hover { background: rgba(0,0,0,0.75); }
+.gallery-editor__caption { font-size: 12px; padding: 5px 8px; }
+.gallery-editor__add {
+  aspect-ratio: 1/1; border: 1px dashed var(--line-strong, var(--line));
+  border-radius: var(--r-md); background: var(--surface-2);
+  color: var(--text-3); cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  font-size: 12px; font-family: inherit;
+}
+.gallery-editor__add:hover { border-color: var(--gold); color: var(--gold-deep); }
+.gallery-editor__add i { font-size: 18px; }
+
+/* Document editor — a stacked list of source cards (scan thumb + fields) in
+   the person form. Richer than the gallery: each row carries title, kind,
+   date, and a citation note. */
+.doc-editor__list { display: flex; flex-direction: column; gap: 10px; }
+.doc-editor__row {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 10px; background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+}
+.doc-editor__thumb {
+  flex: 0 0 auto; width: 68px; height: 68px;
+  border-radius: var(--r-sm); overflow: hidden;
+  background: var(--surface); border: 1px solid var(--line);
+}
+.doc-editor__thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.doc-editor__fields { flex: 1 1 auto; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.doc-editor__fields-top { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.doc-editor__title { flex: 1 1 140px; min-width: 0; }
+.doc-editor__kind { flex: 0 0 auto; }
+.doc-editor__date { flex: 0 0 110px; }
+.doc-editor__note { width: 100%; resize: vertical; min-height: 42px; }
+.doc-editor__remove {
+  flex: 0 0 auto; background: transparent; border: none;
+  color: var(--text-3); width: 30px; height: 30px; border-radius: var(--r-sm);
+}
+.doc-editor__remove:hover { color: var(--rust); background: var(--surface); }
+.doc-editor__add {
+  aspect-ratio: auto; width: 100%; padding: 12px;
+  flex-direction: row; gap: 8px; font-size: 13px;
+}
 
 .relations-list {
   display: flex; flex-direction: column; gap: 6px;
@@ -702,7 +1183,10 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   top: calc(100% + 8px);
   left: 0;
   z-index: var(--z-modal);
-  width: 320px;
+  /* Was a fixed 320 px, which overflowed the bottom-sheet person form on
+     narrow phones. Clamp to the viewport (minus a 32 px gutter) so it always
+     fits; 320 px stays the ceiling on desktop. */
+  width: min(320px, calc(100vw - 32px));
   background: var(--bg-elev);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
@@ -713,6 +1197,10 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   gap: 12px;
   animation: fade-in var(--t-fast);
 }
+/* Flip upward when there isn't room below (JS adds .hdp--up after measuring on
+   open) — the calendar would otherwise be clipped at the bottom of a phone
+   bottom-sheet. */
+.hdp--up .hdp__popover { top: auto; bottom: calc(100% + 8px); }
 .hdp__head {
   display: flex; align-items: center; justify-content: space-between;
   gap: 8px;
@@ -747,8 +1235,9 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   border-radius: var(--r-sm);
   scrollbar-width: thin;
 }
-.hdp__year-strip::-webkit-scrollbar { height: 6px; }
-.hdp__year-strip::-webkit-scrollbar-thumb { background: var(--ink-5); border-radius: 999px; }
+.hdp__year-strip::-webkit-scrollbar { height: 8px; }
+.hdp__year-strip::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+.hdp__year-strip::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: padding-box; }
 .hdp__year {
   flex: 0 0 auto;
   border: 0;
@@ -901,113 +1390,258 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 }
 
 /* ===========================================================
-   Print stylesheet — driven by PrintBook.open() which builds
-   .print-book-root with one .print-page per relative.
+   Print stylesheet — "Family book" — driven by PrintBook.open()
+   which builds .print-book-root with a cover + one .print-page
+   per relative.
+
+   THEME-AWARE: the book reads its palette from tokens scoped to
+   .print-book-root, and a [data-theme="dark"] override flips them
+   to a warm-charcoal night edition. The app's live theme (the
+   data-theme attribute on <html>) persists into the print, so the
+   printed book matches whatever the user is looking at.
+
+   print-color-adjust: exact + @page{margin:0} are LOAD-BEARING:
+   without them browsers drop background fills (the dark edition
+   would print as black text on white) and strand each page in a
+   white physical margin instead of bleeding the tinted sheet
+   edge-to-edge.
    =========================================================== */
 .print-book-root { display: none; }
+
+/* Palette + metrics for the book, light edition. Scoped so nothing here
+   leaks into the app UI, and so the dark override below is a single flip. */
+.print-book-root {
+  --pb-page:      #FCFAF4;   /* sheet */
+  --pb-panel:     #F4EFE3;   /* insets: monogram, stat wells */
+  --pb-ink:       #1F1D19;   /* headings + body */
+  --pb-ink-soft:  #4A463E;   /* secondary prose */
+  --pb-muted:     #7A7363;   /* dates, footer, labels */
+  --pb-olive:     #5E7D63;   /* accent — occupation, eyebrow */
+  --pb-gold:      #B89A5A;   /* highlight — rules, badges, monogram ring */
+  --pb-gold-deep: #856B33;
+  --pb-line:      #E4DECF;   /* hairlines */
+}
+:root[data-theme="dark"] .print-book-root {
+  --pb-page:      #1C1A16;
+  --pb-panel:     #262319;
+  --pb-ink:       #F0EBDD;
+  --pb-ink-soft:  #C5BFA9;
+  --pb-muted:     #9A927E;
+  --pb-olive:     #9DBFA2;
+  --pb-gold:      #D8BE86;
+  --pb-gold-deep: #E2C684;
+  --pb-line:      #3A362C;
+}
+
 @media print {
-  /* Hide everything else so only the book prints. */
-  body > *:not(.print-book-root) { display: none !important; }
-  body.is-printing { background: #fff; }
-  .print-book-root { display: block; }
+  /* Bleed the sheet edge-to-edge; the page's own padding provides the margin,
+     so a tinted / dark edition fills the whole physical page. */
+  @page { margin: 0; }
+
+  /* Only seize the page when a book is actually mounted (body.is-printing,
+     set by PrintBook while a print is in flight). Otherwise — e.g. Ctrl+P on
+     an empty tree, where no book gets built — leave the normal page to print
+     rather than forcing everything hidden = a blank sheet. */
+  body.is-printing > *:not(.print-book-root) { display: none !important; }
+  body.is-printing { background: var(--pb-page); }
+  body.is-printing .print-book-root { display: block; }
+
+  /* Force backgrounds/colours to render — the whole themed look depends on it. */
+  .print-book-root,
+  .print-book-root * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   .print-page {
+    position: relative;
     page-break-after: always;
     break-after: page;
+    break-inside: avoid;
     width: 100%;
     min-height: 100vh;
-    padding: 28mm 22mm;
+    padding: 24mm 22mm 20mm;
     box-sizing: border-box;
-    color: #1a1a1a;
-    background: #fffdf7;
+    color: var(--pb-ink);
+    background: var(--pb-page);
     font-family: var(--font-sans), system-ui, sans-serif;
   }
   .print-page:last-child { page-break-after: auto; }
 
+  /* — Cover — */
   .print-page--cover {
     display: flex; flex-direction: column; justify-content: center; align-items: center;
     text-align: center;
+    padding: 30mm 24mm;
+  }
+  /* A double-hairline frame inset from the trim — the classic bookplate border.
+     Two stacked borders via border + outline keeps it to one element. */
+  .print-cover__frame {
+    position: absolute; top: 12mm; right: 12mm; bottom: 12mm; left: 12mm;
+    border: 0.75pt solid var(--pb-gold);
+    outline: 2.5pt solid var(--pb-page);
+    box-shadow: 0 0 0 3pt var(--pb-gold);
+    pointer-events: none;
+  }
+  .print-cover { position: relative; z-index: 1; max-width: 130mm; }
+  .print-cover__monogram {
+    width: 30mm; height: 30mm; margin: 0 auto 10mm;
+    border-radius: 50%;
+    border: 1.5pt solid var(--pb-gold);
+    background: var(--pb-panel);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 30pt; font-weight: 500;
+    color: var(--pb-gold-deep);
+    letter-spacing: 0.02em;
   }
   .print-cover__eyebrow {
-    font-size: 12pt; letter-spacing: 0.3em; text-transform: uppercase;
-    color: #5E7D63; margin-bottom: 14mm;
+    font-size: 11pt; letter-spacing: 0.34em; text-transform: uppercase;
+    color: var(--pb-olive); margin-bottom: 8mm;
   }
   .print-cover__title {
     font-family: var(--font-display);
-    font-size: 56pt; font-weight: 500; line-height: 1.05;
-    color: #1F1D19; margin: 0;
+    font-size: 52pt; font-weight: 500; line-height: 1.05;
+    color: var(--pb-ink); margin: 0;
+  }
+  .print-cover__subtitle {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 15pt; line-height: 1.4;
+    color: var(--pb-muted);
+    margin-top: 5mm;
   }
   .print-cover__rule {
-    width: 80mm; height: 1pt; background: #B89A5A;
-    margin: 14mm auto;
+    width: 60mm; height: 0; margin: 12mm auto;
+    border-top: 0.75pt solid var(--pb-gold);
+    position: relative;
   }
-  .print-cover__date { font-size: 11pt; color: #7A7363; }
+  /* A small lozenge centred on the rule — a restrained flourish. */
+  .print-cover__rule::after {
+    content: ""; position: absolute; top: 50%; left: 50%;
+    width: 3mm; height: 3mm;
+    transform: translate(-50%, -50%) rotate(45deg);
+    background: var(--pb-gold);
+  }
+  .print-cover__stats {
+    display: flex; justify-content: center; gap: 14mm;
+    margin: 2mm 0 12mm;
+  }
+  .print-cover__stat-value {
+    font-family: var(--font-display);
+    font-size: 26pt; font-weight: 500; line-height: 1;
+    color: var(--pb-gold-deep);
+  }
+  .print-cover__stat-label {
+    font-size: 8.5pt; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--pb-muted); margin-top: 2mm;
+  }
+  .print-cover__date {
+    font-size: 10.5pt; color: var(--pb-muted);
+    letter-spacing: 0.04em;
+  }
 
+  /* — Person page header — */
   .print-person__head {
-    display: flex; align-items: center; gap: 10mm;
-    border-bottom: 1pt solid #E4DECF;
-    padding-bottom: 8mm; margin-bottom: 8mm;
+    display: flex; align-items: center; gap: 9mm;
+    border-bottom: 0.75pt solid var(--pb-line);
+    padding-bottom: 7mm; margin-bottom: 7mm;
   }
   .print-person__photo {
-    width: 36mm; height: 36mm;
+    width: 34mm; height: 34mm;
     border-radius: 50%;
     overflow: hidden;
-    border: 2pt solid #B89A5A;
+    border: 1.5pt solid var(--pb-gold);
+    box-shadow: 0 0 0 3pt var(--pb-page), 0 0 0 3.75pt var(--pb-line);
     flex-shrink: 0;
-    background: #DAE2D5;
+    background: var(--pb-panel);
     display: flex; align-items: center; justify-content: center;
     font-family: var(--font-display);
-    font-size: 24pt; color: #5E7D63;
+    font-size: 22pt; color: var(--pb-olive);
   }
   .print-person__photo img { width: 100%; height: 100%; object-fit: cover; }
   .print-person__photo--initials img { display: none; }
+  .print-person__kicker {
+    font-size: 8.5pt; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--pb-gold-deep); font-weight: 600;
+    margin-bottom: 2mm;
+  }
+  .print-person__kicker--memoriam { color: var(--pb-muted); font-style: normal; }
   .print-person__title h2 {
     font-family: var(--font-display);
-    font-size: 28pt; font-weight: 500;
+    font-size: 27pt; font-weight: 500;
     margin: 0 0 2mm 0; line-height: 1.1;
+    color: var(--pb-ink);
   }
   .print-person__occupation {
-    font-style: italic; color: #5E7D63; font-size: 12pt; margin-bottom: 2mm;
+    font-style: italic; color: var(--pb-olive); font-size: 12pt; margin-bottom: 2mm;
   }
-  .print-person__lifespan { font-size: 10.5pt; color: #7A7363; }
+  .print-person__lifespan { font-size: 10pt; color: var(--pb-muted); }
 
-  .print-section { margin-bottom: 6mm; }
+  /* — Body sections — */
+  .print-section { margin-bottom: 6mm; break-inside: avoid; }
   .print-section h3 {
     font-family: var(--font-display);
-    font-size: 14pt; font-weight: 500; color: #1F1D19;
+    font-size: 14pt; font-weight: 500; color: var(--pb-ink);
     margin: 0 0 3mm 0;
-    padding-bottom: 1mm;
-    border-bottom: 0.5pt solid #E4DECF;
+    padding-left: 4mm;
+    position: relative;
+  }
+  /* A short gold tab marks each section head — quiet structure, not a full rule. */
+  .print-section h3::before {
+    content: ""; position: absolute; left: 0; top: 0.5mm; bottom: 0.5mm;
+    width: 1.25mm; border-radius: 1mm;
+    background: var(--pb-gold);
   }
   .print-prose {
-    font-size: 11pt; line-height: 1.6; color: #1F1D19;
+    font-size: 11pt; line-height: 1.65; color: var(--pb-ink-soft);
     margin: 0; white-space: pre-wrap;
   }
-  .print-prose--muted { color: #555; font-size: 10.5pt; }
+  .print-prose--muted { color: var(--pb-muted); font-size: 10.5pt; }
   .print-list {
-    margin: 0; padding-left: 5mm;
-    font-size: 11pt; line-height: 1.55;
+    margin: 0; padding-left: 5mm; list-style: none;
+    font-size: 11pt; line-height: 1.55; color: var(--pb-ink-soft);
   }
-  .print-list li { margin-bottom: 1mm; }
+  .print-list li { margin-bottom: 1.5mm; padding-left: 4mm; position: relative; }
+  /* Gold diamond bullets instead of default discs. */
+  .print-list li::before {
+    content: ""; position: absolute; left: 0; top: 2.4mm;
+    width: 1.5mm; height: 1.5mm;
+    transform: rotate(45deg);
+    background: var(--pb-gold);
+  }
   .print-stories { display: flex; flex-direction: column; gap: 4mm; }
   .print-story {
-    border-left: 1pt solid #B89A5A;
-    padding-left: 4mm;
+    border-left: 1.5pt solid var(--pb-gold);
+    padding: 0.5mm 0 0.5mm 4mm;
+    break-inside: avoid;
   }
   .print-story h4 {
     font-family: var(--font-display);
-    font-size: 12pt; font-weight: 500;
-    margin: 0 0 1mm 0;
+    font-size: 12.5pt; font-weight: 500;
+    margin: 0 0 1mm 0; color: var(--pb-ink);
   }
   .print-story p {
-    font-size: 11pt; line-height: 1.6;
-    margin: 0; color: #1F1D19;
+    font-size: 11pt; line-height: 1.65;
+    margin: 0; color: var(--pb-ink-soft);
     white-space: pre-wrap;
   }
+
+  /* — In-memoriam edition of a page: a subtle warm wash + gold top-edge, so
+       a departed relative's page reads as a remembrance without shouting. — */
+  .print-page--memoriam { background: var(--pb-panel); }
+  .print-page--memoriam::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3mm;
+    background: linear-gradient(90deg, transparent, var(--pb-gold), transparent);
+  }
+
   .print-person__foot {
-    position: absolute; bottom: 14mm; left: 22mm; right: 22mm;
+    position: absolute; bottom: 12mm; left: 22mm; right: 22mm;
     text-align: center;
-    font-size: 9pt; color: #7A7363;
-    letter-spacing: 0.1em; text-transform: uppercase;
+    font-size: 8.5pt; color: var(--pb-muted);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding-top: 3mm;
+    border-top: 0.5pt solid var(--pb-line);
   }
 }
 
@@ -1020,8 +1654,8 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   position: fixed;
   left: 50%; bottom: 24px;
   transform: translateX(-50%);
-  display: inline-flex; align-items: center; gap: 12px;
-  max-width: min(540px, calc(100vw - 32px));
+  display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  max-width: min(560px, calc(100vw - 32px));
   padding: 10px 12px 10px 16px;
   background: var(--bg-elev);
   color: var(--text);
@@ -1034,7 +1668,10 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   animation: xTabBannerIn .25s ease-out;
 }
 .x-tab-banner__icon { color: var(--gold); font-size: 14px; flex-shrink: 0; }
-.x-tab-banner__msg { flex: 1; min-width: 0; }
+/* Message takes the row; the actions keep their size and wrap below on a
+   narrow screen (the banner has three buttons in the cloud conflict case). */
+.x-tab-banner__msg { flex: 1 1 200px; min-width: 0; }
+.x-tab-banner .btn { flex-shrink: 0; }
 .x-tab-banner__close { width: 32px; height: 32px; padding: 0; }
 @keyframes xTabBannerIn {
   from { opacity: 0; transform: translate(-50%, 8px); }
@@ -1054,12 +1691,48 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 }
 @media (prefers-reduced-motion: reduce) {
   .x-tab-banner { animation: none; }
+  .signin__provider--hint { animation: none; }
 }
+
+/* === View-only banner ===
+   Quiet, persistent strip shown at the top of the canvas when the signed-in
+   member has viewer (read-only) access, explaining why edit controls are gone.
+   Not dismissable — it's an ongoing state, not a notification. */
+.viewer-banner {
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+  padding: 8px 16px;
+  background: var(--olive-soft);
+  color: var(--olive-deep);
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.viewer-banner__icon { flex-shrink: 0; opacity: .8; }
+.viewer-banner__msg { flex: 1; min-width: 0; }
+
+/* Cross-view lineage-focus cue. Shown at the top of .app-main on People /
+   Timeline while a sticky tree focus is active, so the "tracing X's line" lens
+   doesn't silently vanish off the tree. Tinted with the same accent the tree
+   uses for the in-stage "Viewing as" banner so the two read as one state. */
+.lineage-cue {
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+  padding: 8px 16px;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.lineage-cue__icon { flex-shrink: 0; opacity: .85; }
+.lineage-cue__msg { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lineage-cue__name { font-weight: 600; }
+/* The two action buttons hug the right edge; keep them from shrinking away. */
+.lineage-cue .btn { flex: 0 0 auto; }
 
 /* === Kebab overflow menu (phone-only header) ===
    Triggered by the .kebab-btn that's hidden ≥ 769 px. Anchored under
    the kebab; flush-right of the viewport. Same heritage tone as
-   .heritage-select__menu so the visual language stays consistent. */
+   .hsel__menu so the visual language stays consistent. */
 .kebab-menu {
   position: fixed;
   z-index: var(--z-modal);
@@ -1070,6 +1743,13 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   box-shadow: var(--shadow-lg);
   min-width: 200px;
   max-width: calc(100vw - 16px);
+  /* A long menu (theme + lang + collect/import/export + account + trees +
+     share + sign-out) can run past the viewport on a short phone; cap it to
+     the space below the header, honour the home-bar inset, and scroll. */
+  max-height: calc(100dvh - var(--header-total) - 16px - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -1092,10 +1772,2145 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .kebab-menu__item:focus-visible {
   outline: none;
   background: var(--surface-2);
-  box-shadow: 0 0 0 2px var(--olive-soft);
+  box-shadow: inset 0 0 0 2px var(--olive);
 }
 .kebab-menu__icon { width: 16px; text-align: center; color: var(--text-2); }
 .kebab-menu__divider {
   height: 1px; background: var(--line);
   margin: 4px 6px;
 }
+/* Account block inside the popover / kebab: who's signed in. Non-interactive,
+   so it reads as a header rather than a tappable row. */
+.kebab-menu__meta {
+  padding: 8px 12px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.kebab-menu__meta-greeting {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.kebab-menu__meta-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+}
+.kebab-menu__meta-email {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  word-break: break-all;
+}
+/* Desktop account chip — an avatar-only button in the header action row.
+   The avatar span carries its own colour; keep the button chrome minimal. */
+.account-btn { padding: 4px; }
+
+/* Appearance row inside the account menu — theme + high-contrast as two
+   compact circular icon toggles on one line (moon, half-disc), rather than two
+   full-width text rows. Same chrome as the header .theme-toggle so the idiom
+   carries over; the row sits with the same horizontal padding as a menu item. */
+.account-menu__appearance {
+  display: flex;
+  gap: 8px;
+  padding: 4px 12px 6px;
+}
+.account-menu__appearance-btn {
+  width: 34px; height: 34px;
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  border-radius: 50%;
+  display: inline-grid; place-items: center;
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 14px;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+.account-menu__appearance-btn:hover {
+  background: var(--surface-2); border-color: var(--gold); color: var(--gold-deep);
+}
+.account-menu__appearance-btn:focus-visible {
+  outline: 2px solid var(--gold); outline-offset: 2px;
+}
+/* Pressed = that axis is on. Fill with the accent so the on-state reads at a
+   glance, mirroring how .contrast-toggle.is-active flips in the header. */
+.account-menu__appearance-btn[aria-pressed="true"] {
+  background: var(--olive); border-color: var(--olive); color: var(--on-accent);
+}
+.account-menu__appearance-btn[aria-pressed="true"]:hover {
+  background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); color: var(--on-accent);
+}
+:root[data-contrast="high"] .account-menu__appearance-btn[aria-pressed="true"] {
+  background: var(--focus); border-color: var(--focus); color: var(--bg);
+}
+.account-btn .avatar { cursor: pointer; }
+
+/* — Sync pip — a quiet "Saved / Saving… / Offline" chip in the header, shown
+   only in a live cloud session. Colour + dot are driven by data-state. */
+.sync-pip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: var(--r-pill);
+  background: var(--surface-2);
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+  color: var(--text-2);
+  user-select: none;
+}
+.sync-pip[hidden] { display: none; }
+.sync-pip__dot { font-size: 8px; color: var(--text-3); }
+.sync-pip[data-state="synced"]  { color: var(--olive-deep); }
+.sync-pip[data-state="synced"]  .sync-pip__dot { color: var(--olive); }
+.sync-pip[data-state="pending"] { color: var(--gold-deep); }
+.sync-pip[data-state="pending"] .sync-pip__dot { color: var(--gold); animation: sync-pip-pulse 1.2s ease-in-out infinite; }
+.sync-pip[data-state="offline"] { color: var(--danger); background: var(--danger-soft); }
+.sync-pip[data-state="offline"] .sync-pip__dot { color: var(--danger); }
+@keyframes sync-pip-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+/* Tight desktop widths: keep the coloured dot, drop the word to save room. */
+@media (max-width: 1080px) {
+  .sync-pip { padding: 4px 6px; }
+  .sync-pip__label { display: none; }
+}
+/* Phone pip: a bare coloured dot beside the kebab. The desktop pip lives in
+   .app-header__actions (display:none ≤768px), so this is the phone-only twin —
+   hidden on desktop, shown ≤768px. Its label is always screen-reader-only (the
+   colour carries the state); a tap toasts the full plain-language status. */
+.sync-pip--phone { display: none; padding: 6px; cursor: pointer; }
+.sync-pip--phone .sync-pip__label {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+.sync-pip--phone .sync-pip__dot { font-size: 10px; }
+@media (max-width: 768px) {
+  .sync-pip--phone:not([hidden]) { display: inline-flex; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sync-pip[data-state="pending"] .sync-pip__dot { animation: none; }
+}
+
+/* — Sign-in gate — full-viewport, shown only when cloud is enabled and
+   nobody is signed in. Sits above everything (own layer, no modal-root). */
+.signin {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-toast) + 10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-5);
+  /* Heritage backdrop: a jali (carved lattice screen, as in havelis and
+     Mughal architecture) — an endlessly interlocking motif that echoes
+     generations connecting. Inline SVG data-URI so it stays crisp at any
+     zoom with no extra file/build step (same idiom as the .select chevron).
+     Layers top→bottom: soft gold glow · faint centre veil that lets the
+     card breathe · the jali lattice · the ivory base. */
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(120% 120% at 50% -10%, var(--gold-soft) 0%, transparent 55%),
+    radial-gradient(60% 55% at 50% 48%, var(--bg) 0%, transparent 70%),
+    url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%235E7D63' stroke-opacity='0.14' stroke-width='1'%3E%3Ccircle cx='0' cy='0' r='28'/%3E%3Ccircle cx='56' cy='0' r='28'/%3E%3Ccircle cx='0' cy='56' r='28'/%3E%3Ccircle cx='56' cy='56' r='28'/%3E%3Ccircle cx='28' cy='28' r='28'/%3E%3Ccircle cx='28' cy='28' r='3.5' fill='%23B89A5A' fill-opacity='0.18' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: no-repeat, no-repeat, repeat;
+  background-position: center top, center center, center center;
+  background-size: auto, auto, 60px 60px;
+  overflow-y: auto;
+}
+/* On dark surfaces the olive lattice would nearly vanish, so it's lifted to a
+   warm gold — but a BRIGHT line on a near-black field reads far louder than the
+   light theme's dark line on ivory at the same alpha, so the gold must sit at a
+   much lower opacity than the light olive (not higher) to feel equally quiet.
+   Kept faint so it's a texture behind the copy, never noise the text fights. */
+:root[data-theme="dark"] .signin {
+  background-image:
+    radial-gradient(120% 120% at 50% -10%, var(--gold-soft) 0%, transparent 55%),
+    radial-gradient(60% 55% at 50% 48%, var(--bg) 0%, transparent 70%),
+    url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23B89A5A' stroke-opacity='0.07' stroke-width='1'%3E%3Ccircle cx='0' cy='0' r='28'/%3E%3Ccircle cx='56' cy='0' r='28'/%3E%3Ccircle cx='0' cy='56' r='28'/%3E%3Ccircle cx='56' cy='56' r='28'/%3E%3Ccircle cx='28' cy='28' r='28'/%3E%3Ccircle cx='28' cy='28' r='3.5' fill='%23B89A5A' fill-opacity='0.10' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
+}
+.signin__card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--s-8) var(--s-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.signin__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-2);
+}
+.signin__logo { width: 48px; height: 48px; }
+.signin__title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.signin__tagline {
+  font-size: 13.5px;
+  color: var(--text-2);
+  margin: 0;
+  line-height: 1.5;
+}
+.signin__form { display: flex; flex-direction: column; gap: var(--s-4); }
+.signin__form .btn--block { margin-top: var(--s-1); }
+.signin__provider { height: 42px; }
+/* The magic-link button and the "or use a password" divider are toggled off in
+   sign-up mode via [hidden]. Both set an explicit display (.btn → inline-flex,
+   .signin__divider → flex) that outranks the UA [hidden] rule, so — exactly like
+   .field[hidden] / .signin__error[hidden] above — they need these overrides or
+   they'd stay visible when hidden. */
+.signin__provider[hidden] { display: none; }
+.signin__divider[hidden] { display: none; }
+/* Recovery hint: a wrong password names the magic-link button in the error;
+   this briefly pulses it so the eye finds the way out. Toggled for ~2.4s. */
+.signin__provider--hint {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  animation: signin-hint-pulse 0.9s ease-in-out 2;
+}
+@keyframes signin-hint-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px var(--accent-soft); }
+  50%      { box-shadow: 0 0 0 5px var(--accent-soft); }
+}
+.signin__link {
+  align-self: center;
+  background: none;
+  border: none;
+  color: var(--accent-deep);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+}
+.signin__link:hover { text-decoration: underline; }
+.signin__link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--olive-soft); }
+.signin__link:disabled { opacity: .5; cursor: default; text-decoration: none; }
+.signin__divider {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  color: var(--text-4);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.signin__divider::before,
+.signin__divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+.signin__error {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-radius: var(--r-md);
+  padding: 10px 14px;
+}
+.signin__error--note {
+  color: var(--accent-deep);
+  background: var(--accent-soft);
+}
+.signin__error[hidden] { display: none; }
+
+/* ── Boot splash (between sign-in and first data-complete paint) ────────────
+   Same jali backdrop as .signin so the transition from the sign-in screen is
+   seamless. A logo, a spinner, and the "Loading your tree…" line, centred. */
+.app-splash { flex-direction: column; gap: var(--s-5); }
+.app-splash__inner {
+  display: flex; flex-direction: column; align-items: center; gap: var(--s-4);
+  text-align: center;
+}
+.app-splash__logo { width: 56px; height: 56px; opacity: .95; }
+.app-splash__spinner { font-size: 22px; color: var(--accent-deep); }
+.app-splash__msg { font-size: 14px; color: var(--text-2); letter-spacing: .01em; }
+
+/* ── Landing (pre-login intro) ─────────────────────────────────────────────
+   A FULL-PAGE intro on the same jali backdrop as the sign-in gate — a hero
+   plus a row of feature tiles that fills the viewport, deliberately unlike the
+   compact sign-in card so the two screens read as distinct pages. show()
+   renders BOTH the landing and the auth card; the .signin--landing class picks
+   which is visible, so "Get started" is a pure class swap (no re-render).
+
+   The landing needs the whole viewport, but .signin centres its child (right
+   for the card). When landing is showing, override that: stretch to fill and
+   drop the page padding so the landing owns its own spacing. */
+.signin--landing { align-items: stretch; justify-content: stretch; padding: 0; }
+.signin--landing .signin__card { display: none; }
+.signin:not(.signin--landing) .landing { display: none; }
+
+.landing {
+  position: relative;
+  flex: 1;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Deliberately NO justify-content:center. When the content is taller than
+     the viewport (short window, browser zoom, or the longer "Full" landing),
+     vertical centering pushes the top — logo + title — ABOVE the scroll
+     container's reachable area and clips it (you can't scroll to a negative
+     offset). Instead .landing__inner uses margin-block:auto, which centres it
+     when there's slack but collapses to the top and stays fully scrollable
+     when it overflows. */
+  /* No horizontal padding here: the hero band is a full-bleed direct child and
+     must reach both edges. The section stack (.landing__inner) supplies its own
+     side padding below. Keep only vertical breathing room. */
+  padding-block: 0 var(--s-8);
+}
+.landing__inner {
+  width: 100%;
+  max-width: 940px;
+  margin: var(--s-8) auto 0;
+  padding-inline: var(--s-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-8);
+}
+/* Full-bleed hero band: the coloured/animated surface spans the whole width;
+   .landing__hero-inner re-constrains the content to a centred column that lines
+   up with the sections below. Two columns on a wide screen (copy + decorative
+   tree mock); stacks on phones (see the query at the end of this block). */
+.landing__hero {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  /* .landing is a flex column stretched to the viewport by .signin (a flex row),
+     so its children are under shrink pressure when the page overflows. A flex
+     item with overflow:hidden has an automatic min-size of 0 (not min-content),
+     so this band — the only clipped child — would collapse to its 1px border and
+     vanish. Pin it: the hero must never shrink below its content height. */
+  flex-shrink: 0;
+  /* A hairline bottom border marks where the band ends against the ivory page;
+     no side/top border or radius — it runs to the edges. */
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(120% 130% at 8% 0%, var(--gold-soft) 0%, transparent 48%),
+    linear-gradient(158deg, var(--bone) 0%, var(--parchment) 100%);
+}
+.landing__hero-inner {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  align-items: center;
+  gap: var(--s-8);
+  width: 100%;
+  max-width: 1040px;
+  margin-inline: auto;
+  padding: var(--s-9) var(--s-6);
+}
+/* The hero as a dark heritage "stage": deep forest-green depth with an
+   animated aurora glow and drifting golden dust motes (built in sign-in.js,
+   styled below). Copy flips to cream. This is the page's focal moment — the
+   one place that leads with atmosphere rather than a light plate. The green is
+   theme-aware via --hero-* tokens: a rich jewel on the light page, lifted and
+   saturated in dark mode so it stays a distinct stage instead of melting into
+   the near-black background. */
+.landing__hero--stage {
+  background:
+    radial-gradient(90% 120% at 100% 0%, rgba(184, 154, 90, 0.22) 0%, transparent 50%),
+    radial-gradient(90% 130% at 0% 100%, rgba(94, 125, 99, 0.38) 0%, transparent 55%),
+    linear-gradient(155deg, var(--hero-from) 0%, var(--hero-mid) 55%, var(--hero-to) 100%);
+  /* Full-bleed: gold hairline only at the base, a soft drop shadow to separate
+     the band from the ivory page below, and an inset top highlight. */
+  border-bottom-color: rgba(184, 154, 90, 0.35);
+  box-shadow: 0 18px 40px rgba(28, 42, 34, 0.28), inset 0 1px 0 rgba(248, 244, 236, 0.06);
+  isolation: isolate;
+}
+.landing__hero--stage .landing__pitch { color: rgba(244, 239, 227, 0.82); }
+.landing__hero--stage .landing__eyebrow { color: var(--gold); }
+.landing__hero--stage .landing__eyebrow::before { background: linear-gradient(90deg, var(--gold), transparent); }
+.landing__hero--stage .signin__link { color: rgba(244, 239, 227, 0.78); }
+.landing__hero--stage .signin__link:hover { color: #F8F4EC; }
+
+/* ── Hero atmosphere layers (aria-hidden, all motion reduced-motion-gated) ── */
+.landing__hero-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.landing__hero-inner { position: relative; z-index: 1; }
+/* Slow aurora — two soft radial washes that breathe and drift, so the dark
+   backdrop is never static. */
+.landing__hero-glow {
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(38% 44% at 26% 30%, rgba(94, 125, 99, 0.55), transparent 60%),
+    radial-gradient(34% 40% at 74% 68%, rgba(184, 154, 90, 0.28), transparent 60%);
+  filter: blur(6px);
+}
+/* Golden dust motes — small blurred gold dots that rise and gently drift, like
+   sunlight catching dust over an old album. Each mote's position/size/speed/
+   drift/opacity are seeded as CSS vars in sign-in.js. */
+.landing__motes { position: absolute; inset: 0; }
+.landing__mote {
+  position: absolute;
+  bottom: -6%;
+  width: var(--size, 3px);
+  height: var(--size, 3px);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(233, 214, 160, 0.95), rgba(184, 154, 90, 0.35) 60%, transparent 70%);
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .landing__hero-glow {
+    animation: landing-aurora 16s ease-in-out infinite alternate;
+    will-change: transform, opacity;
+  }
+  .landing__mote {
+    animation: landing-mote-rise var(--dur, 12s) linear infinite;
+    animation-delay: var(--delay, 0s);
+    will-change: transform, opacity;
+  }
+}
+@keyframes landing-aurora {
+  0%   { transform: translate3d(-4%, 2%, 0) scale(1);    opacity: 0.85; }
+  100% { transform: translate3d(5%, -3%, 0) scale(1.12); opacity: 1; }
+}
+@keyframes landing-mote-rise {
+  0%   { transform: translate3d(0, 0, 0);                       opacity: 0; }
+  12%  { opacity: var(--o, 0.6); }
+  88%  { opacity: var(--o, 0.6); }
+  100% { transform: translate3d(var(--drift, 0), -560px, 0);   opacity: 0; }
+}
+.landing__hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: var(--s-3);
+}
+.landing__logo { width: 72px; height: 72px; margin-bottom: var(--s-1); }
+.landing__hero--stage .landing__logo { filter: drop-shadow(0 4px 16px rgba(184, 154, 90, 0.45)); }
+/* Gold small-caps kicker under the wordmark — an editorial lede that carries
+   the heritage highlight colour into the hero. A short gold rule leads into
+   it, like a magazine standfirst. */
+.landing__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+}
+.landing__eyebrow::before {
+  content: "";
+  width: 24px;
+  height: 2px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--gold), transparent);
+}
+.landing__title {
+  font-family: var(--font-display);
+  font-size: clamp(44px, 6.6vw, 66px);
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+}
+/* Gold-foil wordmark: a warm deep→bright→deep gold sheen clipped to the
+   letters. The solid ink `color` above is the fallback, so on any browser
+   without background-clip:text the brand name is still fully legible (never
+   an invisible transparent title). Themes automatically — the gold tokens
+   remap in dark mode. */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .landing__title {
+    /* A bright band travels through the gold via an oversized, animated
+       background-position — a slow shimmer, like light moving across gilt
+       lettering. Solid ink `color` above stays the fallback. */
+    background-image: linear-gradient(105deg,
+      var(--gold-deep) 0%, var(--gold) 38%, #F1E4BE 50%, var(--gold) 62%, var(--gold-deep) 100%);
+    background-size: 260% 100%;
+    background-position: 0% 50%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+  /* On the dark stage the deep-gold stops would muddy — brighten the ramp. */
+  .landing__hero--stage .landing__title {
+    background-image: linear-gradient(105deg,
+      var(--gold) 0%, #E9D6A0 40%, #FBF3D8 50%, #E9D6A0 60%, var(--gold) 100%);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .landing__title { animation: landing-shimmer 7s ease-in-out infinite; }
+  }
+}
+@keyframes landing-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+.landing__pitch {
+  font-size: clamp(16px, 2.2vw, 20px);
+  line-height: 1.55;
+  color: var(--text-2);
+  margin: 0;
+  text-wrap: balance;
+}
+.landing__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+}
+.landing__cta {
+  position: relative;
+  overflow: hidden;
+  height: 52px;
+  padding-inline: var(--s-8);
+  font-size: 16px;
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-glow-gold);
+}
+/* A diagonal light-sweep crosses the primary CTA on a slow loop, drawing the
+   eye to the one action that matters. Reduced-motion hides it (opacity 0). */
+.landing__cta::after {
+  content: "";
+  position: absolute;
+  top: -60%;
+  left: -30%;
+  width: 40%;
+  height: 220%;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 252, 245, 0.45), transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .landing__cta::after {
+    opacity: 1;
+    animation: landing-cta-sweep 4.5s ease-in-out 1.2s infinite;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (hover: hover) {
+  .landing__cta { transition: transform var(--t-fast), box-shadow var(--t-fast); }
+  .landing__cta:hover { transform: translateY(-1px); box-shadow: var(--shadow-md), var(--shadow-glow-gold); }
+}
+@keyframes landing-cta-sweep {
+  0%   { left: -40%; }
+  55%  { left: 130%; }
+  100% { left: 130%; }
+}
+
+/* Decorative hero tree mock — a small SVG diagram of a couple linked down to
+   three children. Nodes reuse the avatar pastel tokens so it themes light/dark;
+   aria-hidden in the DOM, so it's purely visual. */
+.landing__mock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+/* Soft radial spotlight behind the tree mock — a warm halo that anchors the
+   decorative diagram and slowly breathes, so the tree feels alive on the dark
+   stage. Sits behind the SVG (z-index) and is purely atmospheric. */
+.landing__mock::before {
+  content: "";
+  position: absolute;
+  inset: -12% -6%;
+  background: radial-gradient(60% 60% at 50% 45%, var(--gold-soft) 0%, transparent 70%);
+  z-index: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .landing__mock::before { animation: landing-breathe 6.5s ease-in-out infinite; will-change: transform, opacity; }
+}
+@keyframes landing-breathe {
+  0%, 100% { transform: scale(0.94); opacity: 0.7; }
+  50%      { transform: scale(1.06); opacity: 1; }
+}
+.landing__mock > * { position: relative; z-index: 1; }
+/* On the dark stage the halo brightens to gold and the connecting lines glow
+   gold so the little tree reads against the deep-green backdrop. */
+.landing__hero--stage .landing__mock::before {
+  background: radial-gradient(58% 58% at 50% 45%, rgba(184, 154, 90, 0.42) 0%, transparent 70%);
+}
+.landing__hero--stage .landing__tree-link {
+  stroke: rgba(233, 214, 160, 0.85);
+  filter: drop-shadow(0 0 3px rgba(184, 154, 90, 0.55));
+}
+.landing__hero--stage .landing__tree-disc { stroke: rgba(28, 42, 34, 0.9); }
+.landing__tree-svg {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  overflow: visible;
+}
+.landing__tree-link {
+  stroke: var(--line-strong, var(--line));
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.landing__tree-disc {
+  stroke: var(--surface);
+  stroke-width: 3;
+  filter: drop-shadow(0 2px 4px rgba(34, 31, 26, 0.12));
+}
+.landing__tree-fig { fill: currentColor; opacity: 0.85; }
+
+/* — Hero tree assembles on load: the links "draw" in, then the people pop in
+   staggered (the couple first, then their children) — the family tree building
+   itself. Guarded by prefers-reduced-motion below, where it all just appears. */
+@media (prefers-reduced-motion: no-preference) {
+  .landing__tree-link {
+    stroke-dashoffset: var(--len, 200px);
+    animation: landing-draw 0.5s ease forwards;
+    animation-delay: 0.15s;
+  }
+  .landing__tree-node {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(0.4);
+    animation: landing-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    /* Children wait for the links to finish drawing (~0.65s), then stagger. */
+    animation-delay: calc(0.7s + var(--i, 0) * 0.1s);
+  }
+}
+@keyframes landing-draw { to { stroke-dashoffset: 0; } }
+@keyframes landing-pop {
+  0%   { opacity: 0; transform: scale(0.4); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.landing__tree-node--peach    { color: var(--av-peach-ink);    }
+.landing__tree-node--peach    .landing__tree-disc { fill: var(--av-peach);    }
+.landing__tree-node--sage     { color: var(--av-sage-ink);     }
+.landing__tree-node--sage     .landing__tree-disc { fill: var(--av-sage);     }
+.landing__tree-node--sky      { color: var(--av-sky-ink);      }
+.landing__tree-node--sky      .landing__tree-disc { fill: var(--av-sky);      }
+.landing__tree-node--rose     { color: var(--av-rose-ink);     }
+.landing__tree-node--rose     .landing__tree-disc { fill: var(--av-rose);     }
+.landing__tree-node--lavender { color: var(--av-lavender-ink); }
+.landing__tree-node--lavender .landing__tree-disc { fill: var(--av-lavender); }
+
+/* Section headings shared by the "How it works" and "capture" bands. A short
+   gold rule under each title gives every section a small editorial flourish —
+   the one detail that repeats across the page and ties the sections together
+   with the heritage highlight colour. */
+.landing__section-title {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.4vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 0 0 var(--s-6);
+  text-align: center;
+}
+.landing__section-title::after {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 2px;
+  margin: var(--s-3) auto 0;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
+}
+.landing__how, .landing__capture { width: 100%; }
+
+/* How it works — three numbered steps, side-by-side then stacked on phones. A
+   dashed gold "journey" line threads across behind the numbered medallions
+   (they punch through it), tying the three steps into one path. */
+.landing__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-6);
+  counter-reset: none;
+  position: relative;
+}
+.landing__steps::before {
+  content: "";
+  position: absolute;
+  top: 22px;                /* centre of the 44px medallion row */
+  left: 16.67%;             /* first medallion centre (1 of 6 columns) … */
+  right: 16.67%;            /* … to the last medallion centre */
+  border-top: 2px dashed var(--gold);
+  opacity: 0.5;
+  z-index: 0;
+}
+.landing__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-2);
+  position: relative;
+  z-index: 1;
+}
+.landing__step-num {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Warm parchment medallion with a hairline gold ring — carries the highlight
+     colour through the steps without the flat olive-disc look. */
+  background: linear-gradient(160deg, var(--gold-soft), var(--accent-soft));
+  box-shadow: inset 0 0 0 1px rgba(184, 154, 90, 0.35);
+  color: var(--accent-deep);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: var(--s-1);
+}
+.landing__step-title { font-size: 16px; font-weight: 600; color: var(--text); margin: 0; }
+.landing__step-body { font-size: 13.5px; line-height: 1.55; color: var(--text-3); margin: 0; max-width: 30ch; }
+
+/* What you can capture — a centred row of icon+label chips that wraps. */
+.landing__chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-3);
+}
+.landing__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-5);
+  /* Warm parchment pills with a gold hairline — the capture set reads as a row
+     of tokens on the light plate. */
+  background: var(--bg-sunken);
+  border: 1px solid var(--gold-soft);
+  border-radius: var(--r-pill, 999px);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+@media (prefers-reduced-motion: no-preference) and (hover: hover) {
+  .landing__chip:hover {
+    transform: translateY(-2px);
+    background: var(--surface);
+    border-color: var(--gold);
+  }
+}
+.landing__chip > i { color: var(--gold-deep); font-size: 14px; }
+/* Three feature tiles side-by-side on a wide screen; they wrap to a single
+   column on phones (see the query below). */
+.landing__features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-5);
+  width: 100%;
+}
+.landing__feature {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+  padding: var(--s-6);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  /* A thin gold ribbon rides the top edge of each tile (via a gradient border
+     drawn on the top only); it brightens on hover for a crafted, tactile feel
+     without adding an element. */
+  position: relative;
+  overflow: hidden;
+}
+.landing__feature::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold-soft), var(--gold) 50%, var(--gold-soft));
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+@media (prefers-reduced-motion: no-preference) and (hover: hover) {
+  .landing__feature:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--gold-soft);
+  }
+  .landing__feature:hover::before { opacity: 1; }
+}
+.landing__feature-icon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, var(--gold-soft), var(--accent-soft));
+  box-shadow: inset 0 0 0 1px rgba(184, 154, 90, 0.35);
+  color: var(--accent-deep);
+  font-size: 18px;
+  margin-bottom: var(--s-1);
+}
+.landing__feature-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+.landing__feature-body {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-3);
+  margin: 0;
+}
+.landing__footer {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-4);
+  margin: 0;
+  text-align: center;
+  max-width: 520px;
+}
+
+/* Feature deep-dive — a two-column list of icon + title + body items. Reads as
+   a fuller companion to the capture chips; stacks to one column on phones. */
+.landing__deep { width: 100%; }
+.landing__deep-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s-5);
+  max-width: 820px;
+  margin-inline: auto;
+}
+.landing__deep-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-4);
+}
+.landing__deep-icon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, var(--gold-soft), var(--accent-soft));
+  box-shadow: inset 0 0 0 1px rgba(184, 154, 90, 0.35);
+  color: var(--accent-deep);
+  font-size: 18px;
+}
+.landing__deep-text { display: flex; flex-direction: column; gap: 2px; }
+.landing__deep-title { font-size: 16px; font-weight: 600; color: var(--text); margin: 0; }
+.landing__deep-body { font-size: 13.5px; line-height: 1.55; color: var(--text-3); margin: 0; }
+
+/* Heritage / values — a quiet centred band (no card) that pauses between the
+   feature sections and states the ethos. */
+.landing__ethos {
+  width: 100%;
+  max-width: 620px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-3);
+}
+.landing__ethos-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(160deg, var(--gold-soft), var(--accent-soft));
+  box-shadow: inset 0 0 0 1px rgba(184, 154, 90, 0.35);
+  font-size: 24px;
+  color: var(--accent-deep);
+}
+.landing__ethos-title {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.6vw, 26px);
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+.landing__ethos-body {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-2);
+  margin: 0;
+}
+
+/* FAQ — collapsible <details> rows, collapsed by default for a calm, skimmable
+   list. Each summary is a large tappable target; the chevron rotates on open. */
+.landing__faq { width: 100%; }
+.landing__faq-list {
+  max-width: 680px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.landing__faq-item {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.landing__faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;                 /* hide the default disclosure marker */
+}
+.landing__faq-q::-webkit-details-marker { display: none; }
+.landing__faq-chevron {
+  flex: none;
+  color: var(--text-4);
+  font-size: 13px;
+  transition: transform var(--dur-2, 180ms) var(--ease, ease);
+}
+.landing__faq-item[open] .landing__faq-chevron { transform: rotate(180deg); }
+.landing__faq-a {
+  margin: 0;
+  padding: 0 var(--s-5) var(--s-4);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-3);
+}
+
+/* Closing CTA band — a final "get started" prompt in a soft accent card so it
+   stands apart from the sections above without shouting. */
+.landing__cta-band {
+  width: 100%;
+  max-width: 620px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-3);
+  padding: var(--s-8) var(--s-6);
+  /* The finale mirrors the hero plate — a warm parchment→olive wash with a low
+     gold glow and a hairline gold ring — so the page opens and closes on the
+     same crafted panel language. */
+  background:
+    radial-gradient(120% 130% at 50% 0%, var(--gold-soft) 0%, transparent 55%),
+    linear-gradient(158deg, var(--parchment) 0%, var(--accent-soft) 100%);
+  border: 1px solid var(--gold-soft);
+  border-radius: var(--r-2xl);
+  box-shadow: var(--shadow-md);
+}
+.landing__cta-title {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.6vw, 26px);
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+.landing__cta-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-2);
+  margin: 0;
+  max-width: 44ch;
+}
+.landing__cta-band .landing__cta { margin-top: var(--s-2); }
+
+/* ── Landing footer + legal pages ───────────────────────────────────────────
+   A quiet closing footer: the About / Privacy / Terms pages (opened as modals
+   lifted above the landing) over the reassurance line. */
+.landing__footer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding-top: var(--s-6);
+  border-top: 1px solid var(--line);
+  margin-top: var(--s-2);
+}
+.landing__foot-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.landing__foot-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-deep);
+  transition: color var(--t-fast), background var(--t-fast);
+}
+.landing__foot-link:hover { color: var(--gold-deep); text-decoration: underline; }
+.landing__foot-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--olive-soft); }
+.landing__foot-dot { color: var(--text-4); font-size: 13px; user-select: none; }
+.landing__foot-note {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-3);
+  margin: 0;
+  text-align: center;
+  max-width: 52ch;
+}
+
+/* Legal / About modal body — comfortable reading measure with heritage type. */
+.legal { max-width: 60ch; }
+.legal__h {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  margin: var(--s-5) 0 var(--s-2);
+}
+.legal__h:first-child { margin-top: 0; }
+.legal__p {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text-2);
+  margin: 0 0 var(--s-3);
+}
+.legal__list {
+  margin: 0 0 var(--s-3);
+  padding-left: var(--s-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+.legal__list li {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+.legal__list li::marker { color: var(--gold-deep); }
+
+/* Standalone legal PAGES (privacy.html / terms.html) — the same .legal prose,
+   but framed as a full web page (bar + centred article + footer) rather than a
+   modal, since these are the public, no-login URLs Google's OAuth consent
+   screen links to. */
+/* Standalone pages (privacy/terms/help) are full documents, not the SPA — undo
+   the app-shell lockdown (base.css sets body{height:100dvh;overflow:hidden} so
+   only the in-app panes scroll). Without this a long page like help.html clips
+   at the fold with no way to scroll. Scoped via :has so it only fires on the
+   standalone pages, never the app. */
+body:has(> .legal-page) { height: auto; min-height: 100dvh; overflow-y: auto; overflow-x: hidden; }
+
+.legal-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--s-4) var(--s-4) var(--s-7);
+  gap: var(--s-6);
+}
+.legal-page__bar {
+  width: 100%;
+  max-width: 72ch;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-bottom: var(--s-3);
+  border-bottom: 1px solid var(--line);
+}
+.legal-page__home {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  text-decoration: none;
+  color: var(--text);
+}
+.legal-page__home:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--olive-soft); border-radius: var(--r-sm); }
+.legal-page__brand {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+}
+.legal-page__body { width: 100%; }
+.legal-page__title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text);
+  margin: 0 0 var(--s-5);
+}
+.legal-page__foot {
+  width: 100%;
+  max-width: 72ch;
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line);
+}
+
+/* ── Help page (help.html) ──────────────────────────────────────────────────
+   Shares the legal-page frame (bar + centred column + footer) but runs wider —
+   it carries a responsive card grid of features, each led by an icon medallion
+   and a numbered "stepper", plus a hero, a quick-start, and a jump-nav to the
+   sections. Everything reads from the help.* i18n namespace via help-page.js.
+   Screenshots are optional: a card shows a real image only when its `img` is
+   set — otherwise the medallion carries it (no empty placeholder boxes). */
+:root { --help-max: 1040px; --help-read: 66ch; }
+.help-page { gap: var(--s-7); }
+.help-page__bar,
+.help-hero,
+.help-start,
+.help-section,
+.help-page__foot { width: 100%; max-width: var(--help-max); }
+
+/* Hero — centred, editorial. A hairline gold rule under the eyebrow gives the
+   heading some ceremony without a heavy slab. */
+.help-hero { text-align: center; padding: var(--s-4) 0 var(--s-2); }
+.help-hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+  margin: 0 0 var(--s-3);
+}
+.help-hero__eyebrow::before,
+.help-hero__eyebrow::after {
+  content: "";
+  width: 28px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.help-hero__title { margin-bottom: var(--s-3); font-size: clamp(30px, 5vw, 44px); }
+.help-hero__lede {
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--text-2);
+  margin: 0 auto;
+  max-width: var(--help-read);
+}
+
+/* Quick-start: three numbered cards in a row (stack on mobile). */
+.help-start { text-align: center; }
+.help-start > .help-section__title { text-align: center; }
+.help-start > .help-section__title::after { margin-inline: auto; }
+.help-steps {
+  margin: var(--s-5) 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: help-step;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+.help-steps__item {
+  counter-increment: help-step;
+  position: relative;
+  text-align: left;
+  padding: var(--s-6) var(--s-5) var(--s-5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+.help-steps__item::before {
+  content: counter(help-step);
+  position: absolute;
+  left: var(--s-5);
+  top: calc(-1 * var(--s-4));
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Section heading — display serif with a short gold underline accent. Offset
+   scroll target so the jump-nav anchor doesn't tuck the title under the fold. */
+.help-section { scroll-margin-top: var(--s-6); }
+.help-section__title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 var(--s-5);
+}
+.help-section__title::after {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 3px;
+  margin-top: var(--s-2);
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-soft));
+}
+/* One tile per row. A single column means every tile is exactly as tall as its
+   own content — no ragged bottoms or dead gaps (the old auto-fill grid left big
+   voids beside a short card next to a tall one). Each tile is a horizontal
+   split: a media panel (screenshot when present, else a branded illustration)
+   on the left, the prose + numbered steps on the right. */
+.help-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.help-card {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  scroll-margin-top: var(--s-7);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+}
+.help-card:hover {
+  border-color: var(--gold-soft);
+  box-shadow: var(--shadow-md);
+}
+
+/* Media panel — fills the left column edge to edge. A real screenshot when the
+   tile has one; otherwise a soft parchment illustration carrying the icon, so
+   the slot is always visibly "here's where the picture goes." */
+.help-card__media {
+  position: relative;
+  min-height: 100%;
+  border-right: 1px solid var(--line);
+  background: var(--bg-sunken);
+}
+.help-card__shot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.help-card__illus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 172px;
+  background:
+    radial-gradient(120% 120% at 30% 20%, var(--gold-soft) 0%, transparent 55%),
+    linear-gradient(140deg, var(--surface-2), var(--bg-sunken));
+}
+.help-card__illus-icon {
+  width: 66px;
+  height: 66px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  color: var(--gold-deep);
+  font-size: 27px;
+}
+
+.help-card__body { padding: var(--s-5) var(--s-6); }
+.help-card__title { margin: 0 0 var(--s-3); }
+/* The title is a copy-link button dressed as a heading. */
+.help-card__titlebtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 4px 8px;
+  margin: -4px -8px;
+  border: 0;
+  background: transparent;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: left;
+  transition: color var(--t-fast), background var(--t-fast);
+}
+.help-card__titlebtn:hover { color: var(--accent-deep); background: var(--gold-soft); }
+.help-card__titlebtn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--olive-soft); }
+.help-card__linkicon {
+  font-size: 12px;
+  color: var(--gold-deep);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity var(--t-fast), transform var(--t-fast);
+}
+.help-card__titlebtn:hover .help-card__linkicon,
+.help-card__titlebtn:focus-visible .help-card__linkicon { opacity: 1; transform: none; }
+/* Touch devices can't hover — keep the link glyph gently visible there. */
+@media (hover: none) {
+  .help-card__linkicon { opacity: 0.5; transform: none; }
+}
+/* Icon medallion beside the title — small, so the title still leads. */
+.help-card__icon {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--olive-soft);
+  color: var(--gold-deep);
+  font-size: 15px;
+}
+.help-card__desc {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text-2);
+  margin: 0;
+  max-width: 62ch;
+}
+.help-card__steps-label {
+  margin: var(--s-4) 0 var(--s-3);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+/* Numbered stepper — chips joined by a hairline connector between them. Two
+   columns on wide tiles so a long how-to doesn't run down the page. */
+.help-card__steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: help-card-step;
+  /* Numbered how-to → row-major grid: step 2 sits to the RIGHT of step 1, with
+     3-4 on the next row (reads "1 2 / 3 4"). This used `columns: 2`, but CSS
+     multi-column fills column-major — 1-2 down the left, 3-4 down the right — so
+     step 3 landed at the top-right next to step 1 and the top row read "1 … 3",
+     backwards for a sequence you follow in order. */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: var(--s-6);
+  row-gap: var(--s-3);
+}
+.help-card__step {
+  counter-increment: help-card-step;
+  position: relative;
+  padding-left: 34px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+.help-card__step::before {
+  content: counter(help-card-step);
+  position: absolute;
+  left: 0;
+  top: -1px;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--olive-soft);
+  color: var(--gold-deep);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* Deep-link highlight — help.html#slug scrolls here and pulses a gold ring +
+   wash for a few seconds so the eye lands on the right tile. Class is removed
+   by the page script after the animation. */
+.help-card.is-flash {
+  animation: help-flash 2.4s var(--t-med) both;
+}
+@keyframes help-flash {
+  0%, 55% {
+    border-color: var(--gold);
+    box-shadow: var(--shadow-glow-gold);
+    background: var(--gold-soft);
+  }
+  100% {
+    border-color: var(--line);
+    box-shadow: none;
+    background: var(--surface);
+  }
+}
+
+@media (max-width: 720px) {
+  .help-steps { grid-template-columns: 1fr; gap: var(--s-5); }
+  .help-steps__item { padding-top: var(--s-5); }
+  /* Stack the tile: media on top, prose below; steps collapse to one column. */
+  .help-card { grid-template-columns: 1fr; }
+  .help-card__media { border-right: 0; border-bottom: 1px solid var(--line); }
+  .help-card__illus { min-height: 128px; }
+  .help-card__illus-icon { width: 54px; height: 54px; font-size: 22px; }
+  .help-card__steps { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .help-card.is-flash { animation: none; }
+}
+
+/* ── Section FAB — floating "menu" switcher (food-delivery app idiom) ────────
+   A fixed pill in the bottom-right corner that always shows the section you're
+   reading; tap to pop the full list upward and jump anywhere. Sits in the
+   corner (not bottom-centre) so it never overlaps the reading column. Menu is
+   anchored to the toggle and animates in from the bottom-right. */
+.help-fab {
+  position: fixed;
+  /* Bottom-right corner, clear of the centred reading column (which a
+     bottom-centre FAB sat right on top of). */
+  right: calc(var(--s-5) + env(safe-area-inset-right, 0px));
+  bottom: calc(var(--s-5) + env(safe-area-inset-bottom, 0px));
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-2);
+  pointer-events: none; /* let children take events; gap stays click-through */
+}
+.help-fab__toggle {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: 78vw;
+  padding: 12px 18px;
+  border: 1px solid var(--gold);
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  transition: transform var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+}
+.help-fab__toggle:hover { transform: translateY(-1px); background: var(--accent-fill-hover); }
+.help-fab__toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--gold-soft), var(--shadow-lg); }
+.help-fab__glyph { font-size: 15px; }
+.help-fab__current {
+  max-width: 46vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.help-fab__caret { font-size: 11px; transition: transform var(--t-med); opacity: 0.85; }
+.help-fab[data-open="true"] .help-fab__caret { transform: rotate(180deg); }
+
+/* The pop-up list. Column-reverse so the first section sits nearest the button
+   (natural when it grows upward). Hidden = faded + nudged down + non-interactive. */
+.help-fab__menu {
+  pointer-events: auto;
+  order: -1; /* render above the toggle in the column */
+  list-style: none;
+  margin: 0;
+  padding: var(--s-2);
+  width: min(320px, 82vw);
+  max-height: min(60vh, 460px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  transform-origin: bottom right;
+  transition: opacity var(--t-fast), transform var(--t-fast), visibility var(--t-fast);
+}
+.help-fab[data-open="false"] .help-fab__menu {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px) scale(0.98);
+}
+.help-fab[data-open="true"] .help-fab__menu {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+.help-fab__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: 10px var(--s-3);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-2);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.help-fab__item i {
+  width: 20px;
+  text-align: center;
+  color: var(--gold-deep);
+  font-size: 13px;
+}
+.help-fab__item:hover { background: var(--surface-2); color: var(--text); }
+.help-fab__item:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--olive-soft); }
+.help-fab__item.is-active {
+  background: var(--olive-soft);
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+.help-fab__item.is-active i { color: var(--gold-deep); }
+
+/* Give the page bottom room so the FAB never covers the footer's last line. */
+.help-page .help-page__foot { margin-bottom: var(--s-8); }
+
+@media (prefers-reduced-motion: reduce) {
+  .help-fab__menu, .help-fab__caret, .help-fab__toggle { transition: none; }
+}
+
+/* ── Self-contained toast ────────────────────────────────────────────────────
+   help.html doesn't load app.js, so the app's #toast-root/UI.toast is absent.
+   help-page.js mounts its own root + node; these styles dress it. Sits above
+   the FAB (--z-toast) and centres itself at the bottom. */
+.help-toast-root {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--s-6) + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: calc(var(--z-toast) + 20);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  align-items: center;
+  pointer-events: none;
+}
+.help-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  max-width: calc(100vw - 32px);
+  padding: 10px var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--accent-deep);
+  color: var(--on-accent);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity var(--t-med), transform var(--t-med);
+}
+.help-toast.is-in { opacity: 1; transform: none; }
+.help-toast i { color: var(--gold); font-size: 15px; }
+@media (prefers-reduced-motion: reduce) {
+  .help-toast { transition: none; }
+}
+
+/* ── Featured plates ────────────────────────────────────────────────────────
+   Editorial, not dramatic: the "capture" and "privacy" sections sit on a soft
+   parchment PLATE rather than a heavy dark slab. --surface is raised paper in
+   BOTH themes (brighter than the page on light, gently lifted on dark), so the
+   text stays dark-on-light / light-on-dark automatically — no fixed colours, no
+   contrast traps. A thin gold hairline and a whisper of corner glow are the only
+   ornament; the drama lives solely in the hero now. */
+.landing__band {
+  position: relative;
+  width: 100%;
+  padding: var(--s-8) var(--s-7);
+  border-radius: var(--r-2xl);
+  overflow: hidden;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--gold-soft);
+  box-shadow: var(--shadow-sm);
+}
+.landing__band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(90% 130% at 100% 0%, rgba(184, 154, 90, 0.10), transparent 55%);
+  pointer-events: none;
+}
+.landing__band > * { position: relative; z-index: 1; }
+
+/* Trust strip — four at-a-glance reassurances under the hero, between hairlines
+   so it reads as a spec bar. */
+.landing__trust {
+  list-style: none;
+  margin: 0;
+  padding: var(--s-4) var(--s-2);
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-3) var(--s-6);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.landing__trust-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.landing__trust-item > i { color: var(--gold-deep); font-size: 13px; }
+
+/* Audience — three "who it's for" cards (light section). */
+.landing__audience { width: 100%; }
+.landing__aud-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-5);
+}
+.landing__aud-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-2);
+  padding: var(--s-6) var(--s-5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+@media (prefers-reduced-motion: no-preference) and (hover: hover) {
+  .landing__aud-item:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--gold-soft); }
+}
+.landing__aud-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, var(--gold-soft), var(--accent-soft));
+  box-shadow: inset 0 0 0 1px rgba(184, 154, 90, 0.35);
+  color: var(--accent-deep);
+  font-size: 20px;
+  margin-bottom: var(--s-1);
+}
+.landing__aud-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--text); margin: 0; }
+.landing__aud-body { font-size: 13.5px; line-height: 1.55; color: var(--text-3); margin: 0; max-width: 28ch; }
+
+/* Heritage epigraph — an OPEN pull-quote (no plate): a large serif line framed
+   by two short gold rules. The page's quiet centrepiece, all whitespace and
+   type rather than a coloured panel. */
+.landing__quote {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-4);
+  padding-block: var(--s-9);
+}
+.landing__quote::before,
+.landing__quote::after {
+  content: "";
+  width: 56px;
+  height: 2px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.8;
+}
+.landing__quote-mark { display: none; }
+.landing__quote-text {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 4vw, 40px);
+  line-height: 1.28;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--text);
+  margin: 0;
+  max-width: 22ch;
+  text-wrap: balance;
+}
+.landing__quote-attrib {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+}
+
+/* Privacy, in plain terms — a checklist on the deep-olive band. */
+.landing__band-kicker {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+}
+.landing__band-title {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 600;
+  color: var(--text);
+  margin: var(--s-2) 0 var(--s-6);
+  text-align: center;
+}
+.landing__priv-list {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 660px;
+  display: grid;
+  gap: var(--s-4);
+}
+@media (min-width: 640px) { .landing__priv-list { grid-template-columns: 1fr 1fr; } }
+.landing__priv-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+.landing__priv-check {
+  flex: none;
+  margin-top: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-size: 11px;
+}
+
+/* Scroll-reveal — sign-in.js adds .landing__reveal to each section below the
+   hero and swaps in .is-revealed via an IntersectionObserver as it scrolls into
+   view. Only takes effect when motion is allowed; if the observer never runs
+   (no JS, old browser) the class is never added, so the section shows normally.
+   The pre-reveal hidden state lives INSIDE the no-preference guard so reduced-
+   motion users never get a hidden-until-JS section. */
+@media (prefers-reduced-motion: no-preference) {
+  .landing__reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.55s ease, transform 0.55s ease;
+    will-change: opacity, transform;
+  }
+  .landing__reveal.is-revealed {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 860px) {
+  /* Hero stacks: copy centred on top, tree mock below (and smaller). */
+  .landing__hero-inner { grid-template-columns: 1fr; gap: var(--s-5); justify-items: center; padding: var(--s-8) var(--s-6); }
+  .landing__hero-copy { align-items: center; text-align: center; max-width: 560px; }
+  .landing__actions { align-items: center; }
+  .landing__mock { order: -1; }
+  .landing__tree-svg { max-width: 300px; }
+  /* Steps stack to a single column; the horizontal journey line no longer
+     applies to a vertical stack, so hide it. */
+  .landing__steps { grid-template-columns: 1fr; gap: var(--s-5); max-width: 420px; margin-inline: auto; }
+  .landing__steps::before { display: none; }
+  .landing__step-body { max-width: none; }
+}
+@media (max-width: 860px) {
+  /* Audience cards stack alongside the steps. */
+  .landing__aud-list { grid-template-columns: 1fr; gap: var(--s-4); max-width: 420px; margin-inline: auto; }
+  .landing__aud-body { max-width: none; }
+}
+@media (max-width: 720px) {
+  .landing { padding-block: 0 var(--s-7); }
+  .landing__inner { gap: var(--s-7); padding-inline: var(--s-5); }
+  .landing__features { grid-template-columns: 1fr; gap: var(--s-4); max-width: 460px; }
+  .landing__feature { padding: var(--s-5); }
+  /* Deep-dive items stack to one column and narrow so they read as a list. */
+  .landing__deep-list { grid-template-columns: 1fr; gap: var(--s-4); max-width: 460px; }
+  .landing__cta-band { padding: var(--s-6) var(--s-5); }
+  /* Dark bands lose their generous side padding on a narrow phone. */
+  .landing__band { padding: var(--s-7) var(--s-5); }
+}
+
+/* ── First-run (signed in, no tree yet) ────────────────────────────────────
+   Reuses the .signin jali backdrop. A topbar carries the greeting + a sign-out
+   escape hatch; the card offers create / import / sample. */
+.firstrun { flex-direction: column; }
+.firstrun__topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+}
+.firstrun__greeting { font-size: 13px; color: var(--text-2); }
+.firstrun__signout {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+}
+.firstrun__signout:hover { color: var(--text); text-decoration: underline; }
+.firstrun__signout:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--olive-soft); }
+.firstrun__card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--s-8) var(--s-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.firstrun__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-2);
+}
+.firstrun__title {
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.firstrun__subtitle {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-2);
+  margin: 0;
+  text-wrap: balance;
+}
+.firstrun__form { display: flex; flex-direction: column; gap: var(--s-4); }
+.firstrun__form .btn--block { margin-top: var(--s-1); }
+.firstrun__alts { display: flex; flex-direction: column; gap: var(--s-3); }
+.firstrun__alt {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--s-3) var(--s-4);
+  cursor: pointer;
+  color: var(--text);
+  transition: border-color .15s ease, background .15s ease;
+}
+.firstrun__alt:hover { border-color: var(--accent); background: var(--accent-soft); }
+.firstrun__alt:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--olive-soft); }
+.firstrun__alt > i { flex: none; font-size: 16px; color: var(--accent-deep); width: 20px; text-align: center; }
+.firstrun__alt-text { display: flex; flex-direction: column; gap: 1px; }
+.firstrun__alt-title { font-size: 14px; font-weight: 600; }
+.firstrun__alt-body { font-size: 12.5px; color: var(--text-2); line-height: 1.4; }
+/* The "tree already on this device" path is the highest-trust option when it
+   appears — a returning local user's own data, one tap from their account. A
+   quiet accent border (not a loud filled button) marks it as recommended
+   without shouting over the neutral import/sample siblings below it. */
+.firstrun__alt--device { border-color: var(--accent); background: var(--accent-soft); }
+.firstrun__alt--device > i { color: var(--accent-deep); }
+.firstrun__alt--device:hover { border-color: var(--accent-deep); }
+/* Invite footnote — quiet, below the create/import/sample paths. For a
+   wrong-email invitee who'd otherwise see no clue their invite exists. */
+.firstrun__invite-hint {
+  display: flex; gap: var(--s-3); align-items: flex-start;
+  margin: var(--s-4) 0 0;
+  padding: var(--s-3) var(--s-4);
+  background: var(--surface-2); border-radius: var(--r-md);
+  font-size: 12px; line-height: 1.5; color: var(--text-3);
+}
+.firstrun__invite-hint > i { flex: none; margin-top: 2px; color: var(--accent-deep); }
+
+/* ── Onboarding chrome (lang + theme on landing / sign-in / first-run) ──────
+   These screens render as a full-viewport overlay ABOVE the app header, so the
+   header's own EN/HI + theme toggles are unreachable. UI.onboardChrome() mints
+   a matching cluster; the slots below pin it into each screen. It reuses the
+   .lang-switch and .theme-toggle component styles verbatim so the affordance is
+   identical to the in-app one. */
+.onboard-chrome { display: inline-flex; align-items: center; gap: var(--s-3); }
+/* Sign-in chrome: pinned to the PAGE top-right (the .signin root is fixed +
+   full-viewport), so lang + theme sit in the same corner whether the visitor is
+   on the landing intro or has stepped into the auth card. `fixed` keeps it put
+   even as the landing scrolls; z-index clears the card + hero but stays under
+   the legal modals (which raise their own backdrop above .signin). */
+.signin__card { position: relative; }
+.onboard-chrome-slot--page {
+  position: fixed; top: var(--s-4); right: var(--s-5); z-index: 3;
+}
+/* First-run already lays its topbar out as a flex row (greeting · chrome ·
+   sign-out); the chrome sits in the middle and pushes sign-out to the end. The
+   greeting shrinks + truncates so a long email can't push the controls off a
+   narrow phone. */
+.firstrun__topbar { z-index: 2; }
+.firstrun__topbar .onboard-chrome { margin-left: auto; flex: none; }
+.firstrun__topbar .firstrun__signout { margin-left: 0; flex: none; }
+.firstrun__greeting {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+@media (max-width: 480px) {
+  /* Non-essential on a phone; drop it so the lang/theme + sign-out breathe. */
+  .firstrun__greeting { display: none; }
+}
+@media (max-width: 480px) {
+  /* Tuck the page chrome tighter into the corner on a narrow phone and shrink
+     the toggle so it never crowds the card brand or the landing hero logo. */
+  .onboard-chrome-slot--page { top: var(--s-3); right: var(--s-3); }
+  .onboard-chrome-slot--page .theme-toggle { width: 34px; height: 34px; }
+}
+@media (max-height: 640px) {
+  /* Short viewport (landscape phone, small desktop window): the card is taller
+     than the screen, and the flex column centres it — so its top edge slides
+     UP under the absolutely-positioned topbar. Drop the topbar into normal flow
+     (stretched full-width so the greeting-left / sign-out-right spread holds)
+     and top-align the column, so topbar and card stack and the whole screen
+     scrolls (the .signin root already has overflow-y: auto) instead of
+     colliding. No fixed offset — the flow itself keeps them apart. */
+  .firstrun { justify-content: flex-start; gap: var(--s-4); }
+  .firstrun__topbar { position: static; align-self: stretch; }
+}
+
+/* "Back" from the auth card to the landing intro — a quiet ghost link in the
+   card's top-left, mirroring the chrome's top-right. Hidden by default; shown
+   only when the card is reachable (i.e. not on the landing itself, where the
+   card is display:none anyway). */
+.signin__back {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  background: none; border: none;
+  color: var(--text-2); font-size: 13px; font-weight: 500;
+  cursor: pointer; padding: var(--s-1) var(--s-2);
+  margin: calc(var(--s-2) * -1) 0 calc(var(--s-2) * -1) calc(var(--s-2) * -1);
+  border-radius: var(--r-sm);
+}
+.signin__back:hover { color: var(--text); }
+.signin__back:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--olive-soft); }
+.signin__back > i { font-size: 11px; }
+
+/* First-run alt buttons (Import / Sample) gain a busy spinner that swaps in for
+   the leading icon while a create is in flight (setBusyLabel toggles .is-busy
+   on the pressed button). Without this, tapping Import/Sample gave no feedback
+   on the button actually pressed. */
+.firstrun__alt-spinner { display: none; }
+.firstrun__alt.is-busy { pointer-events: none; }
+.firstrun__alt.is-busy .firstrun__alt-icon { display: none; }
+.firstrun__alt.is-busy .firstrun__alt-spinner {
+  display: inline-block;
+  flex: none; font-size: 16px; color: var(--accent-deep);
+  width: 20px; text-align: center;
+}
+.firstrun__alt:disabled { opacity: .55; cursor: default; }
+.firstrun__alt.is-busy { opacity: 1; }
+
+/* ── Viewer role (read-only shared trees) ──────────────────────────────────
+   The store guard (FamilyStore.setReadOnly) is the correctness backstop; this
+   hides every affordance that would mutate the tree so a viewer never taps a
+   dead control. Every such control carries .js-edit-only. Export/print/find
+   are read-only and intentionally stay visible. */
+body.is-viewer .js-edit-only { display: none !important; }
+
+/* ── Tree list (multi-tree switcher) ──────────────────────────────────────── */
+.tree-list { display: flex; flex-direction: column; gap: 6px; min-width: min(420px, 78vw); }
+.tree-list__loading,
+.tree-list__empty {
+  color: var(--text-2);
+  font-size: 14px;
+  padding: 16px 4px;
+  text-align: center;
+}
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 4px 6px 4px 4px;
+  background: var(--bg-elev);
+}
+.tree-row--active { border-color: var(--olive-soft); background: var(--surface-2); }
+.tree-row__main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  border: 0;
+  padding: 8px 8px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+}
+.tree-row__main.is-active { cursor: default; }
+.tree-row__main:not(.is-active):hover { background: var(--surface-2); }
+.tree-row__icon { width: 18px; text-align: center; color: var(--accent-deep); flex: 0 0 auto; }
+.tree-row__label { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tree-row__name {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tree-row__role {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+}
+.tree-row__role--active { color: var(--accent-deep); }
+.tree-row__actions { display: flex; align-items: center; gap: 2px; flex: 0 0 auto; }
+.tree-row__action {
+  background: transparent;
+  border: 0;
+  width: 32px; height: 32px;
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.tree-row__action:hover { background: var(--surface-2); color: var(--text); }
+.tree-row__action--danger:hover { background: var(--danger-soft, #fbeaea); color: var(--danger, #b3261e); }
+
+/* ── Sharing (invite + members) ───────────────────────────────────────────── */
+.share { display: flex; flex-direction: column; gap: 14px; min-width: min(440px, 80vw); }
+.share__subtitle { margin: 0; color: var(--text-2); font-size: 14px; }
+.share__note {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+}
+.share-form { display: flex; flex-direction: column; gap: 10px; }
+.share-form__actions { display: flex; justify-content: flex-end; }
+/* App-link delivery aid — a read-only URL + copy button owners paste into
+   their own chat. Sits between the invite form and the members list. */
+.share-link { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.share-link__row { display: flex; gap: 8px; align-items: stretch; }
+.share-link__input { flex: 1; font-size: 12px; color: var(--text-2); }
+.share-link__copy { flex-shrink: 0; }
+.share-link__copy.is-copied { background: var(--olive); border-color: var(--olive); color: var(--bone); }
+.share__members-title {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+}
+.share-members { display: flex; flex-direction: column; gap: 6px; }
+.share-members__loading,
+.share-members__empty { color: var(--text-2); font-size: 13px; padding: 8px 2px; }
+.share-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg-elev);
+}
+.share-member__info { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.share-member__email {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.share-member__pills { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.share-member__role {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+}
+.share-member__pending {
+  font-size: 11px;
+  color: var(--accent-deep);
+  background: var(--accent-soft);
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+.share-member__controls { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.share-member__select { padding: 4px 8px; font-size: 13px; height: auto; }
+.share-member__remove { color: var(--text-2); }
+.share-member__remove:hover { color: var(--danger, #b3261e); }
+.share-member__copy { color: var(--text-2); }
+.share-member__copy:hover { color: var(--olive-deep); }
+.share-member__copy.is-copied { background: var(--olive); border-color: var(--olive); color: var(--bone); }
+

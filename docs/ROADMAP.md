@@ -25,7 +25,10 @@ These move the heritage product forward the most for the effort.
 - **Detailed vs compact tree views.** A toggle on the Tree view:
   - *Compact* — only direct lineage (default focus on whoever is set as "self"), good at-a-glance.
   - *Detailed* — shows every person who married into the family + their parents, children, and grandchildren as long as the chain stays connected.
-- **Pin a "self" person.** All views can then highlight relationship paths and label everyone with how they relate to you ("paternal grandmother", "spouse's brother"). Pairs naturally with the path-finder that already exists.
+- **Pin a "self" person.** ~~Persisted "self" anchor + label everyone with how they relate to you ("paternal grandmother", "spouse's brother").~~ ~~Anchor + inspector labels shipped.~~ **On-tree marker + relation pills shipped too** — see below. *Still open:* highlight the relationship **path** in the tree from self→selected, and surface the kin term in the People grid / Timeline rows too. **Cloud fast-follow:** sync the anchor + per-viewer view prefs via a `tree_member_prefs (tree_id, user_id, prefs jsonb)` table (self-scoped RLS: `using (user_id = auth.uid())` for all ops — a sibling to `tree_members`, NOT a column on it, so a viewer can't escalate their role). localStorage stays as the offline tier; load = prefs-row ?? localStorage.
+
+  > **Shipped (minimal scope):** `lib/features/self-anchor.js` — `SelfAnchor.get/set/clear/isSelf/onChange`, persisted **local-only, keyed by the active tree id** (never in the synced `state` blob, because "self" is a per-viewer lens: since cloud sync, several people share one tree and my "me" ≠ yours). Set via a **"You" dropdown in the left rail** (`renderSelfPicker()` → a `HeritageSelect` person picker with a "— No one —" clear row; the old tree-node right-click *"This is me"* and the on-node `fa-user` corner disc were both **removed** — the person icon read as clutter). A small info line under the picker (`fa-circle-info` + `rail.youHint`) tells the viewer the gold ring marks them. Available to viewers too — it's a personal lens, not an edit; gated off pets. Setting a new self replaces the old (single stored id → exclusivity is inherent; asserted in the test). The inspector hero shows a gold chip naming the selected person's exact relation to you via `KinTerms.label(findRelationPath(self, person))`, and a *"This is you"* marker on the anchor. **On the tree:** the pinned node's photo gets a **gold ring** (`.t-node.is-self` — now the *only* on-node marker), and each close-kin node shows an olive **relation pill** (chacha, bua, bhatija…) in its subtitle slot — toggled by *"Show relation to me"* in View Options (only appears once a self is set; resets to on when the anchor is cleared). The pill ellipsizes to fit the node width and carries a `<title>` on the node group so hovering shows the full relation (fixes the earlier overflow onto adjacent nodes). Painted by `decorateSelf()` as a pure overlay keyed by person id, deliberately **outside `topoSignature`** so pinning "me" never busts the layout cache; its own `kinSignature` (anchor + toggle + lang + every person's gender/year) gates re-labelling on soft renders. Stripped from PNG/print/poster exports (`.t-node-selfdeco` stripped **and** the `is-self` ring class removed from the export clone) — a personal lens must not bake into shared art. Reuses `KinTerms` (didn't re-derive). Unit coverage: `tests/self-anchor.mjs` (round-trip, per-tree isolation, exclusivity, self-heal on delete). Path-highlighting + relabeling the other views + the cloud-prefs sync above are the remaining, larger half.
+- **Self-host the web fonts.** Today all four HTML pages pull Fraunces + Inter + Noto Sans Devanagari from the Google Fonts CDN (`fonts.googleapis.com` CSS → `fonts.gstatic.com` `.woff2`). Vendoring them as local `assets/fonts/*.woff2` + a `styles/fonts.css` of hand-copied `@font-face` rules would (a) make **first paint fully offline** — the SW precaches the *CSS* URL today, but the actual `.woff2` files are only runtime-cached after the first online visit, so a cold offline install currently falls back to system fonts; (b) **remove the per-visit IP-address hit to Google** (a documented EU/GDPR concern); and (c) let the **CSP hardening item drop `fonts.googleapis.com` / `fonts.gstatic.com`** from its whitelist (see the stack-review checklist below). **Keep Google's `unicode-range` subsetting** — it's why an English-only session never downloads the ~485 KB of Devanagari, and a Hindi reader still gets Latin glyphs for mixed text. A faithful mirror is **14 files (~1.2 MB in-repo, but any single session fetches only the subsets it actually renders)**: Fraunces `latin` + `latin-ext` (variable, 2 files), Inter `latin` + `latin-ext` × 4 weights (8), Noto Sans Devanagari `devanagari` × 4 weights (4) — Google's cyrillic/greek/vietnamese subsets and Noto's redundant Latin subsets are dropped (Latin inside Hindi text falls back to Inter). Font Awesome stays on cdnjs for now (icons are a separate, larger mirror — follow-up). Mechanics: drop the `preconnect` + Google Fonts `<link>` from index/help/privacy/terms, add `<link href="styles/fonts.css">`, add the `.woff2` + `fonts.css` to the SW `SHELL` precache, drop the Google Fonts URL from `CDN_SHELL`, and bump `CACHE_VERSION`. Owner has OK'd committing the binary `.woff2` assets.
 - **Auto-tag who's in a group photo** by clicking faces and assigning a person — useful for old family albums.
 - **Date precision: BCE / month-only.** Today `parseDate` accepts `YYYY[-MM[-DD]]` only. Negative years and "March (year unknown)" are real for ancient genealogies. Defer until someone needs it.
 - **Calendar systems** — record dates in Vikram Samvat / Hijri / etc. alongside Gregorian, with a per-tree default.
@@ -46,9 +49,11 @@ These move the heritage product forward the most for the effort.
 
 ---
 
-## P3.5 — Multi-tenant cloud sync (auth + sharing)
+## ~~P3.5 — Multi-tenant cloud sync (auth + sharing)~~ ✅ SHIPPED
 
-A separate tier because it's the single biggest product shift: turning Virasat from a single-device personal artifact into a family-shared archive. Big enough that I had four parallel review agents read the codebase + scrape vendor pricing pages before writing this. Verdict: **medium-hard, ~2.5 weeks of focused work**, on Supabase + GitHub Pages, with the architecture mostly already set up well for it.
+> **Shipped.** This tier is built and live: `lib/auth/` holds the seven modules (`config.js`, `auth-store.js`, `cloud-store.js`, `sign-in.js`, `first-run.js`, `tree-list.js`, `sharing.js`), `config.js` carries live Supabase credentials, and the cloud seam (`activeTreeId`, version-guarded push, viewer read-only guard) runs through `data-store.js` + `app.js`. Blank the credentials in `config.js` to fall back to local-only. Setup and design notes live in [`docs/CLOUD-SYNC-PLAN.md`](CLOUD-SYNC-PLAN.md) and [`docs/SUPABASE-SETUP.md`](SUPABASE-SETUP.md). The original planning notes are kept below for provenance.
+
+A separate tier because it's the single biggest product shift: turning Virasat from a single-device personal artifact into a family-shared archive. Big enough that I had four parallel review agents read the codebase + scrape vendor pricing pages before writing this. Verdict at the time: **medium-hard, ~2.5 weeks of focused work**, on Supabase + GitHub Pages, with the architecture mostly already set up well for it.
 
 ### What it actually is
 
@@ -75,7 +80,7 @@ A separate tier because it's the single biggest product shift: turning Virasat f
 | Edge cases, audit log, polish | 2 |
 | **Total** | **~17 dev days, ~2.5 weeks calendar** |
 
-**New code:** ~1,500 lines across `lib/auth/auth-store.js`, `lib/auth/cloud-store.js`, `lib/auth/tree-list.js`, `lib/auth/sharing.js`, `lib/auth/sign-in.js`. **Existing code touched:** ~200 lines (mostly in `data-store.js` to add a backend hook + scope localStorage keys per tree). **View modules unchanged** — they keep calling `FamilyStore.getPeople()` etc.
+**Code (as shipped):** ~2,300 lines across the seven `lib/auth/` modules — `config.js`, `auth-store.js`, `cloud-store.js`, `sign-in.js`, `first-run.js`, `tree-list.js`, `sharing.js`. **Existing code touched:** ~200 lines (mostly in `data-store.js` for the backend hook + per-tree localStorage scoping). **View modules unchanged** — they keep calling `FamilyStore.getPeople()` etc.
 
 ### Backend: Supabase
 
@@ -213,7 +218,7 @@ The owner asked, before going public: is vanilla JS + localStorage actually safe
 
 Three independently-arrived-at conclusions:
 
-1. **The vanilla code is not the security problem.** `UI.el(tag, attrs, children)` routes children through `createTextNode(String(c))` — security-equivalent to React's JSX auto-escaping. Every user-text field in the codebase (`person.name`, `description`, `story.body`, `notes`, `achievements[]`, etc.) was traced and confirmed rendered as text nodes, not innerHTML. There are six `innerHTML = ""` calls (all clearings, all safe) and one **dangerous** `html` attribute on `UI.el` that's currently unused but is a future-bug trap. **Action: remove the `html` attribute. Five-minute fix.**
+1. **The vanilla code is not the security problem.** `UI.el(tag, attrs, children)` routes children through `createTextNode(String(c))` — security-equivalent to React's JSX auto-escaping. Every user-text field in the codebase (`person.name`, `description`, `story.body`, `notes`, `achievements[]`, etc.) was traced and confirmed rendered as text nodes, not innerHTML. There are six `innerHTML = ""` calls (all clearings, all safe). *(The one-time `html` attribute on `UI.el` — an unused future-bug trap — has since been removed; see the removal note in `lib/ui/dom.js`.)*
 2. **localStorage isn't worse than IndexedDB for this threat model.** Both are same-origin plaintext, both readable by any script that runs on the origin. The defence isn't "move to IDB" — it's "no malicious script ever reaches the origin", which means CSP + SRI + careful dependency hygiene. Encryption in either store works the same way. *Migrating from localStorage to IDB is security theatre.*
 3. **Framework migrations don't solve any of the actual gaps.** React/Next/Svelte don't give you CSP, SRI, EXIF stripping, deletion flows, or audit logs by default. They add ~200 KB and a build step in exchange for a rendering model the app doesn't need (no per-field reactivity bottleneck — the SVG layout is the cost, and that's imperative either way).
 
@@ -253,7 +258,7 @@ The production-checklist agent gave the current stack a **38 % readiness score**
 | Tier | Blocker | Fix time |
 |---|---|---|
 | **Legal / data protection** | No Privacy Policy. No right-to-erasure flow. No consent flow for shared trees. | ~1 day |
-| **Data security** | EXIF stripping unverified (canvas.toBlob *should* strip it but no test confirms). `UI.el`'s `html` attribute is an XSS trap. CSP / SRI / X-Frame-Options can't be set on GitHub Pages. | ~1 day (move to Cloudflare Pages for headers) |
+| **Data security** | EXIF stripping unverified (canvas.toBlob *should* strip it but no test confirms). CSP / SRI / X-Frame-Options can't be set on GitHub Pages. | ~1 day (move to Cloudflare Pages for headers) |
 | **Operational** | No backups. No monitoring. No incident-response plan. | ~1 day |
 
 When the P3.5 cloud-sync work lands, the same agent gave a **63 %** readiness score with one extra blocker (rate limiting / abuse prevention) and warned that multi-tenant scoping bugs could leak user data across trees if the per-tree localStorage / IDB scoping (already documented above in this section) isn't done meticulously.
@@ -266,7 +271,7 @@ When the P3.5 cloud-sync work lands, the same agent gave a **63 %** readiness sc
 
 In priority order, all doable on the existing vanilla codebase without migrating to a framework:
 
-1. **Remove the `html` attribute from `UI.el`** (5 min). It's unused and an XSS trap.
+1. ~~**Remove the `html` attribute from `UI.el`** (5 min). It's unused and an XSS trap.~~ ✅ Done — removed; see the note in `lib/ui/dom.js`.
 2. **Add CSP via `<meta http-equiv="Content-Security-Policy">`** (15 min). Restrict `script-src 'self'`, whitelist Google Fonts + Font Awesome + Supabase origins, deny inline scripts, deny `frame-ancestors`. Meta-tag CSP is weaker than HTTP-header CSP but functional.
 3. **Add SRI hashes to the two CDN `<link>` tags** (15 min). `<link integrity="sha384-..." crossorigin="anonymous">`. Protects against Google Fonts / Font Awesome supply-chain compromise.
 4. **Verify EXIF stripping in `photo-store.js`** (2 hr). Write a test: upload a photo with known GPS coordinates → verify the IDB blob is stripped. If any browser leaks, add `piexifjs` (3 KB) defensively.
@@ -293,6 +298,37 @@ When any of these trigger fires, **Preact + Signals** is the destination — 5 K
 Vanilla JS + localStorage + GitHub Pages is **fine for production** with three days of hardening (CSP, SRI, EXIF verification, Cloudflare Pages migration, Privacy Policy, deletion flow, cross-tab conflict banner). Moving to a framework now would burn 15–25 days for ~5 % security improvement that can be achieved in 3 days at the source. The state-management model is sneaky-good for this workload — a framework would *replace* it with something that's not obviously better and likely worse for the SVG-layout work that dominates the cost.
 
 The single biggest win to actually unlock public production is **moving hosting to Cloudflare Pages so we can set real HTTP security headers**. That's an afternoon's work and worth more than any rewrite.
+
+---
+
+## P3.9 — Declutter the workspace chrome (header / rail / inspector)
+
+The three-pane workspace has accreted controls over many audit rounds, and on a wide desktop screen it now reads as *busy*: three competing control zones framing a canvas that, on a small tree, sits nearly empty in the middle. This tier is about **subtraction and hierarchy**, not new features — every item below removes or demotes something already shipped. Nothing here changes the data model; it's all layout and affordance work in `index.html`, `styles/base.css`, `styles/components.css`, and `lib/app.js`.
+
+Guiding principle: **one primary action per zone, everything else one level down.** A heritage archive should feel calm — closer to a museum wall label than a dashboard.
+
+### Header
+
+- **Kill the duplicated view nav.** Tree / People / Timeline appear **twice** — once as the header `.app-nav` (`index.html` ~L79) and again in the rail's "Overview" group (~L154). Pick one home. Recommendation: keep the header tabs (they're the primary wayfinding) and drop "Overview" from the rail entirely, reclaiming the top of the rail.
+- **Collapse Collect / Import / Export into one "Data" menu.** Three text+icon buttons sit between the language switch and the primary Share button (`index.html` ~L109–120), all secondary, all competing with Share for attention. Fold them into a single overflow/kebab or a "Data ▾" split-button. Share stays as the one primary (`btn--primary`) action; everything else demotes to icon-only or menu items.
+- **Let the header breathe on the primary view.** Search, theme, language, four action buttons, and the account avatar is a lot of surface for a first-time visitor. Consider showing only Share + account + a single overflow by default, and revealing the rest on focus/hover or under a settings affordance.
+
+### Left rail
+
+- **Fold "Filter" into the view it acts on.** All / Living / Deceased with live counts (`index.html` ~L169–173) is really a property of the People and Tree views, not a global navigation concern. Moving it into each view's own toolbar (the People view already has a search toolbar) removes a whole rail section and puts the control where its effect is visible.
+- **Split destructive + sample tools out of the everyday Tools list.** *Try sample family* and *Reset everything* (~L189–190) are rare, high-consequence actions living in the same visual weight as *Add person* and *Manage people*. Move them to the bottom under a subtle divider (or into the account/settings menu), so the common tools read first and the danger action isn't one slip away.
+- **De-emphasise "Tree statistics."** The Members / Generations tiles duplicate the count already in the Tree view subtitle ("15 members · 4 generations · 12 memories"). Either drop the rail tiles or make them a single quiet line — right now two big number tiles compete with the actual tree.
+- **Consider a collapsible rail on wide screens.** A hamburger/collapse toggle (the mobile rail is already a slide-in) would let power users reclaim the whole left third for the canvas.
+
+### Right sidebar (inspector)
+
+- **Give the empty state a single focal point.** The empty inspector currently stacks four "Family highlights" cards (Oldest ancestor / Latest addition / Most stories / Next birthday) plus a Family-archive completion bar (`lib/components/inspector.js` ~L112+). On a small tree these are often the *same person* four times over (as in the Sharma sample: Mohan Lal Sharma fills three of four cards), which reads as repetitive rather than rich. Show one hero highlight + a compact "more" row, or rotate them, so the panel doesn't feel padded.
+- **Reserve the right pane for selection, not ambient stats.** The archive-completion bar and highlights are ambient dashboard content; the pane's real job is showing the selected person. Consider moving ambient stats into the (de-emphasised) statistics area or a dedicated **Generational statistics** view (see P2/P3 ideas), leaving the inspector calm and single-purpose until someone is selected.
+
+### Cross-cutting
+
+- **Audit for triplicated "Add person."** It exists as a rail tool (`#tool-add`), an on-canvas button in the Tree view, and the People-view CTA. That's fine as long as they don't all shout at once — pick one primary per view and let the rest be quiet or contextual.
+- **Establish a visual weight ladder.** Today many controls share the same `btn` treatment. A clear three-tier ladder — primary (filled) / secondary (outline) / tertiary (ghost or icon-only) — applied consistently across all three zones would do more for perceived calm than any single removal.
 
 ---
 

@@ -3,8 +3,8 @@
  *
  * Lives in tests/ rather than lib/core/ because:
  *   1. It is sample data, not application code. Keeping data-store.js
- *      lean (~56 KB) keeps the core module easy to read.
- *   2. The base64-inlined photos make this file ~480 KB. A future
+ *      lean (~43 KB) keeps the core module easy to read.
+ *   2. The base64-inlined photos make this file ~450 KB. A future
  *      contributor opening data-store.js shouldn't have to scroll past
  *      a wall of base64 to read the schema.
  *
@@ -28,7 +28,7 @@
   // welcome-offer path also depends on FamilyStore.replaceAll, so this
   // is fine in practice.
   const SCHEMA_VERSION = (global.FamilyStore && global.FamilyStore.getState()
-    && global.FamilyStore.getState().version) || 4;
+    && global.FamilyStore.getState().version) || 2;
 
   // Four-generation Sharma family used for the "Try sample data" first-run
   // and for the README screenshots. Every record carries the full schema

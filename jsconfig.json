@@ -1,0 +1,41 @@
+{
+  // Editor + CI type-checking for a NO-BUILD codebase. This file configures
+  // the TypeScript language service (used by VS Code) and the `tsc --noEmit`
+  // check run in CI. It emits NOTHING — no compilation, no output, no change
+  // to how the app is served. The app remains hand-authored classic <script>
+  // files on GitHub Pages.
+  //
+  // Opt-in model: `checkJs` is false, so ONLY files that start with a
+  // `// @ts-check` comment are type-checked. This lets us harden the codebase
+  // one module at a time instead of drowning in errors from all 26 at once.
+  // To bring a file under type-checking, add `// @ts-check` as its first line
+  // and fix what surfaces.
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    // NOT full `strict`. `noImplicitAny` would demand a JSDoc type on every
+    // function parameter in the codebase — a large annotation project, not the
+    // point of this pilot. Instead keep the high-value, low-noise checks that
+    // catch actual bugs a no-types codebase hides: null/undefined dereferences
+    // (strictNullChecks) and wrong argument types/counts on values TypeScript
+    // can already infer (DOM APIs, Date, FileReader, etc.). Untyped params
+    // simply infer as `any`. Tightening toward full `strict` is a later step.
+    "strictNullChecks": true,
+    "noImplicitThis": true,
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["es2022", "dom", "dom.iterable"],
+    "skipLibCheck": true,
+    // No @types packages are installed (no node_modules); rely solely on the
+    // ambient declarations in types/ plus the built-in dom/es libs.
+    "types": []
+  },
+  // types/ supplies ambient globals (window-globals.d.ts) for the cross-module
+  // window.* surface. lib/ is included so the editor offers checking on any
+  // file the moment it gains a `// @ts-check` line. tests/ (Node .mjs harness)
+  // and forms/ (standalone) are out of scope for this pilot.
+  "include": ["types/**/*.d.ts", "lib/**/*.js"],
+  "exclude": ["tests", "forms"]
+}

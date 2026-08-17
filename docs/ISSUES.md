@@ -1,5 +1,9 @@
 # Virasat — issues
 
+> **This file tracks core-app bugs & tech-debt only.** The live, day-to-day backlog
+> — including all cloud-sync / auth / sharing work — is [`UX-BACKLOG.md`](UX-BACKLOG.md).
+> This file predates the cloud work and intentionally makes no mention of it.
+
 Bugs, regressions, and tech-debt found across four audit rounds plus user-reported issues. **Open items at the top, ranked by impact priority.** Solved items live in [Resolved](#resolved) at the bottom for traceability.
 
 Use the priority tier as the order to work through; within a tier, ordered by impact.
@@ -20,11 +24,18 @@ Use the priority tier as the order to work through; within a tier, ordered by im
 - 🟡 **Inspector mobile close polish.** The `.inspector-close` exists at `≤ 1100 px` and works; the small × in the top corner could be more obvious.
 - 🟡 **Photo migration first-load re-renders.** `migrateLegacy` runs N updates; each fires a notification (now muted, but the legacy code path could still cascade in some edge cases). Verify and tighten.
 - 🟡 **`zoomBy` doesn't clamp the anchor.** Wheeling over canvas padding lets the tree slide off-screen.
-- 🟡 **Crop editor — no keyboard reframe.** Drag is mouse/touch only. Arrow keys = ±2 % focal shift, +/− = scale ±0.1.
 - 🟡 **Butter pastel + small text fails AA.** `--av-butter` (`#ECE0AE`) on ivory is 1.15:1 contrast.
 - 🟡 **`buildGenerations` spouse-pull is symmetric.** Two orphan partners both at gen 0 stay at gen 0. No observed bug; gate the pull on `Math.max > 0`.
 - 🟡 **`gapBefore` indexing fragile when `indexOfRight === 0`.** Defensive only.
 - 🟡 **No progress UI on long PNG exports.** Currently only the button label flips to "Rendering…". A small "Inlining 12/30 photos…" chip would help.
+- 🟡 **Hardcoded UI strings that bypass i18n** (found in the 2026-08 subagent audit; all should route through `lib/core/i18n.js` so both EN + HI resolve — the new `tests/i18n-parity.mjs` guards the label file, but not string *usage*). Ranked by user impact:
+  - **Exported "Family Tree" text doesn't localise.** In HI, a Hindi user's exported PNG poster (`image-export.js:577` header default, `:855` bottom-right wordmark), the JSON backup's default family name (`export-import.js:614`), and the PNG filename all read English "Family Tree". Highest-impact of this group because it ships in a file the user shares. Fix: add an `exp.defaultFamilyName` key and thread it through, or fall back to `insights.titleFallback` ("परिवार"). This is the separable "export surface" cluster — do it as one change.
+  - **`people-view.js:1219` contact email placeholder** is a literal `"name@example.com"` — an existing `auth.emailPlaceholder` key holds the same string; reuse it.
+  - **`insights-view.js:239` decade tooltip** builds `d.decade + "s · " + d.count` — the `"s"` decade-plural suffix is English-only (HI has no `titleFallback`-style key for it). Low: it's a hover `title`, and `:246` already renders the visible label as `'XXs`-free (`'80`). Add an `insights.decadeTooltip` template if localising.
+  - **`tree-view.js:201` `"Family tree"`** fallback when `FamilyStore.getFamilyTitle` is absent — unreachable in practice (the method always exists), defensive only.
+  - **`dom.js:208/210/247` + `:255`** — `openModal` `aria-label` default `"Dialog"`, and `UI.confirm` defaults `"Are you sure?"` / `"Confirm"`. Verified **every** `UI.confirm` caller passes `title` + `confirmLabel` from i18n, so these are unreachable fallbacks — but `:313/:322` already use the `window.I18n ? I18n.t(…) : "English"` idiom, so routing these three through it would be consistent. Lowest priority.
+  - **`export-import.js:562` `"JSON"` field label + `:460` `"JSON ≈ {size}"` readout + `formatSize` `" KB"`/`" MB"`/`" B"` units** — debatable whether "JSON"/"KB"/"MB" are translatable at all; left as-is intentionally, noted for completeness.
+  - **Devanagari `_hi` field placeholders** (`people-view.js:1021/1146/1157/1191/1240`, e.g. `"पूरा नाम"`, `"नगर, देश"`) are hardcoded Hindi *on purpose* — they cue Hindi-script entry regardless of UI language, so a current-language `I18n.t()` would wrongly show English when the UI is EN. If moved to i18n at all, they need a language-pinned lookup (`I18n.t(key, {lang:"hi"})`, which doesn't exist yet). Not a bug; documented so a future sweep doesn't "fix" it wrong.
 
 ### Tier D — Low (nits)
 
@@ -33,38 +44,24 @@ Use the priority tier as the order to work through; within a tier, ordered by im
 - 🟡 **Crop editor 404-tolerates silently** when `photoUrl` 404s. Drag still applies to a 0×0 broken image. Add an `<img>.onerror` that aborts with a toast.
 - 🟡 **Generation labels clip on 360 px viewports.** Polish.
 - 🟡 **PWA uninstall recovery story.** Browser keeps localStorage + IDB after uninstall on most platforms. Document: "Uninstall removes the icon, not the data. Use Tools → Reset everything before uninstalling for a clean wipe."
-- 🟡 **First-time tooltips for hidden affordances.** Right-click on tree, click on the gold knot, drag in the crop editor — none are visually hinted on first run. One-shot tooltips gated by `localStorage.getItem("virasat.tip.knot")` etc.
+- 🟡 **First-time tooltips for hidden affordances.** The tree long-press menu (phone) and the desktop right-click pan-hint are now covered; what's still unhinted on first run is the **gold-knot click** and the **crop-editor drag**. One-shot tooltips gated by `localStorage.getItem("virasat.tip.knot")` etc.
 - 🟡 **Date-input placeholder doesn't update with precision.** When the user picks "About", the input still says `YYYY-MM-DD`.
-- 🟡 **Heritage date-picker popover overflows narrow modals.** 320 px popover + `left: 0` can push past the right edge on a 375 px screen. JS reposition.
 - 🟡 **Timeline name column truncates Hindi names at 120 px.** Polish — accept truncation, consider line-wrap on `(pointer: coarse)`.
 - 🟡 **Inspector "Add child" success doesn't expand the Family section.** If collapsed, the new child is invisible until the user clicks the section header.
 - 🟡 **Storage.persist() toast may race the toast-root mount.** Defer inside `DOMContentLoaded`.
 - 🟡 **Landscape phone (667×375) is functionally tight.** Inherent constraint; consider a more compact tree layout when `(orientation: landscape) and (max-height: 480px)`.
-- 🟡 **Header search hidden on phones.** Compact search-icon → modal/drawer would restore discoverability.
 
 ---
 
 ## Tech stack & free hosting
 
-**Verdict: stack is right-sized. Stay vanilla, stay on a static host.**
-
-The whole codebase is ~10 k JS lines spread across 25 modules, all attached to `window`. Right at the ceiling before the lack of an explicit dependency graph starts to bite, but it's not biting yet — and the *no-build, just-open-index.html* property is a feature for a 30-year-lifespan family heirloom app.
-
-**Hosting — top pick: stay on GitHub Pages.** Free HTTPS, free custom domain, automatic deploys on push. The 100 GB/month bandwidth cap is unreachable.
-
-**Alternative: Cloudflare Pages.** Same feature set + (a) global edge CDN (faster outside North America), (b) instant PR-preview URLs. 5-min migration if those matter.
-
-**Skip Netlify / Vercel / Firebase Hosting** — same free tier, more setup friction, no advantage here.
-
-**Concrete next steps in ROI order:**
-
-1. **Custom domain** (~10 min, ~$12/yr). `virasat.family` or similar. Trust signal for relatives storing decades of photos.
-2. **JSON-backup-to-private-Gist** (~1 hr). One-time PAT pasted into the app; *Backup to cloud* button POSTs a timestamped JSON to a private Gist. Survives device loss without OAuth.
-3. **Self-host the fonts** (~2 hrs) only if first-offline-boot font flash becomes a complaint. Subset Fraunces / Inter / Noto Serif Devanagari / Font Awesome to woff2 via `glyphhanger`. Adds ~400 KB to the precache, removes two CDN dependencies.
-4. **ES modules** (~4–6 hrs) only when contributors arrive who need IDE autocomplete. `<script type="module">` is zero-config, keeps the no-build promise.
-5. **Vite for dev DX** (~30 min after #4) for hot-reload during dev. Production build stays static.
-
-**Skip cloud-storage OAuth** (Drive / Dropbox). The redirect-URI + `localhost` dance breaks PWAs. JSON export + manual cloud upload is more portable.
+> Superseded by [`ROADMAP.md`](ROADMAP.md) §P3.5, which is the source of truth for the
+> stack and hosting decisions (Supabase + GitHub Pages, since implemented on
+> `feat/cloud-sync`). The earlier survey that lived here — comparing static hosts and
+> weighing a Gist-backup vs. real auth — has been overtaken by that work and removed to
+> avoid two conflicting records. For scale: the app is ~18 k JS lines across 26 `window`
+> modules, still no-build (`just-open-index.html`), which remains a deliberate
+> 30-year-heirloom property.
 
 ---
 
@@ -87,6 +84,8 @@ Fixed items (✅) tagged with the resolving commit hash. Verified-false / closed
 
 ### Tier B — High
 
+- ✅ **CI standing-red on `feat/cloud-sync` — `tests` + `typecheck` both failing on every push.** Three independent pre-existing root causes, none introduced by recent feature work: **(1)** `i18n.js` read `navigator.language` at module load *outside* the try/catch. `navigator` only became a Node global in v21, so CI's node-20 threw `ReferenceError` the moment any test booted i18n — killing `i18n-parity`, `kin-terms`, and `self-anchor` (the other 8 tests passed). Guarded with `typeof navigator !== "undefined"`, preserving the `"en"` fallback. **(2)** `SelfAnchor` and `KinTerms` are shipped `window` globals but were never declared in `types/window-globals.d.ts`, and the file carried a stale `HelpGuide` (nothing exports it — the real global is `HelpPage`), producing ~38 `TS2304/TS2339` errors across app/inspector/tree-view/path-finder. Added the three real globals, removed the stale one. **(3)** four genuine intra-file type nits behind `// @ts-check`: `kin-terms.js:363` (`key` string-coercion), `image-export.js:445` (`Element`→`HTMLElement` cast for `.style`), `help-page.js:177/183` (`root` null-narrowing) and `:308` (`FrameRequestCallback` arity). Verified locally: 11/11 tests pass, the 3 formerly-failing tests pass with `navigator` deleted (faithful node-20 sim), and `tsc@5.9.3 --noEmit -p jsconfig.json` is clean. (this commit)
+- ✅ **Pets could not be linked to an owner from the UI.** `isPet` had a working toggle, but `petOwners[]` — the anchor that seats a pet one generation below its humans — was only ever written by sample/seed data. A user marking a person as a companion animal got a node that floated rootless at the tree's top row, with no affordance to tether it. The person form now reveals an **Owners** picker whenever the pet toggle is on: a dynamic multi-row list (a pet can belong to a couple) mirroring the spouse rows, excluding self and other pets from candidates, with inline "add a new person" and unlink-confirm. Persists `petOwners` on save; the existing delete-strip already clears dangling owner ids. (this commit)
 - ✅ **Service worker `SHELL` array out of sync with `index.html`.** `path-finder.js` and `print-book.js` were loaded by the page but missing from `SHELL`, so offline mode broke for those features. Both added; `CACHE_VERSION` bumped to `v3` to invalidate stale caches. (this commit)
 - ✅ **Timeline bar avatar ignored `photoCropAvatar`.** Real bug — couples-photo crops showed the wrong face on the timeline because the bar avatar didn't honour the user-chosen focal point. `buildBarAvatar` now mirrors `UI.avatar`'s crop application. (this commit)
 - ✅ **Service worker bypass — `sw.js` was being cached.** `sw.js` is now bypass-cached; `CACHE_VERSION = v2`. (`655b493`)
@@ -126,6 +125,7 @@ Fixed items (✅) tagged with the resolving commit hash. Verified-false / closed
 - ✅ **Inspector accordion focus halo touches the icon.** Inset gold outline on `:focus-visible`. (`6625fba`)
 - ✅ **Section body glued to header on hover.** 8 px top padding on the open body. (`6625fba`)
 - ✅ **Reframe modal overflowed horizontally; one shared zoom slider for both frames.** Manual layout that fits inside the modal max-width; per-frame zoom slider; the avatar shrinks to 180 px so both fit on one row. (`c548494`)
+- ✅ **Crop editor — no keyboard reframe.** The focal-point surface is now `tabindex=0` + `role`/`aria-label`; a `keydown` handler nudges the focal point (arrows, Shift = larger step) and each frame's zoom slider is keyboard-operable, so reframing no longer requires a pointer.
 - ✅ **People grid stretched single result to full height.** `align-content: start` + per-card `align-self: start`. (`07516dd`)
 - ✅ **Search returned people-only when matching stories.** Story-result cards now appear above person-result cards; clicking opens the inspector + scrolls to the matched story + flashes a gold halo. (`07516dd`)
 - ✅ **Emojis everywhere instead of icons.** Sweep replaced 📍 / ⏳ / ❓ / ✦ / ↗ / ✕ / − / ＋ / { } / 🌳 / 🌱 / 🔎 / ← / ✎ / 🗑 with FA equivalents. (`07516dd`, plus a follow-up sweep across modal-button labels.)
@@ -142,6 +142,10 @@ Fixed items (✅) tagged with the resolving commit hash. Verified-false / closed
 - ✅ **Bare-text dialog buttons across modals.** Sweep covered Cancel / Save / Close / Remove / Forget / Today / Clear and the story-editor footer. (`de8e6be`)
 - ✅ **Full SVG re-render on every store mutation.** Topology-signature gate: when the structural bits (parents / spouses / petOwners / isPet / deathDate / story-count presence / photo presence / marriages keys / view toggles) haven't changed, render() skips layout + DOM rebuild and patches cosmetic bits (name / dates / density-chip number) on existing nodes. (`51d2f8c`)
 - ✅ **People-view search re-renders the entire grid per keystroke.** Debounced 120 ms + person cards cached in `Map<id, {sig, node}>`. Cache reuses DOM when name/date/place/photo are stable; pruned once size > 2× population. (`51d2f8c`)
+- ✅ **Header search hidden on phones.** Resolved with a different shape than the originally-suggested modal/drawer: the phone kebab menu carries a *Search people* row (`app.js` `openKebabMenu`) that routes into the People view's search, so discoverability is restored without a second search surface.
+- ✅ **Heritage date-picker popover overflows narrow modals.** The popover is now `width: min(320px, calc(100vw - 32px))` (`components.css`) and flips above the field via a `.hdp--up` class when there's more room above than below (`heritage-datepicker.js`), so it never pushes past a narrow modal's edge.
+- ✅ **Insights dashboard was demographic-only — silent on memory, depth, and time.** The view shipped 11 panels, all headcount/dates/places, and never touched the qualitative archive it exists to celebrate (a gap `inspector.js`'s own "most stories / latest addition / oldest ancestor" comment had flagged as unbuilt intent). Added four additions computed from data already on file — no schema change: **Living generations** (living-only span, the number a family actually feels), **Years documented** (earliest–latest birth year, free off the decade pass), **Stories preserved** (count + recurring story-tag chips — the one qualitative stat, on-brand for a heritage app), and **Then & now** (earliest-born ancestor + newest-added member, filling two of the unbuilt inspector intents). All reuse the existing card/masonry/chip CSS (zero new CSS); cards/panels omit themselves when their data is absent so a sparse tree never shows a "0 · 1990–1990" span. A `>=` tie-break on `createdAt` keeps "newest addition" from colliding with "earliest ancestor" on the all-at-once-seeded sample tree. (this commit)
+- ✅ **Clipboard + blob-download logic reimplemented per-caller.** Three separate clipboard routines (`sharing.js` copy-link, `collect-form.js` copy-JSON, `help-page.js` copy-tile-link) each carried their own `navigator.clipboard` → hidden-`textarea`/`execCommand` fallback, and `image-export.js` had its own blob→anchor→`revokeObjectURL` download. Folded into two shared primitives: a new `UI.copyText(text) → Promise<boolean>` (async clipboard with the legacy fallback, resolves false on total failure) and a generalised `UI.downloadFile` that now accepts a `Blob` as well as a string/JSON payload. Each caller keeps its own success/fail UX (toast copy, `.is-copied` button flash, `helpToast`, `window.prompt` last-resort) but no longer reimplements the mechanics. Net −6 lines; the win is one code path to get right. (this commit)
 
 ### Tier D — Low
 
@@ -152,4 +156,4 @@ Fixed items (✅) tagged with the resolving commit hash. Verified-false / closed
 
 ---
 
-*Last updated 2026-06-19. Tiers reflect impact priority across all four audit rounds + user-reported issues.*
+*Last updated 2026-08-17. Tiers reflect impact priority across all four audit rounds + user-reported issues.*

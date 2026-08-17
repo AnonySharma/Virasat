@@ -62,10 +62,36 @@
   --accent-hi:    var(--gold);
   --accent-hi-soft: var(--gold-soft);
 
+  /* Focus-ring colour. Base uses the olive so the ring reads on-brand; the
+     high-contrast blocks below flip it to pure ink/white for a crisp outline. */
+  --focus:        var(--olive);
+
+  /* Scrollbars — heritage-tinted, not the default OS gray. A muted olive thumb
+     on a fully TRANSPARENT track (no gutter fill), so the bar reads as a lone
+     floating pill over whatever surface it scrolls; deepens toward the accent
+     on hover. One thumb-token set drives every scoped bar (rail, inspector,
+     modals, year-strip) plus the app-wide default, re-tuned per theme below. */
+  --scroll-thumb:       rgba(94, 125, 99, 0.48);   /* olive, translucent */
+  --scroll-thumb-hover: rgba(94, 125, 99, 0.7);
+
   --alive:        var(--olive);
   --alive-soft:   var(--olive-soft);
   --deceased:     #8B7F70;
   --deceased-soft:#E5DFD2;
+  --deceased-ink: var(--ink-2);   /* readable text on the --deceased-soft chip */
+
+  /* Text/hover for a filled accent button — fixed so it survives the dark-mode
+     token flips (--bone→dark, --olive-deep→light mint) that broke .btn--primary. */
+  --on-accent:       #FFFCF5;
+  --accent-fill-hover: #3F5944;
+
+  /* Landing hero "stage" gradient — a deep forest-green jewel, theme-aware.
+     On the light page it's the darkest surface: a rich accent against cream.
+     Dark mode lifts + saturates it (below) so it reads as a distinct green
+     stage instead of melting into the near-black background. */
+  --hero-from: #2B4A3B;
+  --hero-mid:  #1F382C;
+  --hero-to:   #152720;
 
   --danger:       #B95844;
   --danger-soft:  #ECD7CB;
@@ -92,6 +118,12 @@
   --font-display: "Cormorant Garamond", "Fraunces", "Iowan Old Style", Georgia, serif;
   --font-sans:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono:    "JetBrains Mono", ui-monospace, Menlo, monospace;
+  /* Devanagari (Hindi) face — a variable so it can be swapped at runtime (the
+     dev-only Hindi font lab in lib/dev/, opened with ?fontlab, overrides this
+     on :root to compare candidates). Noto Sans Devanagari: a clean, highly
+     legible sans chosen for correct conjunct shaping and matra placement — and
+     because it pairs with the sans UI rather than fighting the display serif. */
+  --font-hi:      "Noto Sans Devanagari", var(--font-sans);
 
   /* — Spacing — */
   --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
@@ -119,6 +151,12 @@
 
   /* — Layout — */
   --header-h: 64px;
+  /* The header reserves the top safe-area inset (notch/status bar) on top of
+     its fixed bar height in the installed PWA. Everything positioned against
+     the header — the body height, the fixed rail/inspector `top`, the overlay
+     inset — must offset by the SAME total, so it lives in one derived token.
+     On non-notched devices the inset is 0 and this equals --header-h. */
+  --header-total: calc(64px + env(safe-area-inset-top, 0px));
   --rail-w: 248px;
   --inspector-w: 360px;
   --content-max: 1680px;
@@ -158,6 +196,15 @@
     --olive-deep:   #C5DBC9;
     --gold-deep:    #E2C684;
 
+    /* In-memoriam palette, re-tuned for dark. The light values (#E5DFD2 wash,
+       #8B7F70 taupe) painted a bright parchment slab + low-contrast text over
+       the dark inspector — the reported memorial-card contrast bug. Flip to a
+       translucent warm wash that sits ON the dark surface and a soft warm sand
+       for the eyebrow + chip text so both read clearly without a light box. */
+    --deceased:     #BCAF9A;
+    --deceased-soft: rgba(188, 175, 154, 0.18);
+    --deceased-ink:  #DED6C6;
+
     --av-peach:     #5C3F2B;     --av-peach-ink:    #F0D4B8;
     --av-sage:      #3F4E33;     --av-sage-ink:     #D2DDC4;
     --av-lavender:  #3F384C;     --av-lavender-ink: #DAD2E5;
@@ -166,4 +213,108 @@
     --av-butter:    #4D421B;     --av-butter-ink:   #ECE0AE;
     --av-clay:      #4A3623;     --av-clay-ink:     #DCBFA4;
     --av-mist:      #3A3D43;     --av-mist-ink:     #D9D4CB;
+
+    /* A filled olive button's hover, brightened for the dark page. */
+    --accent-fill-hover: #6E9173;
+
+    /* Scrollbars on the dark page: a brighter mint thumb so it's visible on the
+       near-black surfaces (track is transparent app-wide). */
+    --scroll-thumb:       rgba(155, 198, 161, 0.34);
+    --scroll-thumb-hover: rgba(155, 198, 161, 0.6);
+
+    /* Deep forest jewel for the hero stage. It must stay genuinely DARK for a
+       dark theme — an earlier pass lightened it toward mid-sage, which read as a
+       flat, washed-out slab lighter than the rest of the dark UI. These deep
+       greens keep the hero a distinct green stage (the aurora glow + gold sheen
+       carry the depth) while transitioning naturally into the near-black bands
+       below, rather than sitting on the page as a bright rectangle. */
+    --hero-from: #1E3A2E;
+    --hero-mid:  #162B22;
+    --hero-to:   #0E1C16;
+}
+
+/* ── High contrast — an OPT-IN accessibility axis, INDEPENDENT of light/dark ──
+   [data-contrast="high"] layers over whichever base theme is active, so a
+   low-vision user keeps their light OR dark preference and just gains stronger
+   text, borders, and focus. Opt-in only (never auto-flipped from the OS), to
+   match the product's deliberate no-auto-theme stance. Only the tokens that
+   actually fail or barely pass WCAG contrast are touched — the muted text
+   tiers, the decorative hairlines, and the focus colour — so the heritage
+   identity (olive/gold accents, warm surfaces) survives the boost. */
+:root[data-contrast="high"]:not([data-theme="dark"]) {
+  /* Light base — scoped :not([data-theme="dark"]) so these LIGHT palette values
+     never leak into dark+high-contrast (the dark block below owns that combo).
+     Overriding the ink/ivory PALETTE vars cascades to every semantic alias
+     (--text = var(--ink), --line = var(--ink-5), …) at once, so one block
+     re-tunes the whole light theme. Pure-white surfaces + near-black text take
+     body copy to ~21:1; the muted tiers go from failing (--text-3 was #807A6E
+     ≈ 3.8:1) to comfortably AA. */
+  --ivory:        #FFFFFF;
+  --ivory-2:      #ECEAE4;
+  --ivory-3:      #DBD8CE;
+  --bone:         #FFFFFF;
+  --parchment:    #F6F3EB;
+
+  --ink:          #000000;   /* --text  — body copy */
+  --ink-2:        #1B1813;   /* --text-2 */
+  --ink-3:        #37332B;   /* --text-3 — now ~9:1 on white (was ~3.8:1) */
+  --ink-4:        #55503F;   /* --text-4 / --line-2 — clears 3:1 as a border */
+  --ink-5:        #6C6656;   /* --line   — a genuinely visible hairline */
+
+  /* Denser "soft" washes so active pills/chips read against pure white. */
+  --olive-soft:   #C2D1BC;
+  --gold-soft:    #E5D2A4;
+  --deceased-soft:#D6CEBD;
+
+  --focus:        #000000;
+
+  /* High contrast (light): a solid, unmistakable thumb — no translucency to
+     wash it out. Track stays transparent (app-wide) but the ink thumb reads
+     unambiguously against any surface. */
+  --scroll-thumb:       #37332B;
+  --scroll-thumb-hover: #000000;
+}
+/* Dark base. Dark mode sets the SEMANTIC vars directly (not via the ink
+   aliases), so the boost has to restate them here: pure-black surfaces + white
+   text, and the muted tiers lifted well clear of the ~4:1 they sat at. */
+:root[data-theme="dark"][data-contrast="high"] {
+  --ivory:        #000000;
+  --bg:           #000000;
+  --bg-elev:      #000000;
+  --bg-sunken:    #000000;
+  --surface:      #0B0B0A;
+  --surface-2:    #171511;
+  --surface-3:    #232019;
+
+  --text:         #FFFFFF;
+  --text-2:       #EAE5D7;
+  --text-3:       #C8C2B1;   /* was #8B8472 (~4:1); now clearly legible */
+  --text-4:       #A39C89;
+
+  --line:         #7D7767;
+  --line-2:       #A39C89;
+
+  --olive-soft:   rgba(155, 198, 161, 0.32);
+  --gold-soft:    rgba(226, 198, 132, 0.30);
+  --olive-deep:   #D8ECDC;
+  --gold-deep:    #F1D79C;
+  --deceased-soft: rgba(214, 205, 186, 0.28);
+  --deceased-ink:  #EEE7D7;
+
+  --focus:        #FFFFFF;
+
+  /* High contrast (dark): solid light thumb (track is transparent app-wide). */
+  --scroll-thumb:       #C8C2B1;
+  --scroll-thumb-hover: #FFFFFF;
+}
+/* One crisp, unmistakable focus indicator in high contrast: a solid ring in the
+   theme's focus colour (pure ink on light, pure white on dark), overriding the
+   base olive box-shadow ring. Scoped to the interactive elements that take
+   focus so it never boxes a plain container. Higher specificity than the base
+   `.btn:focus-visible { outline:none }`, so it wins. */
+:root[data-contrast="high"] :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible,
+:root[data-contrast="high"] :is(.btn, .nav-btn, .lang-switch__btn, .theme-toggle, .kebab-menu__item):focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  box-shadow: none;
 }

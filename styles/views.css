@@ -5,6 +5,17 @@
   gap: var(--s-4);
   flex-shrink: 0;
 }
+/* Opaque band + hairline foot ONLY on the two views whose scroll body is a
+   full-bleed field of tiles (People cards, Insights panels): there a tile
+   passing under the masthead would otherwise dissolve against the page and its
+   clipped top would read as broken. Tree and Timeline put an INSET, rounded
+   frame below the head, so a full-bleed straight line would collide with those
+   rounded top corners — they keep the plain transparent head. */
+#view-people .view-head,
+#view-insights .view-head {
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
 .view-head__title-wrap {
   display: flex; flex-direction: column; gap: 4px;
   min-width: 0;
@@ -182,25 +193,6 @@
 }
 .tree-pan-hint i { color: var(--accent); font-size: 11px; }
 
-/* Generation labels along left edge */
-.tree-gen-label {
-  position: absolute; left: 24px;
-  font-family: var(--font-display);
-  font-size: 18px; font-weight: 500; font-style: italic;
-  color: var(--text-3);
-  letter-spacing: .02em;
-  pointer-events: none;
-  white-space: nowrap;
-}
-.tree-gen-label::after {
-  content: ""; display: inline-block;
-  width: 28px; height: 1px;
-  background: var(--gold);
-  vertical-align: middle;
-  margin-left: 10px;
-  opacity: .55;
-}
-
 /* SVG — photographic node (no rect; the photo IS the card) */
 .t-node-photo-bg { fill: var(--bone); }
 .t-node-photo-ring { fill: none; stroke: var(--olive); stroke-width: 2.5; }
@@ -252,7 +244,7 @@
   border: 1px solid rgba(94, 125, 99, 0.22);
   border-radius: 999px;
   box-shadow: 0 6px 18px rgba(40, 36, 28, 0.12), 0 1px 2px rgba(40, 36, 28, 0.08);
-  font-family: var(--font-body);
+  font-family: var(--font-sans);
   font-size: 13px;
   color: var(--text);
   z-index: 4;
@@ -305,6 +297,31 @@
   outline-offset: 2px;
 }
 
+/* Compare (relationship-path) banner (#94) — the path summary ("A → B ·
+   relation · N steps") is far longer than the lineage banner's "Name", so
+   keep it a single-line pill that truncates rather than wrapping into a tall
+   block. The name span carries the long text; clamp + ellipsis it, and let the
+   pill grow only up to a viewport-relative ceiling. */
+.lineage-banner--compare { max-width: min(92vw, 620px); flex-wrap: nowrap; }
+.lineage-banner--compare .lineage-banner__label { white-space: nowrap; flex: 0 0 auto; }
+.lineage-banner--compare .lineage-banner__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;      /* let the flex item shrink below its content width */
+  flex: 0 1 auto;
+}
+.lineage-banner--compare .lineage-banner__reset { flex: 0 0 auto; }
+/* A resolved pair is clickable — it reopens Find a Relation prefilled. Signal
+   it with a pointer + a faint surface tint on hover, but leave the "Done"
+   button's own gold hover to read on top (it stops the click). */
+.lineage-banner--compare.is-clickable { cursor: pointer; }
+.lineage-banner--compare.is-clickable:hover { border-color: rgba(94, 125, 99, 0.4); background: var(--surface-1, #FCFBF8); }
+@media (max-width: 560px) {
+  /* On phones drop the "Relationship" eyebrow so the names + count keep room. */
+  .lineage-banner--compare .lineage-banner__label { display: none; }
+}
+
 .t-node-name {
   font-family: var(--font-display);
   font-weight: 500;
@@ -334,6 +351,21 @@
   text-transform: lowercase;
   letter-spacing: .04em;
 }
+/* Left-gutter era markers — one decade per generation row. A faint vertical
+   axis: display type, low-contrast, tabular numerals, non-interactive so they
+   never intercept a pan/tap. Deliberately dimmer than node dates so they read
+   as background scaffolding, not data. */
+.t-era-label {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  fill: var(--text-4);
+  opacity: .6;
+  letter-spacing: .02em;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  user-select: none;
+}
 /* Parent-child connectors: thin, calm, low-contrast so they read as a
    structural skeleton, not as anything you'd confuse with a marriage line. */
 .t-edge {
@@ -362,6 +394,55 @@
   stroke-width: 1.5;
   stroke-dasharray: 4 4;
   opacity: 0.7;
+}
+
+/* Unknown-parent placeholder ("phantom") — a dashed, muted card sitting in
+   the parent row above a child whose father/mother is recorded as actively
+   unknown (adoption, a lost line). Deliberately quiet: dashed ring, "?" glyph,
+   italic label, so it reads as an absence-with-intent, not a real person.
+   These are a pure overlay (no data-person-id) — the tree's filter / highlight
+   / soft-update passes never touch them. */
+.t-phantom-node { pointer-events: none; }
+.t-phantom-photo-bg { fill: var(--bg-elev); }
+.t-phantom-ring {
+  fill: none;
+  stroke: var(--text-3);
+  stroke-width: 2;
+  stroke-dasharray: 4 4;
+  opacity: 0.7;
+}
+.t-phantom-glyph {
+  fill: var(--text-3);
+  font-family: var(--font-display);
+  font-weight: 600;
+  opacity: 0.65;
+}
+.t-phantom-name {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 15px;
+  fill: var(--text-3);
+  letter-spacing: -0.01em;
+}
+@media (max-width: 720px) {
+  .t-phantom-name { font-size: 13px; }
+}
+.t-phantom-edge {
+  fill: none;
+  stroke: var(--text-3);
+  stroke-width: 1.25;
+  stroke-dasharray: 4 4;
+  stroke-linecap: butt;
+  opacity: 0.55;
+}
+/* When a lineage focus dims the tree, dim the phantoms in lockstep so they
+   don't float at full strength over a faded canvas. They carry no lineage
+   membership of their own, so a blanket fade during focus is the right call. */
+.tree-svg:has(.t-node.is-faded) .t-phantom-node,
+.tree-svg:has(.t-edge.is-faded) .t-phantom-edge {
+  opacity: 0.25;
+  transition: opacity var(--t-med);
 }
 /* Wedding-rings emblem (assets/wedding-rings.svg).
    Crisp white outline against the photo rings — chained zero-blur
@@ -395,12 +476,27 @@
 .t-couple-knot:hover {
   animation: knot-pulse 1500ms cubic-bezier(.4,.0,.2,1) infinite;
 }
+/* Keyboard focus on the (now focusable) knot — mirror the node focus ring so
+   the gold dot is clearly the active target. SVG can't take box-shadow, so use
+   outline, which SVG honours in modern engines. */
+.t-couple-knot { outline: none; }
+.t-couple-knot:focus-visible .t-couple-knot__icon {
+  filter:
+    drop-shadow(1px 0 0 var(--olive))
+    drop-shadow(-1px 0 0 var(--olive))
+    drop-shadow(0 1px 0 var(--olive))
+    drop-shadow(0 -1px 0 var(--olive));
+}
+.t-couple-knot:focus-visible {
+  animation: knot-pulse 1500ms cubic-bezier(.4,.0,.2,1) infinite;
+}
 @keyframes knot-pulse {
   0%, 100% { transform: scale(1); }
   50%      { transform: scale(1.18); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .t-couple-knot:hover { animation: none; }
+  .t-couple-knot:hover,
+  .t-couple-knot:focus-visible { animation: none; }
   /* Lineage banner slide-in: vestibular-sensitive users see the change
      instantly instead of an animated reveal. */
   .lineage-banner { transition: none !important; }
@@ -465,7 +561,7 @@
   align-content: start;
   align-items: start;
   gap: var(--s-5);
-  padding: 0 32px 32px;
+  padding: var(--s-6) 32px 32px;
   overflow-y: auto;
   flex: 1;
   min-height: 0;
@@ -492,6 +588,12 @@
   display: block; font-size: 13px; font-weight: 400;
   color: var(--text-3); margin-top: 2px;
   letter-spacing: 0;
+}
+/* Quiet gold memoriam feather beside a deceased person's name — a marker,
+   not a banner. Sized well below the name so it reads as a grace note. */
+.person-card__memoriam {
+  font-size: 0.62em; color: var(--gold-deep);
+  margin-right: 6px; vertical-align: 0.14em;
 }
 .person-card__dates {
   font-size: 11.5px; color: var(--text-3);
@@ -546,6 +648,9 @@
   border: 1px solid var(--line);
   overflow: auto;
   -webkit-overflow-scrolling: touch;
+  /* One-finger pan scrolls natively; two-finger pinch is delivered to the JS
+     zoom handler instead of triggering the browser's native page zoom. */
+  touch-action: pan-x pan-y;
   flex: 1;
   min-height: 0;
 }
@@ -571,10 +676,10 @@
   width: 2px; background: var(--gold);
   z-index: 1; pointer-events: none;
 }
-.timeline-now-line::before {
-  content: "TODAY";
+.timeline-now-line__label {
   position: absolute; top: 6px; left: 8px;
   font-size: 9px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; white-space: nowrap;
   color: var(--bone); background: var(--gold);
   padding: 3px 8px; border-radius: 3px;
 }
@@ -594,6 +699,26 @@
 }
 .timeline-bar:hover { filter: brightness(1.06); transform: translateY(-1px); }
 .timeline-bar--deceased { background: var(--rust); }
+/* Living person: the lifespan has no known end, so square off the right edge
+   (the rounded pill cap wrongly implies a fixed end date) and feather it into
+   a soft gradient so the bar reads as "ongoing" rather than "stops here". */
+.timeline-bar--ongoing {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  -webkit-mask-image: linear-gradient(to left, transparent 0, #000 10px);
+          mask-image: linear-gradient(to left, transparent 0, #000 10px);
+}
+/* When an ongoing bar also has an uncertain birth, feather both ends. */
+.timeline-bar--ongoing.timeline-bar--fade-left {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 10px), transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 10px), transparent 100%);
+}
+/* Living / deceased colour legend, sits with the zoom controls. */
+.timeline-legend { display: inline-flex; align-items: center; gap: var(--s-3); margin-left: auto; }
+.timeline-legend__item { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-2); }
+.timeline-legend__swatch { width: 14px; height: 10px; border-radius: 2px 0 0 2px; flex-shrink: 0; }
+.timeline-legend__swatch--living { background: var(--olive); border-radius: 5px 2px 2px 5px; }
+.timeline-legend__swatch--deceased { background: var(--rust); border-radius: 5px; }
 /* Death-only people: shown as a slim marker centred on the year so the bar
    doesn't visually claim a span from death-year to ~death-year+2. */
 .timeline-bar--point {
@@ -632,6 +757,90 @@
   font-size: 13px; font-weight: 500;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   color: var(--text);
+  cursor: pointer;
+}
+.timeline-name-col:hover { background: var(--bg-hover, var(--bg-elev)); }
+.timeline-name-col:focus-visible {
+  outline: 2px solid var(--olive);
+  outline-offset: -2px;
+}
+/* Must equal nameColWidth() in timeline-view.js (120 on mobile) — otherwise the
+   left edge of every bar hides under this opaque sticky column. */
+@media (max-width: 720px) {
+  .timeline-name-col { width: 120px; }
+}
+
+/* Timeline minimap — a compact overview strip ABOVE the scroll area (under the
+   zoom controls) with a captioned label and a draggable viewport window. Shown
+   by timeline-view.js only when the canvas overflows. The group carries the
+   page margin + caption→strip spacing; the strip itself sits margin-free inside
+   it. Strip height = MINIMAP_LANES(4) × MINIMAP_LANE_H(5) + top/bottom pad; keep
+   in sync with those constants in timeline-view.js. */
+.timeline-minimap-group {
+  margin: 0 24px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.timeline-minimap__caption {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  color: var(--text-3);
+  padding-left: 2px;
+}
+.timeline-minimap {
+  position: relative;
+  height: 30px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  /* A calm radius (not the near-pill --r-md) so the tiny bars and the viewport
+     window clear the corners; paired with the track's horizontal inset below,
+     nothing jams into the curve. */
+  border-radius: var(--r-xs);
+  cursor: pointer;
+  flex-shrink: 0;
+  touch-action: none;   /* pointer drag drives scroll; don't also pan the page */
+  overflow: hidden;
+  /* The lifespan bars + viewport window are absolutely positioned; overflow
+     hidden alone doesn't reliably clip abs-positioned descendants to a ROUNDED
+     corner in Blink/WebKit (they escape the left curve). Paint containment
+     forces a clip layer that honours the border-radius — a backstop behind the
+     track inset so a full-width window never bleeds past the rounding. */
+  contain: paint;
+}
+.timeline-minimap:focus-visible { outline: 2px solid var(--olive); outline-offset: 2px; }
+/* Horizontal inset keeps the bars, the "now" tick, and the viewport window a
+   few px clear of the rounded ends. All three are positioned as a fraction of
+   THIS track, so insetting it just narrows the shared coordinate space — they
+   stay mutually consistent. */
+.timeline-minimap__track { position: absolute; inset: 3px 8px; }
+.timeline-minimap__bar {
+  position: absolute; height: 3px;
+  background: var(--olive); border-radius: 2px;
+  opacity: 0.75;
+}
+.timeline-minimap__bar.is-deceased { background: var(--rust); }
+.timeline-minimap__now {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: var(--gold);
+}
+/* Viewport window — a see-through olive-deep frame (theme-aware: deep green on
+   light, mint on dark), deliberately NOT gold so it never reads as the gold
+   "now" tick it used to match. The faint fill + lift make it obvious as "your
+   current view" without hiding the bars beneath it. */
+.timeline-minimap__window {
+  position: absolute; top: 0; bottom: 0;
+  min-width: 10px;
+  background: rgba(94, 125, 99, 0.12);       /* faint olive lens */
+  border: 1.5px solid var(--accent-deep);
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(34, 31, 26, 0.18);
+  pointer-events: none;
+}
+@media (max-width: 720px) {
+  .timeline-minimap-group { margin: 0 16px 12px; }
 }
 
 /* ========== Inspector — biographical, photo-first ========== */
@@ -688,6 +897,10 @@
   text-align: center;
   line-height: 1.1;
   color: var(--text);
+  /* The inspector is only ~360px (96vw on mobile) with overflow-x:hidden on an
+     ancestor, so a long unbroken name would clip silently. Match the People
+     card name's wrapping. */
+  word-break: break-word;
 }
 .inspector-hero__name-hi { display: block; font-size: 15px; font-weight: 400; color: var(--text-3); margin-top: 2px; letter-spacing: 0; }
 .inspector-hero__role {
@@ -717,6 +930,33 @@
   font-size: 14px;
 }
 .inspector-action:hover { background: var(--olive-soft); color: var(--olive-deep); border-color: transparent; transform: translateY(-1px); }
+/* Read-aloud: tint while actively narrating so the stop state reads clearly. */
+.inspector-action[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-deep); border-color: var(--accent-deep); }
+
+/* === In Memoriam ===
+   A quiet, dignified treatment once a death date is set: a soft top rule and
+   parchment wash on the hero, plus an "In loving memory" eyebrow. Deliberately
+   restrained — the tone carries the meaning, not a loud rust chip. */
+.inspector-hero--memoriam {
+  background:
+    radial-gradient(ellipse at 50% 0%, var(--deceased-soft) 0%, transparent 72%),
+    var(--bg-elev);
+  border-top: 3px solid var(--deceased);
+}
+.inspector-hero__memoriam {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-display);
+  font-size: 11.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--deceased);
+}
+.inspector-hero__memoriam i { font-size: 10.5px; opacity: .85; }
+@media (prefers-reduced-motion: no-preference) {
+  .inspector-hero__memoriam { animation: memoriamFade 900ms ease-out both; }
+}
+@keyframes memoriamFade {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: none; }
+}
 
 /* Collapsible biographical sections */
 .inspector-section {
@@ -807,6 +1047,72 @@
 }
 .inspector-list--edu li::before { background: var(--olive); }
 
+.inspector-gallery {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 10px;
+}
+.inspector-gallery__cell { margin: 0; display: flex; flex-direction: column; gap: 5px; }
+.inspector-gallery__thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.inspector-gallery__thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+.inspector-gallery__thumb.is-empty::after {
+  content: "\f03e"; /* fa-image */
+  font-family: "Font Awesome 6 Free"; font-weight: 900;
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-3); font-size: 20px; opacity: .5;
+}
+.inspector-gallery__caption {
+  font-size: 11px; line-height: 1.4;
+  color: var(--text-3);
+  text-align: center;
+}
+
+/* Documents & sources — scanned certificates/letters shown as a list of
+   citation cards: a tappable scan thumb opens the full-resolution image. */
+.inspector-docs { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.inspector-docs__cell {
+  margin: 0; display: flex; gap: 12px; align-items: flex-start;
+}
+.inspector-docs__thumb-btn {
+  flex: 0 0 auto; padding: 0; border: none; background: none;
+  cursor: pointer; border-radius: var(--r-sm);
+}
+.inspector-docs__thumb-btn:hover .inspector-docs__thumb { border-color: var(--gold); }
+.inspector-docs__thumb {
+  position: relative; width: 64px; height: 64px;
+  border-radius: var(--r-sm); overflow: hidden;
+  background: var(--surface-2); border: 1px solid var(--line);
+  transition: border-color .15s ease;
+}
+.inspector-docs__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.inspector-docs__thumb.is-empty::after {
+  content: "\f15c"; /* fa-file-lines */
+  font-family: "Font Awesome 6 Free"; font-weight: 900;
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-3); font-size: 20px; opacity: .5;
+}
+.inspector-docs__body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.inspector-docs__title {
+  display: flex; align-items: baseline; gap: 7px;
+  font-weight: 600; color: var(--text-1); line-height: 1.35;
+}
+.inspector-docs__icon { flex: 0 0 auto; color: var(--gold-deep); font-size: 13px; }
+.inspector-docs__meta { font-size: 11.5px; color: var(--text-3); }
+.inspector-docs__note { font-size: 12.5px; line-height: 1.45; color: var(--text-2); }
+
 .inspector-family-group { margin-top: 12px; }
 .inspector-family-group:first-child { margin-top: 0; }
 .inspector-family-group__label {
@@ -831,6 +1137,28 @@
 }
 .inspector-chip:hover { background: var(--bg-elev); border-color: var(--gold); }
 .inspector-chip__role { color: var(--text-3); font-weight: 400; font-size: 11px; margin-left: auto; font-variant-numeric: tabular-nums; }
+
+/* Explicitly-unknown parent — a quiet dashed placeholder chip. Not a button
+   (nothing to reveal), so it carries no hover/pointer affordance. The dashed
+   border echoes the tree's dashed "unknown" placeholder node so the two
+   surfaces read as the same concept. */
+.inspector-chip--unknown {
+  cursor: default;
+  background: transparent;
+  border: 1px dashed var(--line);
+  color: var(--text-3);
+  font-style: italic;
+  font-weight: 400;
+}
+.inspector-chip--unknown:hover { background: transparent; border-color: var(--line); }
+.inspector-chip__ph {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 1px dashed var(--line);
+  color: var(--text-3);
+  font-size: 11px;
+}
 
 .inspector-add-row {
   display: flex; flex-wrap: wrap; gap: 6px;
@@ -864,6 +1192,12 @@
 .profile { max-width: 760px; margin: 0 auto; padding: var(--s-6); display: flex; flex-direction: column; gap: var(--s-4); }
 .profile__topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
 .profile__topbar-actions { display: flex; gap: var(--s-2); }
+/* Read-aloud button: tint when actively narrating so the stop state is obvious. */
+.profile__topbar-actions .btn[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent-deep);
+  color: var(--accent-deep);
+}
 .profile__hero {
   display: flex; align-items: center; gap: var(--s-5);
   padding: var(--s-6);
@@ -1030,20 +1364,6 @@
   aspect-ratio: 16 / 9;
   border-radius: var(--r-md);
 }
-.crop-frame__hint {
-  position: absolute;
-  bottom: 8px; left: 50%;
-  transform: translateX(-50%);
-  background: rgba(15, 19, 32, 0.78);
-  color: #fff;
-  padding: 4px 10px;
-  border-radius: var(--r-pill);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  pointer-events: none;
-  opacity: 0.85;
-}
-.crop-frame--round .crop-frame__hint { bottom: auto; top: 50%; transform: translate(-50%, -50%); }
 
 /* Per-frame zoom slider — avatar and hero are tuned independently. */
 .crop-frame__zoom {
@@ -1089,8 +1409,9 @@
   }
   .tree-controls .btn { width: 32px; height: 32px; }
   .tree-controls__pct { padding: 0 6px; font-size: 11px; min-width: 36px; }
-  .tree-gen-label { left: 12px; font-size: 14px; }
-  .tree-gen-label::after { width: 18px; }
+  /* Undo/redo live in the kebab on phone (reachable from every view); drop the
+     canvas copies so the cluster isn't a duplicated, wrapping row. */
+  .tree-controls__hist { display: none; }
 }
 
 /* === iOS safe-area for floating elements that sit at the bottom ===
@@ -1107,6 +1428,17 @@
 @media (pointer: coarse) {
   .btn--icon { min-width: 44px; min-height: 44px; }
   .hsel__opt { min-height: 44px; padding-top: 12px; padding-bottom: 12px; }
+  /* Tree overlay zoom/fit/options buttons are visually 32–36 px for density;
+     on a touch pointer bump them to the 44 px WCAG 2.5.5 minimum. The inner
+     hover-halo (::before) and glyph stay their tuned size — only the hit area
+     grows — so the cluster doesn't visually balloon. */
+  .tree-controls .btn { min-width: 44px; min-height: 44px; }
+  /* Language toggle — the one interactive control on every pre-app screen
+     (sign-in / first-run / landing), undersized at ~19×33 for a bilingual
+     audience. Grow the hit area to the 44 px minimum; let the pill container
+     grow with it (its base height:32px would otherwise clip the buttons). */
+  .lang-switch { height: auto; }
+  .lang-switch__btn { min-height: 44px; padding-top: 12px; padding-bottom: 12px; }
 }
 
 /* === Story result card (search results in the People view) ===
@@ -1204,23 +1536,9 @@
   flex-shrink: 0;
 }
 
-/* === Maintenance rows === */
+/* === Maintenance rows (rail filter panel "Needs attention" group) === */
 .rail-item--needs i { color: var(--rust); }
 .rail-item--needs:hover i { color: var(--gold-deep); }
-
-/* === People-view missing-filter banner === */
-.people-missing-banner {
-  grid-column: 1 / -1;
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 14px;
-  background: var(--gold-soft);
-  border: 1px solid var(--gold);
-  border-radius: var(--r-md);
-  font-size: 13px; color: var(--gold-deep);
-  margin-bottom: 8px;
-}
-.people-missing-banner i { color: var(--gold-deep); }
-.people-missing-banner span { flex: 1; }
 
 /* === Inspector contact block === */
 .contact-block {
@@ -1237,6 +1555,11 @@
   transition: background var(--t-fast), border-color var(--t-fast);
 }
 .contact-row:hover { background: var(--bg-elev); border-color: var(--gold); }
+/* Viewer-redacted contact row — a locked placeholder, never interactive. */
+.contact-row--redacted { cursor: default; }
+.contact-row--redacted:hover { background: var(--surface-2); border-color: var(--line); }
+.contact-row--redacted .contact-row__icon { color: var(--text-3); }
+.contact-row__value--redacted { color: var(--text-3); font-style: italic; }
 .contact-row__icon {
   color: var(--gold);
   font-size: 14px; width: 18px;
@@ -1297,6 +1620,32 @@
 }
 .form-pet-toggle i { color: var(--gold); }
 
+/* === Form — parent slot + "Unknown" toggle === */
+.parent-slot { display: flex; flex-direction: column; gap: 6px; }
+.parent-slot__picker { transition: opacity var(--t-fast); }
+.parent-unknown-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  align-self: flex-start;
+  padding: 4px 10px;
+  font-size: 11px; color: var(--text-3);
+  background: var(--surface-2);
+  border: 1px dashed var(--line);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+}
+.parent-unknown-toggle input { margin: 0; }
+.parent-unknown-toggle:has(input:checked) {
+  background: var(--surface-2);
+  border-color: var(--text-3);
+  color: var(--text-2);
+}
+/* When Unknown is checked, the picker is meaningless — dim it and take it out
+   of the tab / pointer flow (HeritageSelect has no disabled state of its own). */
+.parent-slot--unknown .parent-slot__picker {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 /* === Tree — pet badge === */
 .t-node-pet-bg {
   fill: var(--gold);
@@ -1318,10 +1667,25 @@
   align-items: end;
 }
 .path-finder__count {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
   font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--text-3); font-weight: 600;
   margin-bottom: 8px;
 }
+/* The vernacular kin word ("chacha", "bua", "dada") — the headline of the
+   result. Gold-accented chip: gold signals "this matters" in the palette.
+   Not uppercased — Devanagari has no case and the word is a proper term. */
+.path-finder__kin {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px;
+  background: var(--gold-soft, rgba(184, 154, 90, 0.14));
+  color: var(--gold-deep, var(--gold));
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  font-size: 12.5px; letter-spacing: 0.01em; text-transform: none;
+  font-weight: 600;
+}
+.path-finder__kin i { font-size: 11px; }
 .path-finder__chain {
   list-style: none; margin: 0; padding: 0;
   display: flex; flex-direction: column; align-items: center;
@@ -1383,6 +1747,32 @@
 .theme-toggle.is-dark .theme-toggle__moon { opacity: 0; transform: rotate(90deg); }
 .theme-toggle.is-dark .theme-toggle__sun  { opacity: 1; transform: rotate(0deg); color: var(--gold); }
 
+/* Contrast toggle — same circular chrome as the theme toggle, but a single
+   static half-disc icon (no sun/moon crossfade). When active it fills with the
+   accent so the on-state reads at a glance, mirroring how .is-dark flips the
+   theme button. In high-contrast mode the pressed fill uses the (now ink/white)
+   focus token so the active state stays unmistakable. */
+.contrast-toggle .fa-circle-half-stroke { font-size: 15px; }
+.contrast-toggle.is-active {
+  background: var(--olive); border-color: var(--olive); color: var(--on-accent);
+}
+.contrast-toggle.is-active:hover {
+  background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); color: var(--on-accent);
+}
+:root[data-contrast="high"] .contrast-toggle.is-active {
+  background: var(--focus); border-color: var(--focus);
+  color: var(--bg);
+}
+
+/* Cloud session: the header carries an account (avatar) menu, and Theme +
+   High-contrast move INTO it (app.js adds .has-account-menu once signed in).
+   Hide the standalone header toggles then — they'd be a redundant, crowding
+   duplicate. Local-only mode never gets .has-account-menu (no avatar), so the
+   toggles stay visible there as the only desktop path to appearance settings.
+   The buttons remain in the DOM and functional; the account-menu rows click
+   them, so applyTheme/applyContrast keep working through the hidden controls. */
+.app-header__actions.has-account-menu [data-appearance-toggle] { display: none; }
+
 /* === Story-density badge on tree node === */
 .t-node-density-bg {
   fill: var(--olive);
@@ -1394,8 +1784,78 @@
   pointer-events: none;
 }
 
+/* "This is you" — the pinned self node, marked ONLY by a gold photo ring (a
+   thicker gold stroke). No on-node icon badge: self is set and seen from the
+   rail "You" picker, whose hint tells the viewer the gold ring marks them.
+   Defined after .is-selected / .is-lineage at equal specificity, so the gold
+   ring PERSISTS through selection and lineage focus — "me" is a standing
+   identity marker, not a transient state. A faded node still dims (.is-faded
+   drives opacity, an independent property). Personal lens: the .is-self class
+   is stripped from exports so it never bakes into a shared image. */
+.t-node.is-self .t-node-photo-ring { stroke: var(--gold); stroke-width: 3; }
+/* The pet-paw is a Font Awesome glyph drawn as an SVG <text>. Its font-family
+   is set as a presentation ATTRIBUTE — the weakest source — so in Hindi the
+   :lang(hi) pairing in base.css overrides it to Devanagari and the glyph
+   becomes a tofu box. Force the icon font back with the same !important
+   belt-and-braces base.css uses for FA. */
+.t-node-pet-paw {
+  font-family: "Font Awesome 6 Free" !important;
+  font-weight: 900;
+}
+/* Relation-to-me chip — olive pill in the subtitle slot (chacha, bua…). Same
+   olive/bone treatment as the story-count badge so the two read as one family
+   of node chips. The pill DOES take pointer events so hovering it surfaces the
+   native <title> tooltip with the full, untruncated relation (the chip text is
+   ellipsized to fit the node). Clicks still select the person: SVG events
+   bubble to the .t-node <g> behind it. The <text> stays inert so only the
+   pill area (not glyph gaps) is the hover/hit target. */
+.t-node-relpill { cursor: pointer; }
+.t-node-relpill-bg {
+  fill: var(--olive);
+  stroke: var(--bone);
+  stroke-width: 1.5;
+}
+.t-node-relpill-text {
+  fill: var(--bone);
+  font-size: 10px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+/* Add-relative "+" affordance — bottom-right of a node. Rests dim so it
+   doesn't clutter a dense tree, and lifts to full olive when its node is
+   hovered/focused or the badge itself is focused (keyboard). */
+.t-node-add { opacity: 0.28; transition: opacity var(--t-fast, 140ms) ease; }
+.t-node:hover .t-node-add,
+.t-node:focus-visible .t-node-add,
+.t-node-add:hover,
+.t-node-add:focus-visible { opacity: 1; }
+.t-node-add:focus-visible { outline: none; }
+.t-node-add-bg {
+  fill: var(--olive);
+  stroke: var(--bone);
+  stroke-width: 2;
+}
+.t-node-add:focus-visible .t-node-add-bg { stroke: var(--olive-deep); stroke-width: 2.5; }
+.t-node-add:hover .t-node-add-bg { fill: var(--olive-deep); }
+.t-node-add-plus {
+  fill: var(--bone);
+  pointer-events: none;
+}
+/* Touch devices have no hover — keep the affordance always legible there. */
+@media (hover: none) {
+  .t-node-add { opacity: 0.85; }
+}
+
 /* (Pet tether retired — pets are now child-edge risers with .t-edge--pet
    styling, drawn as part of drawEdges.) */
+
+/* Compare (relationship-path) armed / active state — olive-filled disc so the
+   route icon reads as "on", matching the rail's active-item accent. Uses the
+   ::before halo (already positioned) as the fill so it sits behind the icon. */
+.tree-controls .btn.is-active { color: var(--olive-deep); }
+.tree-controls .btn.is-active::before { background: var(--olive-soft); }
+.tree-controls .btn.is-active:hover::before { background: var(--olive-soft); }
 
 /* Pets toggle off state */
 .tree-controls .btn.is-off i { opacity: 0.35; }
@@ -1434,57 +1894,54 @@
   line-height: 1.5;
   margin: 0;
 }
-.highlights__grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* A labelled block within Family Highlights — the Coming-up list, then the
+   folded family calendar. A quiet eyebrow head sets each apart. */
+.highlights__section {
+  display: flex; flex-direction: column; gap: 12px;
 }
-.highlights__card {
-  min-width: 0;
-  /* One-per-row layout: lay the label/eyebrow on its own row, then the
-     person row underneath, then the footer chip on the right of the
-     person row. Reads like a list of cards. */
-  flex-direction: column;
-}
-.highlights__label {
-  white-space: normal;
-  line-height: 1.25;
-}
-.highlights__card {
-  display: flex; flex-direction: column; gap: 8px;
-  padding: 12px 14px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  cursor: pointer;
-  text-align: left;
-  font: inherit; color: var(--text);
-  transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
-}
-.highlights__card:hover { background: var(--bg-elev); border-color: var(--gold); transform: translateY(-1px); }
-.highlights__card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.highlights__label {
-  display: flex; align-items: center; gap: 6px;
+.highlights__section-head {
+  display: flex; align-items: center; gap: 7px;
   font-size: 10.5px; font-weight: 600;
-  letter-spacing: 0.08em; text-transform: uppercase;
+  letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--text-3);
 }
-.highlights__label i { color: var(--gold); font-size: 11px; }
-.highlights__person {
-  display: flex; align-items: center; gap: 8px;
+.highlights__section-head i { color: var(--gold); font-size: 12px; }
+
+/* Foldable section header (the calendar) — reads like the eyebrow heads above
+   but is a tappable control with a chevron that rotates when open. Folded by
+   default so the sidebar opens as a compact list; the grid renders below it
+   only when expanded. */
+.highlights__fold {
+  display: flex; align-items: center; gap: 7px;
+  width: 100%; padding: 4px 0;
+  background: transparent; border: 0;
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-3);
+  cursor: pointer; text-align: left;
+  transition: color var(--t-fast);
 }
-.highlights__person .avatar { width: 32px; height: 32px; font-size: 12px; flex-shrink: 0; }
-.highlights__person-name {
-  font-family: var(--font-display);
-  font-size: 16px; font-weight: 500;
-  color: var(--text);
-  letter-spacing: -0.01em;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+.highlights__fold:hover { color: var(--text-2); }
+.highlights__fold:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: var(--r-sm); }
+.highlights__fold-icon { color: var(--gold); font-size: 12px; }
+.highlights__fold-label { flex: 1; }
+.highlights__fold-caret {
+  font-size: 10px; color: var(--text-3);
+  transition: transform var(--t-fast);
 }
-.highlights__footer {
-  font-size: 11px; color: var(--text-3);
-  margin-top: 2px;
-}
+.highlights__fold.is-open .highlights__fold-caret { transform: rotate(180deg); }
+
+/* The calendar + coming-up rows are built by the Anniversaries module and
+   shared with the Insights band, where they sit in a wide panel. In the narrow
+   inspector they fill the pane: drop the 360px cap and shrink the month label so
+   the nav row doesn't wrap. */
+.highlights .cal { display: flex; flex-direction: column; }
+.highlights .cal .cal-nav { margin: 0 0 10px; }
+.highlights .cal .cal-nav__label { font-size: 15px; }
+.highlights .cal .cal-weekdays,
+.highlights .cal .cal-grid { max-width: none; }
+.highlights .cal .cal-cell { min-height: 34px; }
+.highlights .cal .cal-legend { margin-top: 12px; }
 
 /* === Family-archive completion bar === */
 .completion {
@@ -1525,6 +1982,14 @@
   display: flex; flex-wrap: wrap; gap: 8px 14px;
   font-size: 11px; color: var(--text-3);
 }
+/* At 100% there's nothing to nudge — collapse the bar+legend to one quiet line
+   with a check, so a finished archive reassures rather than occupies the pane. */
+.completion--done {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  font-size: 12px; color: var(--text-3);
+}
+.completion--done i { color: var(--olive); font-size: 13px; }
 
 /* === Tree view-options popover === */
 .tree-view-options {
@@ -1611,4 +2076,389 @@
   .profile__topbar-actions { flex-wrap: wrap; }
   .profile__name { font-size: 28px; }
   .profile__hero .avatar { width: 80px; height: 80px; font-size: 24px; }
+}
+
+/* ========== Insights view (read-only family dashboard) ========== */
+.insights-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--s-6) 32px 32px;
+  display: flex; flex-direction: column; gap: var(--s-6);
+}
+
+/* "Showing N of M — filter applied" banner. Sits above the cards when a
+   facet is narrowing the set, so the partial numbers below read as intentional. */
+.insight-filter-note {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: var(--olive-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+.insight-filter-note i { color: var(--olive); }
+
+/* Headline stat cards */
+.insight-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--s-4);
+}
+.insight-card {
+  padding: 20px 18px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.insight-card__figure { display: flex; align-items: center; gap: 12px; }
+.insight-card__icon {
+  font-size: 18px; color: var(--olive);
+  width: 34px; height: 34px; flex-shrink: 0;
+  display: inline-grid; place-items: center;
+  background: var(--olive-soft); border-radius: 50%;
+}
+.insight-card__value {
+  font-family: var(--font-display);
+  font-size: 30px; font-weight: 500; line-height: 1;
+  letter-spacing: -0.02em; color: var(--text);
+}
+.insight-card__label {
+  font-size: 12px; color: var(--text-3);
+  letter-spacing: .02em;
+}
+
+/* Panels — gender / decades / names.
+   Masonry-style packing via CSS multi-column. Cards of very different heights
+   (a 6-chip "roots" panel beside a one-line "names" panel) leave big holes in a
+   row-based grid with align-items:start. Multicol balances the stat panels into
+   columns with no vertical dead space. The full-width "coming up" and calendar
+   bands live OUTSIDE this container (in .insight-bands) — a column-span:all
+   child would otherwise force the balancer to leave a tall gap beside the last
+   short column. */
+.insight-panels {
+  columns: 320px 3;
+  column-gap: var(--s-4);
+}
+/* Full-width bands (Coming up, Family calendar) stacked below the stat columns,
+   each carrying its own panel chrome. Their own flow means no multicol balancing
+   gap above them; the parent .insights-body gap sets the rhythm between them. */
+.insight-bands {
+  display: flex; flex-direction: column;
+  gap: var(--s-6);
+}
+.insight-panel {
+  padding: 20px 22px 22px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  /* Keep each card whole within its column; margin gives the vertical rhythm
+     (multicol has no row-gap, so the gap between stacked cards is a margin). */
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  margin: 0 0 var(--s-4);
+}
+.insight-panel__title {
+  font-family: var(--font-display);
+  font-size: 18px; font-weight: 500;
+  margin: 0 0 16px 0; color: var(--text);
+}
+.insight-empty { color: var(--text-3); font-style: italic; font-size: 13px; margin: 0; }
+
+/* Gender: a single stacked proportion bar + legend */
+.insight-gender__bar {
+  display: flex; height: 20px;
+  border-radius: var(--r-pill); overflow: hidden;
+  background: var(--surface-2);
+}
+.insight-gender__seg { height: 100%; }
+.insight-gender__seg--m { background: var(--olive); }
+.insight-gender__seg--f { background: var(--gold); }
+.insight-gender__seg--o { background: var(--rust); }
+@media (prefers-reduced-motion: no-preference) {
+  .insight-gender__seg { transition: width var(--t-med, 320ms) ease; }
+}
+.insight-gender__legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+.insight-gender__legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-2); }
+.insight-gender__dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* Decades: a small column histogram */
+.insight-decades {
+  display: flex; align-items: flex-end; gap: 6px;
+  height: 140px;
+}
+.insight-decades__col {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  height: 100%;
+}
+.insight-decades__bar-wrap {
+  flex: 1; width: 100%;
+  display: flex; align-items: flex-end; justify-content: center;
+  min-height: 0;
+}
+.insight-decades__bar {
+  width: 100%; max-width: 34px;
+  background: linear-gradient(180deg, var(--olive) 0%, var(--olive-deep) 100%);
+  border-radius: var(--r-sm) var(--r-sm) 0 0;
+  position: relative;
+  display: flex; justify-content: center;
+  min-height: 2px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .insight-decades__bar { transition: height var(--t-med, 320ms) ease; }
+}
+.insight-decades__count {
+  position: absolute; top: -18px;
+  font-size: 11px; color: var(--text-2); font-variant-numeric: tabular-nums; font-weight: 600;
+}
+.insight-decades__label {
+  font-size: 11px; color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Names: recurring first-name chips */
+.insight-names { display: flex; flex-wrap: wrap; gap: 8px; }
+.insight-name-chip {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 6px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  font-size: 13px;
+}
+.insight-name-chip__name { font-weight: 500; color: var(--text); }
+.insight-name-chip__count { font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.insight-name-chip__pin { font-size: 11px; color: var(--gold-deep); align-self: center; }
+
+/* Roots: a quiet lead line above the birthplace chips */
+.insight-panel__lead { margin: 0 0 12px 0; font-size: 13.5px; color: var(--text-2); }
+
+/* Elders: eldest / youngest living, one row each */
+.insight-elders { display: flex; flex-direction: column; gap: 12px; }
+.insight-elders__row {
+  display: flex; align-items: baseline; gap: 10px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--line);
+}
+.insight-elders__row:last-child { padding-bottom: 0; border-bottom: none; }
+.insight-elders__label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--text-3); min-width: 68px;
+}
+.insight-elders__name {
+  flex: 1; min-width: 0; font-weight: 500; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.insight-elders__age {
+  color: var(--gold-deep); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 13px;
+}
+
+/* Coming up: the year's birthdays & memorials, plus calendar/reminder actions.
+   A full-width band in .insight-bands; the container's flex gap sets the spacing,
+   so drop the stat-panel's bottom margin that would otherwise double it up. */
+.insight-panel--wide { margin: 0; }
+.coming-up__list { display: flex; flex-direction: column; }
+/* Same row list, reused inside a modal (the full year-ahead, or one calendar
+   day). The modal body already scrolls and pads, so the list just fills it. */
+.coming-up__list--modal { min-width: min(360px, 78vw); }
+/* Rows are <button>s (each opens its person), so reset the UA button chrome
+   back to the full-width flex row they replaced, then add a clear clickable
+   affordance: a hover wash that bleeds to the panel padding edge (via the
+   negative margin) and a focus ring. */
+.coming-up__row {
+  display: flex; align-items: center; gap: 12px;
+  width: calc(100% + 16px); margin: 0 -8px;
+  padding: 10px 8px;
+  border: 0; border-bottom: 1px solid var(--line);
+  background: transparent; color: inherit; text-align: left;
+  cursor: pointer; font: inherit;
+  transition: background var(--t-fast);
+}
+.coming-up__row:hover { background: var(--surface-2); }
+.coming-up__row:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.coming-up__row:last-child { border-bottom: none; }
+/* Lead row — the soonest event, promoted into the list's focal point. A soft
+   olive-tinted card with the person's avatar (a kind badge on it) instead of the
+   small type glyph, so the next date reads at a glance. The negative side margin
+   still bleeds the row to the panel edge; a matching inset keeps its rounded card
+   clear of the padding. */
+.coming-up__row--lead {
+  gap: 14px;
+  margin: 0 -8px 6px; padding: 12px 12px;
+  border: 1px solid var(--olive-soft);
+  border-radius: var(--r-md);
+  background: linear-gradient(180deg, var(--olive-soft), transparent);
+}
+.coming-up__row--lead:hover { background: var(--olive-soft); border-color: var(--olive); }
+.coming-up__row--lead .coming-up__title { font-size: 15px; font-weight: 600; }
+.coming-up__row--lead .coming-up__when { color: var(--olive-deep); }
+.coming-up__lead-avatar { position: relative; flex: 0 0 auto; }
+.coming-up__lead-badge {
+  position: absolute; right: -3px; bottom: -3px;
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: #fff;
+  border: 2px solid var(--bg-elev);
+}
+.coming-up__lead-badge--birth { background: var(--gold-deep); }
+.coming-up__lead-badge--death { background: var(--olive-deep, var(--text-3)); }
+.coming-up__icon {
+  flex: 0 0 auto; width: 20px; text-align: center; font-size: 15px;
+}
+.coming-up__icon--birth { color: var(--gold-deep); }
+.coming-up__icon--death { color: var(--olive-deep, var(--text-3)); }
+.coming-up__body { flex: 1 1 auto; min-width: 0; }
+.coming-up__title {
+  font-weight: 500; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.coming-up__meta { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+.coming-up__when {
+  flex: 0 0 auto; font-size: 12.5px; color: var(--gold-deep);
+  font-weight: 600; white-space: nowrap;
+}
+/* "+N more" is a <button> that opens the full year ahead in a modal. Styled as
+   a clear text-link — accent colour, a caret that nudges on hover — so it reads
+   as a control, not a static caption. */
+.coming-up__more {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 0 0; margin: 0;
+  border: 0; background: transparent;
+  font: inherit; font-size: 12.5px; font-weight: 600;
+  color: var(--accent-deep); text-align: left;
+  cursor: pointer;
+  transition: color var(--t-fast);
+}
+.coming-up__more-caret { font-size: 10px; transition: transform var(--t-fast); }
+.coming-up__more:hover { color: var(--olive-deep); }
+.coming-up__more:hover .coming-up__more-caret { transform: translateX(2px); }
+.coming-up__more:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--r-xs); }
+/* "Keep these dates" — the calendar-export + reminder controls live in the
+   events-modal footer (their single home), always visible beside Close instead
+   of buried beneath the scrolling row list. The footer stacks the hint over a
+   row that pushes the utility actions left and Close right. */
+.coming-up__footer { flex: 1 1 100%; display: flex; flex-direction: column; gap: 12px; }
+.coming-up__footer-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  justify-content: space-between;
+}
+.coming-up__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.coming-up__remind.is-on {
+  background: var(--gold); border-color: var(--gold); color: #fff;
+}
+.coming-up__remind.is-on:hover { background: var(--gold-deep); border-color: var(--gold-deep); }
+.coming-up__hint {
+  margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-3);
+}
+
+/* ── Family calendar (month grid marking birthdays & memorials) ─────────── */
+.cal-nav {
+  display: flex; align-items: center; gap: 10px;
+  margin: 4px 0 14px;
+}
+.cal-nav__btn {
+  flex: 0 0 auto;
+  width: 30px; height: 30px;
+  display: inline-grid; place-items: center;
+  border: 1px solid var(--line); background: var(--bg-elev);
+  border-radius: 50%;
+  color: var(--text-2); font-size: 12px;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+.cal-nav__btn:hover { background: var(--olive-soft); color: var(--olive-deep); border-color: var(--olive-deep); }
+.cal-nav__btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.cal-nav__label {
+  font-family: var(--font-display);
+  font-size: 18px; font-weight: 500; color: var(--text);
+  text-transform: capitalize;
+}
+/* "This month" resets the calendar to the current month. A bordered pill (not
+   bare text) so it reads as the button it is; the rotate-left icon reinforces
+   "go back to now". */
+.cal-nav__today {
+  margin-left: auto;
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 1px solid var(--line); background: var(--bg-elev);
+  border-radius: var(--r-pill);
+  font: inherit; font-size: 11.5px; font-weight: 600; color: var(--accent-deep);
+  cursor: pointer; padding: 4px 10px;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+.cal-nav__today-icon { font-size: 10px; }
+.cal-nav__today:hover { background: var(--olive-soft); color: var(--olive-deep); border-color: var(--olive-deep); }
+.cal-nav__today:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Compact, mac-style month widget: capped width so it reads as a glanceable
+   calendar rather than a full-bleed field of giant squares. The weekday header
+   and the grid share one width and a 7-column geometry. */
+.cal-weekdays,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  max-width: 360px;
+}
+.cal-weekday {
+  text-align: center;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text-3);
+  padding-bottom: 4px;
+}
+.cal-grid { margin-top: 2px; }
+/* Each cell is a small tile: the day number, and (when marked) a row of type
+   icons under it. Marked days are <button>s; plain days and the leading blanks
+   are inert spans that share the geometry. */
+.cal-cell {
+  position: relative;
+  min-height: 40px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px;
+  border: 1px solid transparent; border-radius: var(--r-xs);
+  font: inherit; color: var(--text-2);
+  background: transparent;
+}
+.cal-cell--blank { visibility: hidden; }
+.cal-cell__num { font-size: 12.5px; font-variant-numeric: tabular-nums; line-height: 1; }
+/* Type icons: a small cake for a birthday, a feather for a memorial. One of
+   each at most per day; a day with both shows the pair side by side. */
+.cal-cell__icons { display: flex; gap: 4px; align-items: center; line-height: 1; }
+.cal-cell__icon { font-size: 10px; }
+.cal-cell__icon--birth { color: var(--gold-deep); }
+.cal-cell__icon--death { color: var(--olive-deep, var(--text-3)); }
+/* Today: a soft ring, whether or not it's marked. */
+.cal-cell.is-today { border-color: var(--accent-deep); }
+.cal-cell.is-today .cal-cell__num { font-weight: 700; color: var(--text); }
+/* Marked days are interactive: a filled tile that opens the day's people. */
+.cal-cell--marked {
+  cursor: pointer;
+  background: var(--surface-2);
+  border-color: var(--line);
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+.cal-cell--marked:hover { background: var(--olive-soft); border-color: var(--olive-deep); }
+.cal-cell--marked:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.cal-legend {
+  display: flex; flex-wrap: wrap; gap: 16px;
+  margin-top: 16px; padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12px; color: var(--text-3);
+}
+.cal-legend__item { display: inline-flex; align-items: center; gap: 6px; }
+
+@media (max-width: 640px) {
+  .insights-body { padding: var(--s-5) 16px 24px; gap: var(--s-5); }
+  .insight-bands { gap: var(--s-5); }
+  .coming-up__footer-row { flex-direction: column; align-items: stretch; }
+  .coming-up__actions .btn { flex: 1 1 auto; justify-content: center; }
+  .coming-up__footer-row > .btn { justify-content: center; }
+  .cal-weekdays,
+  .cal-grid { max-width: none; }
+  .cal-cell { min-height: 36px; }
+  .cal-cell__num { font-size: 12px; }
 }

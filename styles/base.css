@@ -26,13 +26,48 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 ::selection { background: var(--olive-soft); color: var(--accent-deep); }
 
+/* ── Themed scrollbars ──────────────────────────────────────────────────────
+   App-wide default: a slim, heritage-olive thumb floating on a TRANSPARENT
+   track (no gutter fill) so the bar disappears into whatever surface it's over,
+   replacing the generic OS gray. The thumb tokens (--scroll-thumb/-hover) are
+   re-tuned per theme in tokens.css, so this one block follows light / dark /
+   high-contrast. Firefox reads scrollbar-width/-color; Blink/WebKit use the
+   ::-webkit pseudos below. Scoped scrollers (rail, inspector, modal body,
+   year-strip) inherit these and just tweak width. Touch overlay scrollbars
+   ignore all of this — no harm. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) transparent;
+}
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 999px;
+  /* Transparent border carved from the thumb via background-clip leaves an
+     inset gap, so the pill reads as floating in the gutter rather than filling
+     it edge-to-edge. */
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: padding-box; }
+::-webkit-scrollbar-corner { background: transparent; }
+
 /* Scope the Devanagari pairing carefully: Font Awesome icons use the
    `Font Awesome 6 Free / Brands` font-family and we must NOT override that.
    Apply Devanagari only to text-bearing elements lower-specificity than
    Font Awesome's i.fa-*. */
 :lang(hi):not(i):not(.fa):not([class*="fa-"]),
 [lang="hi"]:not(i):not(.fa):not([class*="fa-"]) {
-  font-family: "Noto Serif Devanagari", var(--font-display);
+  font-family: var(--font-hi);
+  /* Devanagari is a connected, shaping script: matras and conjuncts must sit
+     tight against their base. The Latin-styling tracking we sprinkle on
+     eyebrows/labels/headings (letter-spacing, plus ALL-CAPS which Devanagari
+     has no concept of) shatters that shaping — see "पा रि वा रि क" splitting
+     apart. Reset both for Hindi everywhere, in one place, so every uppercased
+     tracked label renders correctly without touching 80+ Latin call sites. */
+  letter-spacing: normal;
+  text-transform: none;
 }
 /* Belt and braces: ensure FA elements always pick their own family */
 .fa, .fas, .far, .fab, .fa-solid, .fa-regular, .fa-brands,
@@ -47,10 +82,16 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   z-index: var(--z-header);
   background: var(--bg-elev);
   color: var(--text);
-  height: var(--header-h);
+  /* Reserve the notch/status-bar inset so header content isn't hidden under it
+     in the installed PWA (viewport-fit=cover). --header-total = bar height +
+     top inset; top-padding pushes the row's content below the notch while
+     box-sizing:border-box keeps the interactive row --header-h tall. On
+     non-notched devices the inset is 0 — no visual change. */
+  height: var(--header-total);
+  padding: env(safe-area-inset-top, 0px) var(--s-6) 0;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  padding: 0 var(--s-6);
   gap: var(--s-5);
   border-bottom: 1px solid var(--line);
   flex-shrink: 0;
@@ -113,6 +154,13 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .nav-btn.is-active { background: var(--olive-soft); color: var(--olive-deep); }
 .nav-btn__icon { width: 14px; height: 14px; opacity: .85; }
 
+/* The rail's "Overview" view-switcher duplicates the header tabs on desktop,
+   so hide it ≥769px. It stays in the phone slide-in drawer, where .app-nav is
+   hidden (≤768px block below) and this is the only way to switch views. */
+@media (min-width: 769px) {
+  .rail-block--views { display: none; }
+}
+
 .app-header__actions { margin-left: auto; display: inline-flex; gap: 8px; align-items: center; }
 
 /* Header search — quiet, almost a pill */
@@ -127,21 +175,49 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   transition: background var(--t-fast), border-color var(--t-fast);
 }
 .header-search:hover { background: var(--surface-3); }
-.header-search:focus-within { background: var(--bg-elev); border-color: var(--accent); box-shadow: 0 0 0 4px var(--olive-soft); }
+.header-search:focus-within { background: var(--bg-elev); border-color: var(--olive); box-shadow: 0 0 0 2px var(--olive), 0 0 0 5px var(--olive-soft); }
 .header-search input {
   background: transparent; border: 0; outline: 0;
   flex: 1; color: inherit; font-size: 13px;
 }
 .header-search input::placeholder { color: var(--text-3); }
+.header-search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
 .header-search__icon { color: var(--text-3); font-size: 13px; }
+.header-search__clear {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; padding: 0; margin: 0;
+  border: 0; border-radius: 50%; cursor: pointer;
+  background: var(--surface-3); color: var(--text-2);
+  font-size: 11px; line-height: 1;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.header-search__clear[hidden] { display: none; }
+.header-search__clear:hover { background: var(--olive-soft); color: var(--text); }
 
 /* — 3-column body — */
 .app-body {
   display: grid;
   grid-template-columns: var(--rail-w) minmax(0, 1fr) var(--inspector-w);
-  height: calc(100dvh - var(--header-h));
+  height: calc(100dvh - var(--header-total));
   overflow: hidden;
   min-width: 0;
+}
+
+/* Desktop rail collapse — the hamburger toggles this, reclaiming the left
+   third for the canvas (P3.9). Scoped ≥769px so it never fights the phone
+   slide-in drawer below (where the rail is position:fixed and the grid is a
+   single column). The rail keeps overflow-x:hidden, so its content clips
+   cleanly as the column animates to zero width. */
+@media (min-width: 769px) {
+  .app-body { transition: grid-template-columns var(--t-med); }
+  .app-body.rail-collapsed { grid-template-columns: 0 minmax(0, 1fr) var(--inspector-w); }
+  .app-body.rail-collapsed .app-rail { border-right: none; }
+}
+@media (min-width: 769px) and (max-width: 1100px) {
+  .app-body.rail-collapsed { grid-template-columns: 0 minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-body { transition: none; }
 }
 
 .app-rail {
@@ -151,11 +227,11 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   overflow-x: hidden;
   padding: var(--s-5) var(--s-3);
   display: flex; flex-direction: column; gap: var(--s-6);
-  scrollbar-width: thin;
-  scrollbar-color: var(--ink-5) transparent;
+  scrollbar-color: var(--scroll-thumb) transparent;
 }
-.app-rail::-webkit-scrollbar { width: 6px; }
-.app-rail::-webkit-scrollbar-thumb { background: var(--ink-5); border-radius: 999px; }
+.app-rail::-webkit-scrollbar { width: 8px; }
+.app-rail::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+.app-rail::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: padding-box; }
 
 .app-main {
   position: relative;
@@ -167,16 +243,17 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 
 .app-inspector {
+  position: relative;   /* anchor the absolute .inspector-close (mobile re-sets to fixed) */
   background: var(--bg-elev);
   border-left: 1px solid var(--line);
   overflow-y: auto;
   overflow-x: hidden;
   display: flex; flex-direction: column;
-  scrollbar-width: thin;
-  scrollbar-color: var(--ink-5) transparent;
+  scrollbar-color: var(--scroll-thumb) transparent;
 }
-.app-inspector::-webkit-scrollbar { width: 6px; }
-.app-inspector::-webkit-scrollbar-thumb { background: var(--ink-5); border-radius: 999px; }
+.app-inspector::-webkit-scrollbar { width: 8px; }
+.app-inspector::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+.app-inspector::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: padding-box; }
 
 .view { display: none; flex: 1; min-height: 0; min-width: 0; overflow: hidden; }
 .view.is-active { display: flex; flex-direction: column; }
@@ -185,7 +262,7 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 1100px) {
   .app-body { grid-template-columns: var(--rail-w) minmax(0, 1fr); }
   .app-inspector {
-    position: fixed; right: 0; top: var(--header-h); bottom: 0;
+    position: fixed; right: 0; top: var(--header-total); bottom: 0;
     width: min(380px, 96vw);
     transform: translateX(100%);
     transition: transform var(--t-med);
@@ -194,10 +271,38 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   }
   .app-inspector.is-open { transform: translateX(0); }
 }
+
+/* Header fit — a WIDER band than the inspector-collapse above. The title +
+   384 px nav + 280 px search + labelled actions overflow the header well
+   before 1100 px (measured: actions run ~90 px off-screen at 1200 px). Collapse
+   the action-button text to icon-only (their `title`/`aria-label` keep them
+   named) and shrink the search so the row fits down to the ≤768 kebab handover.
+   Nav labels stay — they're short and are the tabs' only accessible name.
+   Kept separate from the 1100 px block so the inspector stays a docked pane in
+   this band rather than becoming a drawer. */
+@media (max-width: 1360px) {
+  .btn__label-md { display: none; }
+  .header-search { width: 180px; }
+  /* Drop the decorative "your family's living legacy" tagline here too — it's
+     the least essential header element (~230 px), and keeping it in this band
+     is what tipped the row into overflow. Already hidden ≤768; this supersedes
+     that rule, so the 768 block no longer needs its own copy. */
+  .app-title__sub { display: none; }
+}
+
+/* Tablet-narrow: full nav + a 180 px search + actions still overflow below
+   ~1024 px (iPad-landscape 1024 is the last width that fits). Retire the header
+   search here — it's the most redundant control at this width (the People view
+   carries its own searchbar, and the ≤768 kebab exposes search too), which
+   keeps the primary nav + Share/Data actions fully on-screen. Supersedes the
+   ≤768 `display:none`, so that block no longer needs its own copy. */
+@media (max-width: 1023px) {
+  .header-search { display: none; }
+}
 @media (max-width: 768px) {
   .app-body { grid-template-columns: minmax(0, 1fr); }
   .app-rail {
-    position: fixed; left: 0; top: var(--header-h); bottom: 0;
+    position: fixed; left: 0; top: var(--header-total); bottom: 0;
     width: 280px;
     transform: translateX(-100%);
     transition: transform var(--t-med);
@@ -205,8 +310,6 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
     box-shadow: var(--shadow-lg);
   }
   .app-rail.is-open { transform: translateX(0); }
-  .header-search { display: none; }
-  .app-title__sub { display: none; }
   .hamburger-btn { display: inline-flex !important; }
   /* On phone the rail handles view switching (Tree/People/Timeline live in
      it); the duplicate top-of-header row would just compete for space. */
@@ -221,16 +324,19 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .app-title__text { font-size: 18px; }
 }
 
-/* Hamburger + kebab only visible on small screens.
+/* The hamburger is dual-purpose: on phone (≤768px) it opens the rail as a
+   slide-in drawer; on desktop it collapses/expands the docked rail column
+   (P3.9). So unlike the kebab it stays visible at all widths — the click
+   handler in app.js branches on the breakpoint. The kebab remains phone-only.
    The element carries class="btn btn--icon hamburger-btn"; .btn defines
-   `display: inline-flex` and loads in components.css *after* base.css,
-   so a plain `.hamburger-btn { display: none }` rule loses the cascade
-   tie-break to .btn. Bumping specificity to button.hamburger-btn (1
-   element + 1 class) wins cleanly without !important. */
-button.hamburger-btn { display: none; }
+   `display: inline-flex` and loads in components.css *after* base.css, so the
+   default here just needs to not hide it. */
 button.kebab-btn { display: none; }
 
-/* Inspector close button — always present, only visible when needed */
+/* Inspector close button — deselects the current person (Inspector.clear()).
+   Hidden when nobody's selected (the empty-state Family Highlights need no
+   close); shown on desktop only while a person is open (.is-open), and always
+   on mobile where the inspector is a slide-in drawer. */
 .inspector-close {
   display: none;
   position: absolute;
@@ -246,12 +352,13 @@ button.kebab-btn { display: none; }
   transition: background var(--t-fast), color var(--t-fast);
 }
 .inspector-close:hover { background: var(--surface-2); color: var(--text); }
+.app-inspector.is-open .inspector-close { display: inline-flex; }
 @media (max-width: 1100px) {
   .inspector-close { display: inline-flex; }
 }
 
 .app-overlay {
-  position: fixed; inset: var(--header-h) 0 0;
+  position: fixed; inset: var(--header-total) 0 0;
   background: rgba(34, 31, 26, .35);
   z-index: calc(var(--z-rail) - 1);
   opacity: 0; pointer-events: none;

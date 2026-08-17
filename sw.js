@@ -13,7 +13,7 @@
  * Cache version is part of the cache name, so bumping CACHE_VERSION on
  * a release activates a clean replacement during `activate`.
  */
-const CACHE_VERSION = "v11";
+const CACHE_VERSION = "v99";
 const SHELL_CACHE = "virasat-shell-" + CACHE_VERSION;
 const RUNTIME_CACHE = "virasat-runtime-" + CACHE_VERSION;
 const CDN_CACHE = "virasat-cdn-" + CACHE_VERSION;
@@ -21,8 +21,12 @@ const CDN_CACHE = "virasat-cdn-" + CACHE_VERSION;
 const SHELL = [
   "./",
   "./index.html",
+  "./privacy.html",
+  "./terms.html",
+  "./help.html",
   "./manifest.webmanifest",
   "./assets/icon.svg",
+  "./assets/apple-touch-icon.png",
   "./assets/tree.svg",
   "./assets/wedding-rings.svg",
   "./styles/tokens.css",
@@ -41,11 +45,21 @@ const SHELL = [
   "./lib/views/people-view.js",
   "./lib/views/tree-view.js",
   "./lib/views/timeline-view.js",
-  "./lib/views/profile-view.js",
+  "./lib/views/insights-view.js",
   "./lib/features/image-export.js",
   "./lib/features/export-import.js",
   "./lib/features/collect-form.js",
   "./lib/features/print-book.js",
+  "./lib/features/anniversaries.js",
+  "./lib/legal-page.js",
+  "./lib/help-page.js",
+  "./lib/auth/config.js",
+  "./lib/auth/auth-store.js",
+  "./lib/auth/cloud-store.js",
+  "./lib/auth/sign-in.js",
+  "./lib/auth/first-run.js",
+  "./lib/auth/tree-list.js",
+  "./lib/auth/sharing.js",
   "./tests/sample-data.js",
   "./lib/app.js"
 ];
@@ -55,7 +69,7 @@ const SHELL = [
 // .woff2 / .ttf files referenced from inside the CSS are picked up by the
 // runtime cache-first handler the first time they're fetched.
 const CDN_SHELL = [
-  "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,30..100&family=Inter:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@400;500;600&display=swap",
+  "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,30..100&family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap",
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 ];
 
@@ -63,18 +77,49 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     Promise.all([
       caches.open(SHELL_CACHE).then((cache) => cache.addAll(SHELL)),
-      // Cross-origin fetches require `mode: "no-cors"` to be cacheable when
-      // CORS headers are missing (Font Awesome's CDN, sometimes Google
-      // Fonts depending on referer). We tolerate individual failures so a
-      // network blip on first install doesn't abort the whole installation.
+      // Fetch these in CORS mode (the default), NOT no-cors. The page loads
+      // Font Awesome's CSS with integrity=... crossorigin, and Subresource
+      // Integrity CANNOT be verified against an opaque (no-cors) response — the
+      // browser rejects the stylesheet and icons silently vanish until a hard
+      // refresh bypasses us. Both CDNs send `access-control-allow-origin: *`,
+      // so a normal CORS fetch yields a verifiable response we can safely
+      // cache. Only store a real 200 (never an opaque type). Individual
+      // failures are tolerated so a first-install network blip doesn't abort.
       caches.open(CDN_CACHE).then((cache) =>
         Promise.all(CDN_SHELL.map((url) =>
-          fetch(url, { mode: "no-cors" })
-            .then((resp) => cache.put(url, resp))
+          fetch(url)
+            .then((resp) => { if (resp && resp.status === 200 && resp.type !== "opaque") return cache.put(url, resp); })
             .catch(() => {})
         ))
       )
-    ]).then(() => self.skipWaiting())
+    ])
+    // Deliberately NOT skipWaiting() here. A fresh deploy parks this worker in
+    // `waiting` while the open tab keeps running the old code; the page shows a
+    // "new version ready" prompt and messages SKIP_WAITING (below) only when the
+    // user accepts — so we never hot-swap code out from under an in-progress
+    // edit (the app has no keystroke-level autosave).
+  );
+});
+
+// The page requests takeover when the user accepts the update prompt. This is
+// the ONLY path to skipWaiting, so activation is always user-consented.
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
+});
+
+// Anniversary reminders (lib/features/anniversaries.js) schedule notifications
+// through this worker. Tapping one focuses an open Virasat tab (or opens a new
+// one) at the tree — nothing here fires notifications, it only handles the tap.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || "./";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) {
+        if ("focus" in w) { w.focus(); if (w.navigate) { try { w.navigate(target); } catch (_) {} } return; }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(target);
+    })
   );
 });
 
@@ -91,7 +136,10 @@ self.addEventListener("activate", (event) => {
 function isCdnHost(url) {
   return url.hostname === "fonts.googleapis.com"
     || url.hostname === "fonts.gstatic.com"
-    || url.hostname === "cdnjs.cloudflare.com";
+    || url.hostname === "cdnjs.cloudflare.com"
+    // Supabase JS SDK (loaded lazily by auth-store.js when cloud is enabled).
+    // Cache-first so an offline relaunch still has the client code.
+    || url.hostname === "cdn.jsdelivr.net";
 }
 
 self.addEventListener("fetch", (event) => {
@@ -99,7 +147,17 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  // Cross-origin fonts/icons → cache-first.
+  // Supabase API (auth, data, storage) must NEVER be cached — responses are
+  // per-user, auth'd, and change constantly. The cross-origin bail below
+  // already lets these through; this explicit guard makes the intent clear
+  // and survives any future reordering of the handlers above it.
+  if (url.hostname.endsWith(".supabase.co")) return;
+
+  // Cross-origin fonts/icons/SDK → cache-first. Never cache an opaque
+  // response: a CSS loaded with SRI (Font Awesome) can't be integrity-checked
+  // against an opaque body, so caching one would break icons on the next
+  // visit. The request keeps its own mode (a `crossorigin` <link> is already
+  // CORS), so a cacheable 200 here is CORS-clean and verifiable.
   if (isCdnHost(url)) {
     event.respondWith(
       caches.open(CDN_CACHE).then(async (cache) => {
@@ -107,7 +165,7 @@ self.addEventListener("fetch", (event) => {
         if (hit) return hit;
         try {
           const resp = await fetch(req);
-          if (resp && resp.status === 200) cache.put(req, resp.clone());
+          if (resp && resp.status === 200 && resp.type !== "opaque") cache.put(req, resp.clone());
           return resp;
         } catch (e) {
           return hit || new Response("", { status: 504 });

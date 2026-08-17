@@ -107,6 +107,8 @@ const order = [
   "lib/core/data-store.js",
   "lib/core/photo-store.js",
   "lib/ui/dom.js",
+  "lib/features/kin-terms.js",
+  "lib/features/self-anchor.js",
   "lib/components/heritage-datepicker.js",
   "lib/components/heritage-select.js",
   "lib/components/crop-editor.js",
@@ -115,11 +117,19 @@ const order = [
   "lib/views/people-view.js",
   "lib/views/tree-view.js",
   "lib/views/timeline-view.js",
-  "lib/views/profile-view.js",
+  "lib/views/insights-view.js",
   "lib/features/image-export.js",
   "lib/features/export-import.js",
   "lib/features/collect-form.js",
   "lib/features/print-book.js",
+  "lib/features/anniversaries.js",
+  "lib/auth/config.js",
+  "lib/auth/auth-store.js",
+  "lib/auth/cloud-store.js",
+  "lib/auth/sign-in.js",
+  "lib/auth/first-run.js",
+  "lib/auth/tree-list.js",
+  "lib/auth/sharing.js",
   "tests/sample-data.js"
 ];
 
@@ -141,6 +151,8 @@ const expectedGlobals = [
   "FamilyStore",
   "PhotoStore",
   "UI",
+  "KinTerms",
+  "SelfAnchor",
   "HeritagePicker",
   "HeritageSelect",
   "CropEditor",
@@ -149,11 +161,19 @@ const expectedGlobals = [
   "PeopleView",
   "TreeView",
   "TimelineView",
-  "ProfileView",
+  "InsightsView",
   "ImageExport",
   "ExportImport",
   "CollectForm",
   "PrintBook",
+  "Anniversaries",
+  "VirasatConfig",
+  "Auth",
+  "CloudStore",
+  "SignIn",
+  "FirstRun",
+  "TreeList",
+  "Sharing",
   "SampleData"
 ];
 for (const g of expectedGlobals) {
@@ -163,7 +183,7 @@ for (const g of expectedGlobals) {
 // --- UI helpers that callers depend on -------------------------------------
 const expectedUiHelpers = [
   "el", "clear", "clamp", "avatar", "toast", "openModal", "confirm",
-  "emptyState", "cancelBtn", "saveBtn", "field", "downloadFile", "pastelFor"
+  "emptyState", "cancelBtn", "saveBtn", "field", "onboardChrome", "downloadFile", "copyText", "legalProse", "pastelFor"
 ];
 for (const k of expectedUiHelpers) {
   if (typeof global.UI?.[k] !== "function") failures.push("missing UI." + k);
