@@ -1784,6 +1784,39 @@
   pointer-events: none;
 }
 
+/* "This is you" — the pinned self node. A gold photo ring plus a small gold
+   person-disc badge (bottom-left, mirroring the add-"+" at bottom-right).
+   Defined after .is-selected / .is-lineage at equal specificity, so the gold
+   ring PERSISTS through selection and lineage focus — "me" is a standing
+   identity marker, not a transient state. A faded node still dims (.is-faded
+   drives opacity, an independent property). Personal lens: stripped from
+   exports. */
+.t-node.is-self .t-node-photo-ring { stroke: var(--gold); stroke-width: 3; }
+.t-node-self-badge-bg {
+  fill: var(--gold);
+  stroke: var(--bone);
+  stroke-width: 2;
+}
+.t-node-self-badge-glyph {
+  fill: var(--ink);
+  pointer-events: none;
+}
+/* Relation-to-me chip — olive pill in the subtitle slot (chacha, bua…). Same
+   olive/bone treatment as the story-count badge so the two read as one family
+   of node chips. pointer-events off: it's a label, taps pass to the node. */
+.t-node-relpill { pointer-events: none; }
+.t-node-relpill-bg {
+  fill: var(--olive);
+  stroke: var(--bone);
+  stroke-width: 1.5;
+}
+.t-node-relpill-text {
+  fill: var(--bone);
+  font-size: 10px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
 /* Add-relative "+" affordance — bottom-right of a node. Rests dim so it
    doesn't clutter a dense tree, and lifts to full olive when its node is
    hovered/focused or the badge itself is focused (keyboard). */

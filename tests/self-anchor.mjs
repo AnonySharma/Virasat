@@ -60,6 +60,15 @@ check("isSelf(me) true", SelfAnchor.isSelf("me") === true);
 check("isSelf(other) false", SelfAnchor.isSelf("other") === false);
 check("onChange heard the set", heard === "me");
 
+// ---- exclusivity: pinning a second person REPLACES the first ----
+// "me" is a single stored id, so re-pinning must move the anchor, never keep
+// two. This is what makes right-clicking someone new silently un-mark the old
+// self (the app relies on it instead of a separate clear step).
+SelfAnchor.set("other");
+check("re-pin moves anchor to other", SelfAnchor.get() === "other");
+check("previous self no longer self", SelfAnchor.isSelf("me") === false);
+check("only the new person is self", SelfAnchor.isSelf("other") === true);
+
 SelfAnchor.clear();
 check("get() null after clear", SelfAnchor.get() === null);
 check("onChange heard the clear (null)", heard === null);
