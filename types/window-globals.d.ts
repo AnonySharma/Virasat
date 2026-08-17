@@ -35,7 +35,9 @@ declare const ImageExport: any;
 declare const ExportImport: any;
 declare const CollectForm: any;
 declare const PrintBook: any;
-declare const HelpGuide: any;
+declare const HelpPage: any;
+declare const KinTerms: any;
+declare const SelfAnchor: any;
 declare const Anniversaries: any;
 declare const LegalPage: any;
 declare const VirasatConfig: any;
@@ -74,7 +76,9 @@ interface Window {
   ExportImport: any;
   CollectForm: any;
   PrintBook: any;
-  HelpGuide: any;
+  HelpPage: any;
+  KinTerms: any;
+  SelfAnchor: any;
   Anniversaries: any;
   LegalPage: any;
   // Notification Triggers API — present only on Chromium PWAs; feature-detected
