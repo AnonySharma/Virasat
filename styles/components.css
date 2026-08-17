@@ -2986,9 +2986,11 @@ body:has(> .legal-page) { height: auto; min-height: 100dvh; overflow-y: auto; ov
   object-fit: cover;
   border-bottom: 1px solid var(--line);
 }
-/* Screenshot placeholder — a soft, clearly-empty box until a real image lands. */
+/* Screenshot placeholder — a soft, clearly-empty box until a real image lands.
+   Kept SHORT (not the 16/10 of a real shot) so the numbered steps below are the
+   focus while screenshots are pending; swap in a real .help-card__shot later. */
 .help-card__ph {
-  aspect-ratio: 16 / 10;
+  height: 96px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3022,6 +3024,49 @@ body:has(> .legal-page) { height: auto; min-height: 100dvh; overflow-y: auto; ov
   line-height: 1.6;
   color: var(--text-2);
   margin: 0;
+}
+.help-card__steps-label {
+  margin: var(--s-3) 0 var(--s-2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-4);
+}
+.help-card__steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: help-card-step;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.help-card__step {
+  counter-increment: help-card-step;
+  position: relative;
+  padding-left: 28px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+.help-card__step::before {
+  content: counter(help-card-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--olive-soft);
+  color: var(--gold-deep);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1;
 }
 
 @media (max-width: 640px) {
