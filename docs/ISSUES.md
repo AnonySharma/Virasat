@@ -143,6 +143,7 @@ Fixed items (✅) tagged with the resolving commit hash. Verified-false / closed
 - ✅ **People-view search re-renders the entire grid per keystroke.** Debounced 120 ms + person cards cached in `Map<id, {sig, node}>`. Cache reuses DOM when name/date/place/photo are stable; pruned once size > 2× population. (`51d2f8c`)
 - ✅ **Header search hidden on phones.** Resolved with a different shape than the originally-suggested modal/drawer: the phone kebab menu carries a *Search people* row (`app.js` `openKebabMenu`) that routes into the People view's search, so discoverability is restored without a second search surface.
 - ✅ **Heritage date-picker popover overflows narrow modals.** The popover is now `width: min(320px, calc(100vw - 32px))` (`components.css`) and flips above the field via a `.hdp--up` class when there's more room above than below (`heritage-datepicker.js`), so it never pushes past a narrow modal's edge.
+- ✅ **Clipboard + blob-download logic reimplemented per-caller.** Three separate clipboard routines (`sharing.js` copy-link, `collect-form.js` copy-JSON, `help-page.js` copy-tile-link) each carried their own `navigator.clipboard` → hidden-`textarea`/`execCommand` fallback, and `image-export.js` had its own blob→anchor→`revokeObjectURL` download. Folded into two shared primitives: a new `UI.copyText(text) → Promise<boolean>` (async clipboard with the legacy fallback, resolves false on total failure) and a generalised `UI.downloadFile` that now accepts a `Blob` as well as a string/JSON payload. Each caller keeps its own success/fail UX (toast copy, `.is-copied` button flash, `helpToast`, `window.prompt` last-resort) but no longer reimplements the mechanics. Net −6 lines; the win is one code path to get right. (this commit)
 
 ### Tier D — Low
 
@@ -153,4 +154,4 @@ Fixed items (✅) tagged with the resolving commit hash. Verified-false / closed
 
 ---
 
-*Last updated 2026-08-13. Tiers reflect impact priority across all four audit rounds + user-reported issues.*
+*Last updated 2026-08-17. Tiers reflect impact priority across all four audit rounds + user-reported issues.*
