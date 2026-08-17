@@ -1719,6 +1719,16 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .viewer-banner__icon { flex-shrink: 0; opacity: .8; }
 .viewer-banner__msg { flex: 1; min-width: 0; }
 
+/* Preview-as-viewer variant. Same strip, gold tint instead of olive so an
+   owner reads it as "I'm previewing" (a temporary, self-invoked lens), not
+   the olive "you have view-only access" state a real guest sees. Gold tokens
+   brighten in dark mode, so gold-deep-on-gold-soft stays legible in both. */
+.viewer-banner--preview {
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+}
+.viewer-banner__exit { flex-shrink: 0; margin-left: auto; }
+
 /* Cross-view lineage-focus cue. Shown at the top of .app-main on People /
    Timeline while a sticky tree focus is active, so the "tracing X's line" lens
    doesn't silently vanish off the tree. Tinted with the same accent the tree
