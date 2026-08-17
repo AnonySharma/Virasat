@@ -77,10 +77,11 @@
   .view-head__rename { width: 28px; height: 28px; opacity: 1; }
   .view-head__actions { width: 100%; }
   .view-head__actions .btn { flex: 1; justify-content: center; }
-  /* People: let the search pill fill the row so the in-bar scope (sliders)
-     toggle sits flush inside its right edge. Without flex:1 the pill stayed at
-     its 240px min-width while the Add button grew, leaving the sliders looking
-     detached in the gap. Add button sizes to its own content beside it. */
+  /* People: give the search pill the row's spare width (it stayed pinned at its
+     240px min-width while the Add button grew), and let Add size to its content.
+     This is layout priority only — what makes the in-bar sliders toggle read as
+     *inside* the pill is the pill's visible border + the toggle's zeroed margin
+     (components.css .searchbar / .searchbar__scope), not this flex split. */
   #view-people .view-head__actions .searchbar { flex: 1 1 auto; min-width: 0; }
   #view-people .view-head__actions .btn { flex: 0 0 auto; }
 }

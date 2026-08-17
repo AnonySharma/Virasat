@@ -725,7 +725,12 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .searchbar {
   display: flex; align-items: center; gap: 8px;
   background: var(--surface-2);
-  border: 1px solid transparent;
+  /* Visible resting border, not transparent. --surface-2 is nearly the page
+     colour in dark mode, so a transparent-bordered pill had no legible edge —
+     the trailing sliders (scope) button then read as a glyph floating in the
+     gutter, not a control docked inside the bar. --line gives the pill a real
+     boundary in every theme; :focus-within still swaps it to --accent. */
+  border: 1px solid var(--line);
   padding: 8px 14px;
   border-radius: var(--r-pill);
   height: 36px;
@@ -761,7 +766,11 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .searchbar__scope {
   position: relative; flex: none;
   display: inline-flex; align-items: center; justify-content: center;
-  width: 24px; height: 24px; padding: 0; margin: 0 -4px 0 0;
+  /* No negative right margin — that pulled the icon into the pill's rounded
+     (999px) end where the fill curves away, selling the "outside the bar" read.
+     Zero margin seats it inside the 14px padding, mirroring the search icon's
+     inset on the left so it looks docked in the bar, not stranded past it. */
+  width: 24px; height: 24px; padding: 0; margin: 0;
   border: 0; border-radius: 50%; cursor: pointer;
   background: transparent; color: var(--text-3);
   font-size: 12px; line-height: 1;
