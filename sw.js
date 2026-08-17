@@ -13,7 +13,7 @@
  * Cache version is part of the cache name, so bumping CACHE_VERSION on
  * a release activates a clean replacement during `activate`.
  */
-const CACHE_VERSION = "v93";
+const CACHE_VERSION = "v95";
 const SHELL_CACHE = "virasat-shell-" + CACHE_VERSION;
 const RUNTIME_CACHE = "virasat-runtime-" + CACHE_VERSION;
 const CDN_CACHE = "virasat-cdn-" + CACHE_VERSION;
@@ -69,7 +69,7 @@ const SHELL = [
 // .woff2 / .ttf files referenced from inside the CSS are picked up by the
 // runtime cache-first handler the first time they're fetched.
 const CDN_SHELL = [
-  "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,30..100&family=Inter:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@400;500;600&display=swap",
+  "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,30..100&family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap",
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 ];
 

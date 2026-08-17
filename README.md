@@ -61,7 +61,7 @@ Top-left rail has **All / Living / Deceased** filters. Toggling one **dims non-m
 
 ### Languages — EN / HI
 
-Top-right toggle switches the entire UI between English (Inter / Fraunces) and Hindi (Noto Serif Devanagari). Font Awesome icons are protected from the language change. Search matches both scripts.
+Top-right toggle switches the entire UI between English (Inter / Fraunces) and Hindi (Noto Sans Devanagari). Font Awesome icons are protected from the language change. Search matches both scripts.
 
 ### Data collection — Google Form
 
@@ -141,7 +141,7 @@ A red rail item under Tools wipes localStorage state, IndexedDB photos, the acti
 ### Heritage design system
 
 - **Palette** — ivory `#F8F6F2`, olive `#5E7D63`, gold `#B89A5A`. Light surface as default. Dark mode is an explicit opt-in via `[data-theme="dark"]`; high contrast layers on via `[data-contrast="high"]`.
-- **Type** — Fraunces (display serif), Inter (UI), Noto Serif Devanagari (Hindi). Font Awesome 6 from CDN.
+- **Type** — Fraunces (display serif), Inter (UI), Noto Sans Devanagari (Hindi). Font Awesome 6 from CDN.
 - **Soft pastel avatars** — name-hashed (peach / sage / lavender / sky / rose / butter / clay / mist) so each person gets the same colour everywhere.
 - 20-24px radii, warm shadows, parchment textures behind the tree canvas.
 

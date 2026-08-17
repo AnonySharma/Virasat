@@ -2881,182 +2881,271 @@ body:has(> .legal-page) { height: auto; min-height: 100dvh; overflow-y: auto; ov
 }
 
 /* ── Help page (help.html) ──────────────────────────────────────────────────
-   Shares the legal-page frame (bar + centred column + footer) but is wider —
-   it carries a 2-up card grid of features, each with a screenshot slot — and
-   leads with a hero + numbered quick-start. Everything reads from the help.*
-   i18n namespace via lib/help-page.js. */
-.help-page { gap: var(--s-5); }
+   Shares the legal-page frame (bar + centred column + footer) but runs wider —
+   it carries a responsive card grid of features, each led by an icon medallion
+   and a numbered "stepper", plus a hero, a quick-start, and a jump-nav to the
+   sections. Everything reads from the help.* i18n namespace via help-page.js.
+   Screenshots are optional: a card shows a real image only when its `img` is
+   set — otherwise the medallion carries it (no empty placeholder boxes). */
+:root { --help-max: 1040px; --help-read: 66ch; }
+.help-page { gap: var(--s-7); }
 .help-page__bar,
 .help-hero,
 .help-start,
 .help-section,
-.help-page__foot { width: 100%; max-width: 72ch; }
+.help-page__foot { width: 100%; max-width: var(--help-max); }
 
-.help-hero { text-align: left; }
+/* Hero — centred, editorial. A hairline gold rule under the eyebrow gives the
+   heading some ceremony without a heavy slab. */
+.help-hero { text-align: center; padding: var(--s-4) 0 var(--s-2); }
 .help-hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--gold-deep);
-  margin: 0 0 var(--s-2);
+  margin: 0 0 var(--s-3);
 }
-.help-hero__title { margin-bottom: var(--s-3); }
+.help-hero__eyebrow::before,
+.help-hero__eyebrow::after {
+  content: "";
+  width: 28px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.help-hero__title { margin-bottom: var(--s-3); font-size: clamp(30px, 5vw, 44px); }
 .help-hero__lede {
-  font-size: 16px;
-  line-height: 1.65;
+  font-size: 17px;
+  line-height: 1.7;
   color: var(--text-2);
-  margin: 0;
-  max-width: 60ch;
+  margin: 0 auto;
+  max-width: var(--help-read);
 }
 
-/* Quick-start: three numbered steps in a soft parchment plate. */
-.help-start {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-xl);
-  padding: var(--s-5) var(--s-6);
-}
+/* Quick-start: three numbered cards in a row (stack on mobile). */
+.help-start { text-align: center; }
+.help-start > .help-section__title { text-align: center; }
+.help-start > .help-section__title::after { margin-inline: auto; }
 .help-steps {
-  margin: var(--s-3) 0 0;
+  margin: var(--s-5) 0 0;
   padding: 0;
   list-style: none;
   counter-reset: help-step;
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-3);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-4);
 }
 .help-steps__item {
   counter-increment: help-step;
   position: relative;
-  padding-left: calc(var(--s-6) + 6px);
+  text-align: left;
+  padding: var(--s-6) var(--s-5) var(--s-5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
   font-size: 14.5px;
   line-height: 1.6;
   color: var(--text-2);
-  min-height: 24px;
-  display: flex;
-  align-items: flex-start;
 }
 .help-steps__item::before {
   content: counter(help-step);
   position: absolute;
-  left: 0;
-  top: 1px;
-  width: 24px;
-  height: 24px;
+  left: var(--s-5);
+  top: calc(-1 * var(--s-4));
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Section heading — display serif with a short gold underline accent. Offset
+   scroll target so the jump-nav anchor doesn't tuck the title under the fold. */
+.help-section { scroll-margin-top: var(--s-6); }
+.help-section__title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 var(--s-5);
+}
+.help-section__title::after {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 3px;
+  margin-top: var(--s-2);
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-soft));
+}
+/* One tile per row. A single column means every tile is exactly as tall as its
+   own content — no ragged bottoms or dead gaps (the old auto-fill grid left big
+   voids beside a short card next to a tall one). Each tile is a horizontal
+   split: a media panel (screenshot when present, else a branded illustration)
+   on the left, the prose + numbered steps on the right. */
+.help-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.help-card {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  scroll-margin-top: var(--s-7);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+}
+.help-card:hover {
+  border-color: var(--gold-soft);
+  box-shadow: var(--shadow-md);
+}
+
+/* Media panel — fills the left column edge to edge. A real screenshot when the
+   tile has one; otherwise a soft parchment illustration carrying the icon, so
+   the slot is always visibly "here's where the picture goes." */
+.help-card__media {
+  position: relative;
+  min-height: 100%;
+  border-right: 1px solid var(--line);
+  background: var(--bg-sunken);
+}
+.help-card__shot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.help-card__illus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 172px;
+  background:
+    radial-gradient(120% 120% at 30% 20%, var(--gold-soft) 0%, transparent 55%),
+    linear-gradient(140deg, var(--surface-2), var(--bg-sunken));
+}
+.help-card__illus-icon {
+  width: 66px;
+  height: 66px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  color: var(--gold-deep);
+  font-size: 27px;
+}
+
+.help-card__body { padding: var(--s-5) var(--s-6); }
+.help-card__title { margin: 0 0 var(--s-3); }
+/* The title is a copy-link button dressed as a heading. */
+.help-card__titlebtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 4px 8px;
+  margin: -4px -8px;
+  border: 0;
+  background: transparent;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: left;
+  transition: color var(--t-fast), background var(--t-fast);
+}
+.help-card__titlebtn:hover { color: var(--accent-deep); background: var(--gold-soft); }
+.help-card__titlebtn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--olive-soft); }
+.help-card__linkicon {
+  font-size: 12px;
+  color: var(--gold-deep);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity var(--t-fast), transform var(--t-fast);
+}
+.help-card__titlebtn:hover .help-card__linkicon,
+.help-card__titlebtn:focus-visible .help-card__linkicon { opacity: 1; transform: none; }
+/* Touch devices can't hover — keep the link glyph gently visible there. */
+@media (hover: none) {
+  .help-card__linkicon { opacity: 0.5; transform: none; }
+}
+/* Icon medallion beside the title — small, so the title still leads. */
+.help-card__icon {
   flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   background: var(--olive-soft);
   color: var(--gold-deep);
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 13px;
-  line-height: 1;
+  font-size: 15px;
 }
-
-.help-section__title {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--text);
-  margin: 0 0 var(--s-4);
-}
-.help-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--s-4);
-}
-.help-card {
-  display: flex;
-  flex-direction: column;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  overflow: hidden;
-}
-.help-card__media { width: 100%; }
-.help-card__shot {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 10;
-  object-fit: cover;
-  border-bottom: 1px solid var(--line);
-}
-/* Screenshot placeholder — a soft, clearly-empty box until a real image lands.
-   Kept SHORT (not the 16/10 of a real shot) so the numbered steps below are the
-   focus while screenshots are pending; swap in a real .help-card__shot later. */
-.help-card__ph {
-  height: 96px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--s-1);
-  background:
-    repeating-linear-gradient(
-      45deg,
-      var(--bg) 0, var(--bg) 10px,
-      var(--surface-2, var(--bg)) 10px, var(--surface-2, var(--bg)) 20px
-    );
-  border-bottom: 1px solid var(--line);
-  color: var(--text-4, var(--text-3));
-}
-.help-card__ph-icon { font-size: 26px; opacity: 0.6; }
-.help-card__ph-cap { font-size: 11.5px; letter-spacing: 0.02em; }
-.help-card__body { padding: var(--s-4); }
-.help-card__title {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  font-family: var(--font-display);
-  font-size: 16.5px;
-  font-weight: 600;
-  color: var(--text);
-  margin: 0 0 var(--s-2);
-}
-.help-card__icon { color: var(--gold-deep); font-size: 15px; width: 20px; text-align: center; }
 .help-card__desc {
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 14.5px;
+  line-height: 1.65;
   color: var(--text-2);
   margin: 0;
+  max-width: 62ch;
 }
 .help-card__steps-label {
-  margin: var(--s-3) 0 var(--s-2);
+  margin: var(--s-4) 0 var(--s-3);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-4);
+  color: var(--text-3);
 }
+/* Numbered stepper — chips joined by a hairline connector between them. Two
+   columns on wide tiles so a long how-to doesn't run down the page. */
 .help-card__steps {
   margin: 0;
   padding: 0;
   list-style: none;
   counter-reset: help-card-step;
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
+  columns: 2;
+  column-gap: var(--s-6);
 }
 .help-card__step {
   counter-increment: help-card-step;
   position: relative;
-  padding-left: 28px;
+  padding-left: 34px;
+  margin-bottom: var(--s-3);
+  break-inside: avoid;
   font-size: 13.5px;
   line-height: 1.55;
   color: var(--text-2);
 }
+.help-card__step:last-child { margin-bottom: 0; }
 .help-card__step::before {
   content: counter(help-card-step);
   position: absolute;
   left: 0;
-  top: 0;
-  width: 20px;
-  height: 20px;
+  top: -1px;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3069,9 +3158,195 @@ body:has(> .legal-page) { height: auto; min-height: 100dvh; overflow-y: auto; ov
   line-height: 1;
 }
 
-@media (max-width: 640px) {
-  .help-grid { grid-template-columns: 1fr; }
-  .help-start { padding: var(--s-4) var(--s-4); }
+/* Deep-link highlight — help.html#slug scrolls here and pulses a gold ring +
+   wash for a few seconds so the eye lands on the right tile. Class is removed
+   by the page script after the animation. */
+.help-card.is-flash {
+  animation: help-flash 2.4s var(--t-med) both;
+}
+@keyframes help-flash {
+  0%, 55% {
+    border-color: var(--gold);
+    box-shadow: var(--shadow-glow-gold);
+    background: var(--gold-soft);
+  }
+  100% {
+    border-color: var(--line);
+    box-shadow: none;
+    background: var(--surface);
+  }
+}
+
+@media (max-width: 720px) {
+  .help-steps { grid-template-columns: 1fr; gap: var(--s-5); }
+  .help-steps__item { padding-top: var(--s-5); }
+  /* Stack the tile: media on top, prose below; steps collapse to one column. */
+  .help-card { grid-template-columns: 1fr; }
+  .help-card__media { border-right: 0; border-bottom: 1px solid var(--line); }
+  .help-card__illus { min-height: 128px; }
+  .help-card__illus-icon { width: 54px; height: 54px; font-size: 22px; }
+  .help-card__steps { columns: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .help-card.is-flash { animation: none; }
+}
+
+/* ── Section FAB — floating "menu" switcher (food-delivery app idiom) ────────
+   A fixed pill in the bottom-right corner that always shows the section you're
+   reading; tap to pop the full list upward and jump anywhere. Sits in the
+   corner (not bottom-centre) so it never overlaps the reading column. Menu is
+   anchored to the toggle and animates in from the bottom-right. */
+.help-fab {
+  position: fixed;
+  /* Bottom-right corner, clear of the centred reading column (which a
+     bottom-centre FAB sat right on top of). */
+  right: calc(var(--s-5) + env(safe-area-inset-right, 0px));
+  bottom: calc(var(--s-5) + env(safe-area-inset-bottom, 0px));
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-2);
+  pointer-events: none; /* let children take events; gap stays click-through */
+}
+.help-fab__toggle {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: 78vw;
+  padding: 12px 18px;
+  border: 1px solid var(--gold);
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  transition: transform var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+}
+.help-fab__toggle:hover { transform: translateY(-1px); background: var(--accent-fill-hover); }
+.help-fab__toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--gold-soft), var(--shadow-lg); }
+.help-fab__glyph { font-size: 15px; }
+.help-fab__current {
+  max-width: 46vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.help-fab__caret { font-size: 11px; transition: transform var(--t-med); opacity: 0.85; }
+.help-fab[data-open="true"] .help-fab__caret { transform: rotate(180deg); }
+
+/* The pop-up list. Column-reverse so the first section sits nearest the button
+   (natural when it grows upward). Hidden = faded + nudged down + non-interactive. */
+.help-fab__menu {
+  pointer-events: auto;
+  order: -1; /* render above the toggle in the column */
+  list-style: none;
+  margin: 0;
+  padding: var(--s-2);
+  width: min(320px, 82vw);
+  max-height: min(60vh, 460px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  transform-origin: bottom right;
+  transition: opacity var(--t-fast), transform var(--t-fast), visibility var(--t-fast);
+}
+.help-fab[data-open="false"] .help-fab__menu {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px) scale(0.98);
+}
+.help-fab[data-open="true"] .help-fab__menu {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+.help-fab__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: 10px var(--s-3);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-2);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.help-fab__item i {
+  width: 20px;
+  text-align: center;
+  color: var(--gold-deep);
+  font-size: 13px;
+}
+.help-fab__item:hover { background: var(--surface-2); color: var(--text); }
+.help-fab__item:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--olive-soft); }
+.help-fab__item.is-active {
+  background: var(--olive-soft);
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+.help-fab__item.is-active i { color: var(--gold-deep); }
+
+/* Give the page bottom room so the FAB never covers the footer's last line. */
+.help-page .help-page__foot { margin-bottom: var(--s-8); }
+
+@media (prefers-reduced-motion: reduce) {
+  .help-fab__menu, .help-fab__caret, .help-fab__toggle { transition: none; }
+}
+
+/* ── Self-contained toast ────────────────────────────────────────────────────
+   help.html doesn't load app.js, so the app's #toast-root/UI.toast is absent.
+   help-page.js mounts its own root + node; these styles dress it. Sits above
+   the FAB (--z-toast) and centres itself at the bottom. */
+.help-toast-root {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--s-6) + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: calc(var(--z-toast) + 20);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  align-items: center;
+  pointer-events: none;
+}
+.help-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  max-width: calc(100vw - 32px);
+  padding: 10px var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--accent-deep);
+  color: var(--on-accent);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity var(--t-med), transform var(--t-med);
+}
+.help-toast.is-in { opacity: 1; transform: none; }
+.help-toast i { color: var(--gold); font-size: 15px; }
+@media (prefers-reduced-motion: reduce) {
+  .help-toast { transition: none; }
 }
 
 /* ── Featured plates ────────────────────────────────────────────────────────

@@ -84,6 +84,7 @@ Fixed items (✅) tagged with the resolving commit hash. Verified-false / closed
 
 ### Tier B — High
 
+- ✅ **Pets could not be linked to an owner from the UI.** `isPet` had a working toggle, but `petOwners[]` — the anchor that seats a pet one generation below its humans — was only ever written by sample/seed data. A user marking a person as a companion animal got a node that floated rootless at the tree's top row, with no affordance to tether it. The person form now reveals an **Owners** picker whenever the pet toggle is on: a dynamic multi-row list (a pet can belong to a couple) mirroring the spouse rows, excluding self and other pets from candidates, with inline "add a new person" and unlink-confirm. Persists `petOwners` on save; the existing delete-strip already clears dangling owner ids. (this commit)
 - ✅ **Service worker `SHELL` array out of sync with `index.html`.** `path-finder.js` and `print-book.js` were loaded by the page but missing from `SHELL`, so offline mode broke for those features. Both added; `CACHE_VERSION` bumped to `v3` to invalidate stale caches. (this commit)
 - ✅ **Timeline bar avatar ignored `photoCropAvatar`.** Real bug — couples-photo crops showed the wrong face on the timeline because the bar avatar didn't honour the user-chosen focal point. `buildBarAvatar` now mirrors `UI.avatar`'s crop application. (this commit)
 - ✅ **Service worker bypass — `sw.js` was being cached.** `sw.js` is now bypass-cached; `CACHE_VERSION = v2`. (`655b493`)

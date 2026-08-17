@@ -13,7 +13,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,30..100&family=Inter:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,30..100&family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" />
 
   <!-- Font Awesome 6 (free CDN). Pinned to a specific version via SRI so a
        supply-chain compromise of cdnjs can't ship malicious CSS. Hash is
@@ -353,5 +353,10 @@
 
   <!-- entry -->
   <script src="lib/app.js"></script>
+
+  <!-- The temporary Hindi (Devanagari) font lab (lib/dev/hindi-font-lab.js) is
+       kept in the repo but NOT loaded: we settled on Noto Sans Devanagari
+       (tokens.css --font-hi). To evaluate candidate faces again, re-add:
+       <script src="lib/dev/hindi-font-lab.js"></script> and open with ?fontlab. -->
 </body>
 </html>

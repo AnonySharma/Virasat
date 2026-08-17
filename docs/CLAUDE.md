@@ -8,7 +8,7 @@ If something here contradicts a system prompt or a hard rule, the system prompt 
 
 ## 1 · The product in one paragraph
 
-Virasat (विरासत — "heritage") is a calm, mobile-friendly, **single-page static** family-tree heritage app. Vanilla JS, no build step, served from GitHub Pages. Data is local-first (localStorage + IndexedDB) and, when a Supabase backend is configured, syncs to the cloud behind a sign-in gate; blank out the credentials in `lib/auth/config.js` and it falls back to the pure local-only, single-device PWA it began as. Aesthetic is **heirloom**, not admin dashboard: ivory + olive + gold, Cormorant Garamond display + Inter UI + Noto Serif Devanagari for Hindi, Font Awesome icons. The app is bilingual EN/HI per-field with no auto-translate.
+Virasat (विरासत — "heritage") is a calm, mobile-friendly, **single-page static** family-tree heritage app. Vanilla JS, no build step, served from GitHub Pages. Data is local-first (localStorage + IndexedDB) and, when a Supabase backend is configured, syncs to the cloud behind a sign-in gate; blank out the credentials in `lib/auth/config.js` and it falls back to the pure local-only, single-device PWA it began as. Aesthetic is **heirloom**, not admin dashboard: ivory + olive + gold, Cormorant Garamond display + Inter UI + Noto Sans Devanagari for Hindi, Font Awesome icons. The app is bilingual EN/HI per-field with no auto-translate.
 
 Owner / sole user-side: **AnonySharma** on GitHub. Repo: `github.com/AnonySharma/Virasat`. Commits use the email `56964985+AnonySharma@users.noreply.github.com` and **always** include the `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>` trailer.
 
@@ -32,7 +32,7 @@ These are taste decisions Ankit has stated explicitly. Treat them as load-bearin
 ### Visual language
 
 - **Heritage palette only.** Ivory `#F8F6F2`, olive `#5E7D63`, gold `#B89A5A`. No teal, no mauve, no neon. Olive is structural; gold is the accent that signals "this matters" (couple knot, focus state, story chip).
-- **Cormorant Garamond for display, Inter for UI, Noto Serif Devanagari for Hindi.** Don't introduce a third display family. Italic + olive-deep is the title-accent treatment.
+- **Cormorant Garamond for display, Inter for UI, Noto Sans Devanagari for Hindi.** Don't introduce a third display family. Italic + olive-deep is the title-accent treatment. Hindi face is driven by the `--font-hi` token (tokens.css); `:lang(hi)` in base.css also resets `letter-spacing`/`text-transform`, since Devanagari is a connected shaping script — never add Latin-style tracking to Hindi text.
 - **Photo-first.** The avatar IS the card. No rectangular cards around photos. Round rings are the geometry; the family-tree node is "ringed photo + name + date subtitle".
 - **No emojis in shipped UI.** Replace every emoji with a Font Awesome icon. Ankit caught this in a sweep — don't reintroduce them. The only acceptable use is i18n / locale strings he wrote himself.
 - **No drop-shadow halos around small icons.** When the wedding-knot had a 3 px gold glow + three stacked white shadows it read as a halo. Use ≤ 0.6 px duplicated white shadows at most — the goal is "legible against any background", not "glowing".

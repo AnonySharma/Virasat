@@ -59,7 +59,15 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
    Font Awesome's i.fa-*. */
 :lang(hi):not(i):not(.fa):not([class*="fa-"]),
 [lang="hi"]:not(i):not(.fa):not([class*="fa-"]) {
-  font-family: "Noto Serif Devanagari", var(--font-display);
+  font-family: var(--font-hi);
+  /* Devanagari is a connected, shaping script: matras and conjuncts must sit
+     tight against their base. The Latin-styling tracking we sprinkle on
+     eyebrows/labels/headings (letter-spacing, plus ALL-CAPS which Devanagari
+     has no concept of) shatters that shaping — see "पा रि वा रि क" splitting
+     apart. Reset both for Hindi everywhere, in one place, so every uppercased
+     tracked label renders correctly without touching 80+ Latin call sites. */
+  letter-spacing: normal;
+  text-transform: none;
 }
 /* Belt and braces: ensure FA elements always pick their own family */
 .fa, .fas, .far, .fab, .fa-solid, .fa-regular, .fa-brands,

@@ -118,6 +118,12 @@
   --font-display: "Cormorant Garamond", "Fraunces", "Iowan Old Style", Georgia, serif;
   --font-sans:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono:    "JetBrains Mono", ui-monospace, Menlo, monospace;
+  /* Devanagari (Hindi) face — a variable so it can be swapped at runtime (the
+     dev-only Hindi font lab in lib/dev/, opened with ?fontlab, overrides this
+     on :root to compare candidates). Noto Sans Devanagari: a clean, highly
+     legible sans chosen for correct conjunct shaping and matra placement — and
+     because it pairs with the sans UI rather than fighting the display serif. */
+  --font-hi:      "Noto Sans Devanagari", var(--font-sans);
 
   /* — Spacing — */
   --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
