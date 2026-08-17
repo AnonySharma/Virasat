@@ -168,6 +168,18 @@
       <span class="sync-pip__label" id="sync-pip-phone-label"></span>
     </span>
 
+    <!-- Phone-only Share — the desktop header Share button lives in
+         .app-header__actions, which is display:none ≤768px, so on phone Share
+         had no home but the kebab. Inviting family is the highest-value action
+         in the multi-user app, so it earns a top-level phone slot beside the
+         sync pip / kebab. Owner-of-a-live-cloud-tree only; app.js reveals BOTH
+         share buttons together via refreshShareButton(). Icon-only to fit the
+         phone header; aria-label names it. -->
+    <button class="btn btn--primary btn--icon share-btn--phone" id="share-btn-phone" type="button"
+            aria-label="Share" data-i18n-aria-label="share.title" title="Share" data-i18n-title="share.title" hidden>
+      <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+    </button>
+
     <!-- Phone-only kebab — opens an overflow menu mirroring the desktop
          action row. Hidden on >= 769px; the desktop row handles those. -->
     <button class="btn btn--ghost btn--icon kebab-btn" id="kebab-btn" type="button"

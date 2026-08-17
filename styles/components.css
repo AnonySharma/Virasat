@@ -1886,6 +1886,15 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 @media (max-width: 768px) {
   .sync-pip--phone:not([hidden]) { display: inline-flex; }
 }
+
+/* Phone-only Share button — twin of the desktop header Share, shown ≤768px
+   beside the kebab (the desktop primary lives in .app-header__actions, which is
+   display:none there). Hidden on desktop so the two never both show; app.js
+   gates the [hidden] attribute on cloud-tree ownership. */
+.share-btn--phone { display: none; }
+@media (max-width: 768px) {
+  .share-btn--phone:not([hidden]) { display: inline-flex; }
+}
 @media (prefers-reduced-motion: reduce) {
   .sync-pip[data-state="pending"] .sync-pip__dot { animation: none; }
 }
