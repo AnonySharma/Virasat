@@ -77,6 +77,12 @@
   .view-head__rename { width: 28px; height: 28px; opacity: 1; }
   .view-head__actions { width: 100%; }
   .view-head__actions .btn { flex: 1; justify-content: center; }
+  /* People: let the search pill fill the row so the in-bar scope (sliders)
+     toggle sits flush inside its right edge. Without flex:1 the pill stayed at
+     its 240px min-width while the Add button grew, leaving the sliders looking
+     detached in the gap. Add button sizes to its own content beside it. */
+  #view-people .view-head__actions .searchbar { flex: 1 1 auto; min-width: 0; }
+  #view-people .view-head__actions .btn { flex: 0 0 auto; }
 }
 
 /* ========== Tree view ========== */
@@ -627,7 +633,12 @@
 .timeline-row.is-dim:hover { opacity: .85; }
 .person-card .btn--icon {
   width: 30px; height: 30px;
-  background: rgba(255,255,255,.85);
+  /* Theme tokens, not a hardcoded rgba(255,255,255,.85): the literal white had
+     no dark variant, so in dark mode it glared as a pale disc and its
+     var(--text-2) glyph sat near-invisible (~1.3:1) on it. --bg-elev + --text-2
+     flip per theme and keep the glyph legible on both. */
+  background: var(--bg-elev);
+  color: var(--text-2);
   border: 1px solid var(--line);
   font-size: 12px;
 }
@@ -1410,8 +1421,11 @@
   .tree-controls .btn { width: 32px; height: 32px; }
   .tree-controls__pct { padding: 0 6px; font-size: 11px; min-width: 36px; }
   /* Undo/redo live in the kebab on phone (reachable from every view); drop the
-     canvas copies so the cluster isn't a duplicated, wrapping row. */
-  .tree-controls__hist { display: none; }
+     canvas copies so the cluster isn't a duplicated, wrapping row. Scoped under
+     .tree-controls so this beats the 0-2-0 `.tree-controls .btn{display:...}`
+     rule above — an unscoped `.tree-controls__hist` (0-1-0) loses to it and the
+     buttons never actually hide, which is what forced the cluster onto two rows. */
+  .tree-controls .tree-controls__hist { display: none; }
 }
 
 /* === iOS safe-area for floating elements that sit at the bottom ===
@@ -2262,6 +2276,30 @@
    A full-width band in .insight-bands; the container's flex gap sets the spacing,
    so drop the stat-panel's bottom margin that would otherwise double it up. */
 .insight-panel--wide { margin: 0; }
+
+/* Foldable calendar panel — the fold header IS the panel's title row (matching
+   the inspector's Family-Highlights fold), so it reuses the display-serif
+   .insight-panel__title look rather than the rail's uppercase micro-label. The
+   grid drops in below when open; the panel's own padding frames it. */
+.insight-calendar__fold {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 0; margin: 0;
+  background: transparent; border: 0;
+  font-family: var(--font-display);
+  font-size: 18px; font-weight: 500;
+  color: var(--text);
+  cursor: pointer; text-align: left;
+}
+.insight-calendar__fold.is-open { margin-bottom: 16px; }
+.insight-calendar__fold:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: var(--r-sm); }
+.insight-calendar__fold-icon { color: var(--gold); font-size: 15px; }
+.insight-calendar__fold-label { flex: 1; }
+.insight-calendar__fold-caret {
+  font-size: 12px; color: var(--text-3);
+  transition: transform var(--t-fast);
+}
+.insight-calendar__fold.is-open .insight-calendar__fold-caret { transform: rotate(180deg); }
+
 .coming-up__list { display: flex; flex-direction: column; }
 /* Same row list, reused inside a modal (the full year-ahead, or one calendar
    day). The modal body already scrolls and pads, so the list just fills it. */
