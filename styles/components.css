@@ -3891,6 +3891,43 @@ body.is-viewer .js-edit-only { display: none !important; }
 .share-link__input { flex: 1; font-size: 12px; color: var(--text-2); }
 .share-link__copy { flex-shrink: 0; }
 .share-link__copy.is-copied { background: var(--olive); border-color: var(--olive); color: var(--bone); }
+/* View-only link — the no-login "anyone with the link" sharing mode. Its own
+   bordered card so it reads as distinct from (and more exposed than) per-email
+   invites. */
+.share-publink {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+.share-publink__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.share-publink__title-wrap { display: flex; align-items: center; gap: 8px; }
+.share-publink__icon { color: var(--olive-deep); }
+.share-publink__title { font-weight: 600; font-size: 14px; color: var(--text); }
+.share-publink__switch { width: 18px; height: 18px; flex-shrink: 0; cursor: pointer; accent-color: var(--olive); }
+.share-publink__desc { margin: 0; color: var(--text-2); font-size: 12.5px; line-height: 1.5; }
+/* The exposure warning — gold, so it reads as "pay attention" without the
+   alarm of a destructive red. */
+.share-publink__warn {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.share-publink__rotate { align-self: flex-start; }
+/* Full-viewport "this tree isn't available" screen for a dead/rotated link. */
+.public-view-error__inner { max-width: 380px; text-align: center; gap: 12px; }
+.public-view-error__icon { font-size: 32px; color: var(--olive-deep); }
+.public-view-error__title { font-family: var(--font-display); font-size: 22px; color: var(--text); }
+.public-view-error__msg { color: var(--text-2); font-size: 14px; line-height: 1.6; }
+.public-view-error__cta { margin-top: 8px; }
 .share__members-title {
   margin: 4px 0 0;
   font-size: 12px;

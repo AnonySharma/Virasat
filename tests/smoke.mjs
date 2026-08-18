@@ -130,6 +130,7 @@ const order = [
   "lib/auth/first-run.js",
   "lib/auth/tree-list.js",
   "lib/auth/sharing.js",
+  "lib/auth/public-view.js",
   "tests/sample-data.js"
 ];
 
@@ -174,6 +175,7 @@ const expectedGlobals = [
   "FirstRun",
   "TreeList",
   "Sharing",
+  "PublicView",
   "SampleData"
 ];
 for (const g of expectedGlobals) {
