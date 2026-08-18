@@ -104,7 +104,14 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   letter-spacing: -0.015em;
   color: var(--text);
   white-space: nowrap;
+  /* Let the title flex-item shrink below its content width. The brand word +
+     icon hold their min-content floor (see __text below); the subtitle — the
+     only child allowed under min-content — is what actually gives, so a long
+     family name in #app-subtitle truncates here instead of shoving the action
+     cluster (and the account avatar) off the right edge. */
+  min-width: 0;
 }
+.app-title__text { flex-shrink: 0; }
 .app-title__icon {
   width: 36px; height: 36px; border-radius: 50%;
   background: var(--olive-soft);
@@ -135,6 +142,14 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   margin-left: 8px;
   border-left: 1px solid var(--line);
   padding-left: 12px;
+  /* The subtitle is the flexible slack in the title. When it carries a long
+     family name in a cloud session, it truncates with an ellipsis rather than
+     forcing the row wider than the header. min-width:0 lets it drop below its
+     intrinsic width; the ellipsis needs the block-ish overflow trio. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Top nav as text links (Tree / People / Timeline) */
@@ -161,7 +176,7 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .rail-block--views { display: none; }
 }
 
-.app-header__actions { margin-left: auto; display: inline-flex; gap: 8px; align-items: center; }
+.app-header__actions { margin-left: auto; display: inline-flex; gap: 8px; align-items: center; flex-shrink: 0; }
 
 /* Header search — quiet, almost a pill */
 .header-search {
@@ -173,12 +188,17 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   width: 280px; height: 36px;
   color: var(--text-2);
   transition: background var(--t-fast), border-color var(--t-fast);
+  /* Secondary release valve for the header row: above the 1360px breakpoint
+     (where width hard-swaps to 180px) the search may still compress under
+     pressure so the action cluster + account avatar never spill off the right.
+     min-width:0 defeats the flex-item and inner-input intrinsic floors. */
+  min-width: 0;
 }
 .header-search:hover { background: var(--surface-3); }
 .header-search:focus-within { background: var(--bg-elev); border-color: var(--olive); box-shadow: 0 0 0 2px var(--olive), 0 0 0 5px var(--olive-soft); }
 .header-search input {
   background: transparent; border: 0; outline: 0;
-  flex: 1; color: inherit; font-size: 13px;
+  flex: 1; min-width: 0; color: inherit; font-size: 13px;
 }
 .header-search input::placeholder { color: var(--text-3); }
 .header-search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
