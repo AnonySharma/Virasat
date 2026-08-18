@@ -72,6 +72,7 @@ Fixed items (✅) tagged with the resolving commit hash. Verified-false / closed
 
 ### Tier A — Critical / data-loss / iOS-broken
 
+- ✅ **`claim_invites()` crashed on every call — email invites could never be claimed.** The RPC's `INSERT ... SELECT` read `t.tree_id / t.role / t.invited_by` from a CTE that was named `taken`, so Postgres raised `missing FROM-clause entry for table "t"` (SQLSTATE `42P01`, which PostgREST surfaces as a confusing HTTP 404). This is the function that promotes a pending email invite into a live `tree_members` row when the invited person first signs in, so sharing-by-email was silently broken end-to-end since the schema landed (`dbb1a56`). Fixed by aliasing the CTE `from taken t`. Server-side only — re-run `supabase/schema.sql`. (this commit)
 - ✅ **`genId` collisions.** Math.random + Date.now produced same-millisecond dupes. Now uses `crypto.randomUUID` with a per-process counter fallback. (`655b493`)
 - ✅ **PhotoStore IDB races + transaction promise resolution race.** Id is picked inside the transaction (with retry-on-collision); the rewritten `txValue` resolves the captured value on `t.oncomplete`, not `null`. (`655b493`)
 - ✅ **`importPreservingIds` opening a second IDB connection.** Reuses the wrapped connection via `db.putWithKey`. (`655b493`)

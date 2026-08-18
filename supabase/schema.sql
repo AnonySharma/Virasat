@@ -121,7 +121,7 @@ begin
     where i.email=auth.email() and i.claimed_at is null      -- citext => case-insensitive
     returning i.tree_id, i.role, i.invited_by)
   insert into public.tree_members(tree_id,user_id,role,invited_by)
-  select t.tree_id, auth.uid(), t.role, t.invited_by from taken
+  select t.tree_id, auth.uid(), t.role, t.invited_by from taken t
   on conflict (tree_id,user_id) do nothing;
   get diagnostics claimed = row_count; return claimed; end; $$;
 
