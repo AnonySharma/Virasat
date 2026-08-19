@@ -251,6 +251,70 @@ check("Ankit→Aditya = chacheraBhai", term("Ankit Sharma", "Aditya Sharma") ===
   check("unknown-link cousin → plain cousin (not guessed)", t && t.key === "cousin");
 })();
 
+// ==== grandparent generation, up & out: great-grandparents, grandfather's
+//      brothers (bade/chhote dada + their wives), and parent's-sibling-in-laws
+//      (fufa / taai / chachi / mami / mausa). ==================================
+(function grandExtended() {
+  const P = (pid, o) => Object.assign({ id: pid, name: pid, parents: [], spouses: [] }, o);
+  const sp = (a, b) => { a.spouses = [b.id]; b.spouses = [a.id]; };
+  // Paternal: great-grandparents → grandfather (DADA) + his elder/younger brothers.
+  const PGGF = P("G_PGGF", { gender: "m", birthDate: "1905" }); // par-dada
+  const PGGM = P("G_PGGM", { gender: "f", birthDate: "1908" }); // par-dadi
+  const DADA    = P("G_DADA",   { gender: "m", birthDate: "1935", parents: ["G_PGGF", "G_PGGM"] });
+  const DADA_EB = P("G_DADAEB", { gender: "m", birthDate: "1930", parents: ["G_PGGF", "G_PGGM"] }); // bade dada
+  const DADA_YB = P("G_DADAYB", { gender: "m", birthDate: "1940", parents: ["G_PGGF", "G_PGGM"] }); // chhote dada
+  const DADA_EBW = P("G_DADAEBW", { gender: "f", birthDate: "1933" }); // badi dadi
+  const DADA_YBW = P("G_DADAYBW", { gender: "f", birthDate: "1942" }); // chhoti dadi
+  const DADI = P("G_DADI", { gender: "f", birthDate: "1938" });
+  // Father + siblings (bua, elder brother TAU, younger CHACHA) and their spouses.
+  const FATHER  = P("G_FATHER", { gender: "m", birthDate: "1962", parents: ["G_DADA", "G_DADI"] });
+  const TAU     = P("G_TAU",    { gender: "m", birthDate: "1958", parents: ["G_DADA", "G_DADI"] });
+  const TAU_W   = P("G_TAUW",   { gender: "f", birthDate: "1960" }); // taai
+  const CHACHA  = P("G_CHACHA", { gender: "m", birthDate: "1966", parents: ["G_DADA", "G_DADI"] });
+  const CHACHA_W = P("G_CHACHAW", { gender: "f", birthDate: "1968" }); // chachi
+  const BUA     = P("G_BUA",    { gender: "f", birthDate: "1964", parents: ["G_DADA", "G_DADI"] });
+  const FUFA    = P("G_FUFA",   { gender: "m", birthDate: "1962" }); // bua's husband → fufa
+  // Maternal: mother + her brother (mama) + sister (mausi) and their spouses.
+  const NANA = P("G_NANA", { gender: "m", birthDate: "1936" });
+  const NANI = P("G_NANI", { gender: "f", birthDate: "1939" });
+  const MOTHER = P("G_MOTHER", { gender: "f", birthDate: "1965", parents: ["G_NANA", "G_NANI"] });
+  const MAMA   = P("G_MAMA",   { gender: "m", birthDate: "1963", parents: ["G_NANA", "G_NANI"] });
+  const MAMA_W = P("G_MAMAW",  { gender: "f", birthDate: "1965" }); // mami
+  const MAUSI  = P("G_MAUSI",  { gender: "f", birthDate: "1968", parents: ["G_NANA", "G_NANI"] });
+  const MAUSA  = P("G_MAUSA",  { gender: "m", birthDate: "1966" }); // mausi's husband → mausa
+  const SELF   = P("G_SELF",   { gender: "m", birthDate: "1990", parents: ["G_FATHER", "G_MOTHER"] });
+  sp(PGGF, PGGM); sp(DADA, DADI); sp(DADA_EB, DADA_EBW); sp(DADA_YB, DADA_YBW);
+  sp(NANA, NANI); sp(FATHER, MOTHER); sp(TAU, TAU_W); sp(CHACHA, CHACHA_W); sp(BUA, FUFA);
+  sp(MAMA, MAMA_W); sp(MAUSI, MAUSA);
+  FamilyStore.replaceAll({ people: [
+    PGGF, PGGM, DADA, DADA_EB, DADA_YB, DADA_EBW, DADA_YBW, DADI,
+    FATHER, TAU, TAU_W, CHACHA, CHACHA_W, BUA, FUFA,
+    NANA, NANI, MOTHER, MAMA, MAMA_W, MAUSI, MAUSA, SELF
+  ] });
+  const kk = (a, b) => { const t = KinTerms.forPath(FamilyStore.findRelationPath(a, b)); return t ? t.key : null; };
+  // great-grandparents (UUU)
+  check("SELF→par-dada",  kk("G_SELF", "G_PGGF") === "parDada");
+  check("SELF→par-dadi",  kk("G_SELF", "G_PGGM") === "parDadi");
+  // grandfather's brothers (UUUD) — elder=bade, younger=chhote dada
+  check("SELF→bade dada",   kk("G_SELF", "G_DADAEB") === "badeDada");
+  check("SELF→chhote dada", kk("G_SELF", "G_DADAYB") === "chhoteDada");
+  // their wives (UUUDS) — badi/chhoti dadi
+  check("SELF→badi dadi",   kk("G_SELF", "G_DADAEBW") === "badiDadi");
+  check("SELF→chhoti dadi", kk("G_SELF", "G_DADAYBW") === "chhotiDadi");
+  // parent's sibling's spouse (UUDS)
+  check("SELF→fufa (bua's husband)",              kk("G_SELF", "G_FUFA") === "fufa");
+  check("SELF→taai (father's elder bro's wife)",  kk("G_SELF", "G_TAUW") === "taai");
+  check("SELF→chachi (father's younger bro's wife)", kk("G_SELF", "G_CHACHAW") === "chachi");
+  check("SELF→mami (mama's wife)",                kk("G_SELF", "G_MAMAW") === "mami");
+  check("SELF→mausa (mausi's husband)",           kk("G_SELF", "G_MAUSA") === "mausa");
+  // never-guess: blank bade dada's year → can't tell bade/chhote → gloss
+  const noYear = FamilyStore.getPeople().map((p) => Object.assign({}, p));
+  noYear.find((p) => p.id === "G_DADAEB").birthDate = null;
+  FamilyStore.replaceAll({ people: noYear });
+  check("no-year grand-uncle → paternalGrandUncle (not bade/chhote)",
+    kk("G_SELF", "G_DADAEB") === "paternalGrandUncle");
+})();
+
 // --- report ---
 if (failures.length) {
   console.error("kin-terms FAILED:");
