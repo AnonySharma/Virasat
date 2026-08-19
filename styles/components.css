@@ -1188,14 +1188,25 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .hdp.is-open .hdp__trigger { color: var(--olive-deep); background: var(--olive-soft); }
 
 .hdp__popover {
+  /* Base (closed / pre-portal) position. While OPEN the picker portals this to
+     <body> and sets position:fixed + top/left inline (heritage-datepicker.js
+     position()), so it escapes the modal body's overflow clip that used to
+     shear the calendar's top off. z-index sits just above the modal so it
+     stacks over the sheet it's launched from, but below toasts. */
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
-  z-index: var(--z-modal);
+  z-index: calc(var(--z-modal) + 5);
   /* Was a fixed 320 px, which overflowed the bottom-sheet person form on
      narrow phones. Clamp to the viewport (minus a 32 px gutter) so it always
      fits; 320 px stays the ceiling on desktop. */
   width: min(320px, calc(100vw - 32px));
+  /* Last-resort safety net: on a very short viewport (landscape phone) even a
+     viewport-clamped calendar can be taller than the screen. Cap it and let it
+     scroll internally so no row is ever unreachable. position() reads this
+     clamped height, so the pin math stays correct. */
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
   background: var(--bg-elev);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
@@ -1206,10 +1217,6 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   gap: 12px;
   animation: fade-in var(--t-fast);
 }
-/* Flip upward when there isn't room below (JS adds .hdp--up after measuring on
-   open) — the calendar would otherwise be clipped at the bottom of a phone
-   bottom-sheet. */
-.hdp--up .hdp__popover { top: auto; bottom: calc(100% + 8px); }
 .hdp__head {
   display: flex; align-items: center; justify-content: space-between;
   gap: 8px;
@@ -1718,6 +1725,16 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 }
 .viewer-banner__icon { flex-shrink: 0; opacity: .8; }
 .viewer-banner__msg { flex: 1; min-width: 0; }
+
+/* Preview-as-viewer variant. Same strip, gold tint instead of olive so an
+   owner reads it as "I'm previewing" (a temporary, self-invoked lens), not
+   the olive "you have view-only access" state a real guest sees. Gold tokens
+   brighten in dark mode, so gold-deep-on-gold-soft stays legible in both. */
+.viewer-banner--preview {
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+}
+.viewer-banner__exit { flex-shrink: 0; margin-left: auto; }
 
 /* Cross-view lineage-focus cue. Shown at the top of .app-main on People /
    Timeline while a sticky tree focus is active, so the "tracing X's line" lens
@@ -3881,6 +3898,43 @@ body.is-viewer .js-edit-only { display: none !important; }
 .share-link__input { flex: 1; font-size: 12px; color: var(--text-2); }
 .share-link__copy { flex-shrink: 0; }
 .share-link__copy.is-copied { background: var(--olive); border-color: var(--olive); color: var(--bone); }
+/* View-only link — the no-login "anyone with the link" sharing mode. Its own
+   bordered card so it reads as distinct from (and more exposed than) per-email
+   invites. */
+.share-publink {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+.share-publink__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.share-publink__title-wrap { display: flex; align-items: center; gap: 8px; }
+.share-publink__icon { color: var(--olive-deep); }
+.share-publink__title { font-weight: 600; font-size: 14px; color: var(--text); }
+.share-publink__switch { width: 18px; height: 18px; flex-shrink: 0; cursor: pointer; accent-color: var(--olive); }
+.share-publink__desc { margin: 0; color: var(--text-2); font-size: 12.5px; line-height: 1.5; }
+/* The exposure warning — gold, so it reads as "pay attention" without the
+   alarm of a destructive red. */
+.share-publink__warn {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.share-publink__rotate { align-self: flex-start; }
+/* Full-viewport "this tree isn't available" screen for a dead/rotated link. */
+.public-view-error__inner { max-width: 380px; text-align: center; gap: 12px; }
+.public-view-error__icon { font-size: 32px; color: var(--olive-deep); }
+.public-view-error__title { font-family: var(--font-display); font-size: 22px; color: var(--text); }
+.public-view-error__msg { color: var(--text-2); font-size: 14px; line-height: 1.6; }
+.public-view-error__cta { margin-top: 8px; }
 .share__members-title {
   margin: 4px 0 0;
   font-size: 12px;

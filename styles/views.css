@@ -402,6 +402,17 @@
   stroke-dasharray: 4 4;
   opacity: 0.7;
 }
+/* Co-parent bar — joins two people who share a child but aren't married.
+   Deliberately NEUTRAL (structural ink, never gold) so it's never mistaken
+   for the marriage filament + knot; a touch heavier than the skeleton lines
+   so it still reads as a real "these two are a parental unit" join. The
+   .is-faded / .is-lineage rules above (two-class) still win during focus. */
+.t-edge--coparent {
+  stroke: var(--line-2);
+  stroke-width: 1.75;
+  stroke-dasharray: 0;
+  opacity: 0.9;
+}
 
 /* Unknown-parent placeholder ("phantom") — a dashed, muted card sitting in
    the parent row above a child whose father/mother is recorded as actively

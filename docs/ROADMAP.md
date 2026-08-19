@@ -52,6 +52,12 @@ These move the heritage product forward the most for the effort.
 ## ~~P3.5 — Multi-tenant cloud sync (auth + sharing)~~ ✅ SHIPPED
 
 > **Shipped.** This tier is built and live: `lib/auth/` holds the seven modules (`config.js`, `auth-store.js`, `cloud-store.js`, `sign-in.js`, `first-run.js`, `tree-list.js`, `sharing.js`), `config.js` carries live Supabase credentials, and the cloud seam (`activeTreeId`, version-guarded push, viewer read-only guard) runs through `data-store.js` + `app.js`. Blank the credentials in `config.js` to fall back to local-only. Setup and design notes live in [`docs/CLOUD-SYNC-PLAN.md`](CLOUD-SYNC-PLAN.md) and [`docs/SUPABASE-SETUP.md`](SUPABASE-SETUP.md). The original planning notes are kept below for provenance.
+>
+> **Shipped since the banner: unlisted token-based read path (no login).** An owner can now flip a tree to *view-only link* in the Share dialog: `trees.visibility` ('private'|'unlisted') + a random `share_token` gate an anon-callable `get_shared_tree(tree, token)` RPC. Opening `?v=<treeId>&k=<token>` runs `lib/auth/public-view.js` — a pre-sign-in boot path that fetches the tree read-only via the public anon key, hydrates FamilyStore, and trips the same `setReadOnly(true)` + `body.is-viewer` levers a viewer-role member does. **Scoped to *unlisted* only — deliberately NO fully-public/indexable mode** (keeps the "no public pages" promise; `noindex` stays). Photos load via an additive `photos_read_shared` storage policy gated on `visibility='unlisted'`. **Server-side redaction is now WIRED for this path** (was deferred): `get_shared_tree` returns the blob through `redact_person`, so a link viewer never receives private phone/email/address — better than a signed-in viewer-member, whose initial load still gets the raw blob. Owner controls: toggle on/off + copy + reset-token (rotate) in `sharing.js`, with a blunt exposure warning.
+>
+> **Still NOT built (deferred):** a fully **public/indexable** visibility level (intentionally omitted — see above); routing signed-in **viewer-members'** initial load + realtime through `get_tree` so their raw blob is redacted too (the RPC exists, unwired for members; the link path above already uses its `redact_person` helper).
+>
+> **Shipped since the banner: preview-as-viewer.** An owner/editor can now see their own tree exactly as a view-only guest does — `CloudStore.setPreview()` folds a `previewing` flag into `applyRole()` (same read-only guard + `body.is-viewer` a real viewer trips), a gold "Preview — this is how a guest sees your tree · Exit preview" banner replaces the olive viewer note, and a header `#preview-btn` (desktop) / kebab row (phone) toggle it. Pure view state — never persists or pushes. This is the owner-facing *viewer read path*; it is NOT the public-link path above (still deferred).
 
 A separate tier because it's the single biggest product shift: turning Virasat from a single-device personal artifact into a family-shared archive. Big enough that I had four parallel review agents read the codebase + scrape vendor pricing pages before writing this. Verdict at the time: **medium-hard, ~2.5 weeks of focused work**, on Supabase + GitHub Pages, with the architecture mostly already set up well for it.
 
@@ -72,7 +78,7 @@ A separate tier because it's the single biggest product shift: turning Virasat f
 | Photo storage adapter (IDB cache + Supabase Storage) | 2 |
 | Tree-list UI + tree switcher | 1 |
 | Share dialog + member roles UI | 2 |
-| Public / unlisted token-based read path | 1 |
+| ~~Public / unlisted token-based read path~~ ✅ (unlisted only; public mode deliberately omitted) | 1 |
 | Migration UI for existing local data | 1 |
 | Conflict handling (optimistic locking + refresh prompt) | 1 |
 | Offline queue + reconnect replay | 2 |
@@ -186,7 +192,7 @@ The IDB photo store also needs tree-scoping — currently one bucket for all pho
 
 Caught by the auth-UX audit, worth fixing alongside the cloud work:
 
-- **Sample-data + public link collision.** If a viewer of a public tree clicks "Try sample family", current code calls `replaceAll(sampleData())` and overwrites the tree (sample uses fixed ids that collide with anything that ever held them). Fix: gate the sample-data CTA on `role === 'owner'`.
+- **Sample-data + public link collision.** ✅ Handled for the unlisted-link path: the sample/reset/add rail tools carry `.js-edit-only`, which `body.is-viewer` (set by PublicView) hides, and the auto-offer is suppressed because PublicView calls `setActiveTree(treeId)` so `getActiveTreeId()` is non-null. (A signed-in viewer-member was already covered the same way.)
 - **Lineage-focus state in shared URL.** If the owner shares the tree mid-focus, the viewer sees one branch and thinks the tree is broken. Add `?focus=personId` to share URLs and a "Show full tree" banner.
 - **Role-based UI hiding.** Hide Add / Edit / Delete buttons for `viewer` role. Server still enforces — never trust the client.
 - **Tree-switching + inspector selection.** `Inspector.clear()` on tree switch so the previous tree's selection doesn't show "person not found".

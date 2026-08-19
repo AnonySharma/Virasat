@@ -47,6 +47,7 @@ declare const SignIn: any;
 declare const FirstRun: any;
 declare const TreeList: any;
 declare const Sharing: any;
+declare const PublicView: any;
 declare const SampleData: any;
 declare const supabase: any;
 // Not in the smoke.mjs global list: assigned late by app.js (window.Filter =
@@ -93,6 +94,7 @@ interface Window {
   FirstRun: any;
   TreeList: any;
   Sharing: any;
+  PublicView: any;
   SampleData: any;
   supabase: any;
   Filter: any;

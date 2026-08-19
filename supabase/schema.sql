@@ -121,7 +121,7 @@ begin
     where i.email=auth.email() and i.claimed_at is null      -- citext => case-insensitive
     returning i.tree_id, i.role, i.invited_by)
   insert into public.tree_members(tree_id,user_id,role,invited_by)
-  select t.tree_id, auth.uid(), t.role, t.invited_by from taken
+  select t.tree_id, auth.uid(), t.role, t.invited_by from taken t
   on conflict (tree_id,user_id) do nothing;
   get diagnostics claimed = row_count; return claimed; end; $$;
 
@@ -231,12 +231,114 @@ begin
   return jsonb_set(d, '{people}', coalesce(ppl, '[]'::jsonb));
 end; $$;
 
+-- — Unlisted share links (anyone-with-the-link, no sign-in) ————————————————
+-- A tree can be shared read-only via an unguessable link that needs no account.
+-- Two new columns on trees:
+--   visibility   'private' (default) | 'unlisted'. Deliberately NO 'public':
+--                the app promises "no public pages", so a shared tree is
+--                unlisted (noindex, unguessable), never listed/indexed.
+--   share_token  a random uuid that is the link's secret. The tree id alone is
+--                NOT enough to read the data — the token must match.
+-- Idempotent: add-column-if-not-exists guards a re-run.
+alter table public.trees
+  add column if not exists visibility text not null default 'private';
+-- Constraint added separately so a re-run on a table that already has the
+-- column still installs it (add-column's inline check is skipped on re-run).
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'trees_visibility_chk'
+  ) then
+    alter table public.trees
+      add constraint trees_visibility_chk check (visibility in ('private','unlisted'));
+  end if;
+end $$;
+alter table public.trees
+  add column if not exists share_token uuid;
+
+-- The ANON read path: callable with just the public anon key (RLS/ownership is
+-- NOT the gate here — the token is). Returns null on any miss (unknown tree,
+-- not shared, or wrong token) so it never reveals whether a tree exists. On a
+-- hit it returns the REDACTED blob (private phone/email/address stripped via the
+-- same redact_person the viewer branch of get_tree uses — so a link viewer sees
+-- exactly what a signed-in viewer would, enforced in Postgres, not the client)
+-- plus the title/family_name/version the client needs to hydrate + label.
+create or replace function public.get_shared_tree(p_tree uuid, p_token uuid)
+  returns jsonb language plpgsql security definer stable set search_path = public as $$
+declare tr public.trees; ppl jsonb;
+begin
+  select * into tr from public.trees where id = p_tree;
+  if tr.id is null then return null; end if;                 -- unknown tree
+  if tr.visibility <> 'unlisted' then return null; end if;   -- not shared
+  if tr.share_token is null or p_token is null or tr.share_token <> p_token then
+    return null;                                             -- wrong / absent token
+  end if;
+  select jsonb_agg(public.redact_person(elem) order by ord) into ppl
+    from jsonb_array_elements(coalesce(tr.data->'people','[]'::jsonb)) with ordinality as t(elem, ord);
+  return jsonb_build_object(
+    'data',        jsonb_set(tr.data, '{people}', coalesce(ppl, '[]'::jsonb)),
+    'version',     tr.version,
+    'title',       tr.title,
+    'family_name', tr.family_name
+  );
+end; $$;
+grant execute on function public.get_shared_tree(uuid, uuid) to anon, authenticated;
+
+-- Owner-only: turn the link on/off. On → visibility 'unlisted' and mint a token
+-- if there isn't one (so toggling off then on again keeps the SAME link). Off →
+-- visibility 'private' (the read RPC + the shared-photo policy both gate on
+-- 'unlisted', so the link — and photo access — die immediately). Returns the
+-- resulting { visibility, share_token } so the client can build the URL without
+-- a follow-up read.
+create or replace function public.set_tree_share(p_tree uuid, p_on boolean)
+  returns jsonb language plpgsql security definer set search_path = public as $$
+declare tok uuid; vis text;
+begin
+  if not public.is_tree_owner(p_tree) then raise exception 'not tree owner'; end if;
+  if p_on then
+    update public.trees
+      set visibility = 'unlisted',
+          share_token = coalesce(share_token, gen_random_uuid())
+      where id = p_tree returning share_token, visibility into tok, vis;
+  else
+    update public.trees set visibility = 'private'
+      where id = p_tree returning share_token, visibility into tok, vis;
+  end if;
+  return jsonb_build_object('visibility', vis, 'share_token', tok);
+end; $$;
+
+-- Owner-only: mint a fresh token (invalidates the old link immediately) and
+-- ensure the tree is shared. The "I leaked the link — kill it" escape hatch.
+create or replace function public.rotate_share_token(p_tree uuid)
+  returns jsonb language plpgsql security definer set search_path = public as $$
+declare tok uuid; vis text;
+begin
+  if not public.is_tree_owner(p_tree) then raise exception 'not tree owner'; end if;
+  update public.trees
+    set share_token = gen_random_uuid(), visibility = 'unlisted'
+    where id = p_tree returning share_token, visibility into tok, vis;
+  return jsonb_build_object('visibility', vis, 'share_token', tok);
+end; $$;
+
 -- — Private photo bucket (object key = <tree_id>/<photo_id>.jpg) ——————————
 insert into storage.buckets (id,name,public) values ('tree-photos','tree-photos',false)
   on conflict (id) do nothing;
 drop policy if exists photos_read on storage.objects;
 create policy photos_read on storage.objects for select
   using (bucket_id='tree-photos' and public.is_tree_member((split_part(name,'/',1))::uuid));
+-- Anon read for photos of an UNLISTED tree. A Storage GET can't carry the share
+-- token, so the secret here is the object path itself: both the tree id (first
+-- segment) and the photo id are unguessable randoms, and access is gated on the
+-- tree still being 'unlisted' — flip the link off and this policy stops matching
+-- immediately. SECURITY DEFINER helper mirrors is_tree_member so the recursion
+-- break is consistent. Additive (permissive) — it only widens read, members are
+-- still covered by photos_read above.
+create or replace function public.is_tree_shared(t uuid) returns boolean
+  language sql security definer stable set search_path = public as $$
+  select exists(select 1 from public.trees tr where tr.id=t and tr.visibility='unlisted'); $$;
+drop policy if exists photos_read_shared on storage.objects;
+create policy photos_read_shared on storage.objects for select
+  using (bucket_id='tree-photos' and public.is_tree_shared((split_part(name,'/',1))::uuid));
 drop policy if exists photos_insert on storage.objects;
 create policy photos_insert on storage.objects for insert
   with check (bucket_id='tree-photos' and public.can_edit_tree((split_part(name,'/',1))::uuid));

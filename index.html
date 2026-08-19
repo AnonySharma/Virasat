@@ -148,6 +148,16 @@
         <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
         <span class="btn__label-md" data-i18n="share.title">Share</span>
       </button>
+      <!-- Preview as viewer — owner/editor only; app.js reveals it once cloud +
+           edit-rights are known, and flips its icon/label (eye ⇄ eye-slash,
+           Preview ⇄ Exit preview) with the live state. Ghost, secondary to the
+           primary Share. Desktop-only (this row is display:none ≤768px); the
+           phone path is the kebab. Label/aria/title are set imperatively by
+           refreshPreviewButton (state-dependent), so no data-i18n here. -->
+      <button class="btn btn--ghost" id="preview-btn" type="button" aria-label="Preview as viewer" hidden>
+        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+        <span class="btn__label-md">Preview</span>
+      </button>
       <!-- Sync pip — shown by app.js only in a live cloud session. Reflects
            CloudStore.syncState() (synced / pending / offline); aria-live so a
            screen reader hears "offline — will sync" without a visual scan. -->
@@ -357,6 +367,7 @@
   <script src="lib/auth/first-run.js"></script>
   <script src="lib/auth/tree-list.js"></script>
   <script src="lib/auth/sharing.js"></script>
+  <script src="lib/auth/public-view.js"></script>
 
   <!-- sample data: bundled "Try sample family" tree. Lives in tests/ to
        keep lib/ free of base64 photo blobs. Loaded eagerly so the
