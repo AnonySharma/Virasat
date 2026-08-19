@@ -1066,6 +1066,48 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 .import-mode__card.is-active .import-mode__desc { color: var(--olive-deep); opacity: .85; }
 .import-mode__card--danger.is-active .import-mode__desc { color: var(--danger); opacity: .9; }
 
+/* — Export format picker (radio-card style, mirrors .import-mode) — image /
+   data file / backup. Stacks on a narrow screen, sits 3-up when there's room. */
+.exp-format {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+@media (min-width: 520px) {
+  .exp-format { grid-template-columns: repeat(3, 1fr); }
+}
+.exp-format__card {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg-elev);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);
+  font-family: var(--font-sans);
+  color: var(--text-2);
+}
+.exp-format__card:hover { border-color: var(--line-2); background: var(--surface-2); }
+.exp-format__card.is-active {
+  border-color: var(--olive);
+  background: var(--olive-soft);
+  box-shadow: 0 0 0 3px rgba(94, 125, 99, .12);
+  color: var(--olive-deep);
+}
+.exp-format__label {
+  font-weight: 600; font-size: 13.5px;
+  display: flex; align-items: center; gap: 7px;
+  color: var(--text);
+}
+.exp-format__card.is-active .exp-format__label { color: var(--olive-deep); }
+.exp-format__desc { font-size: 11.5px; color: var(--text-3); line-height: 1.35; }
+.exp-format__card.is-active .exp-format__desc { color: var(--olive-deep); opacity: .85; }
+
+/* Export dialog layout: a labeled option group and a per-format option panel. */
+.exp-group { display: flex; flex-direction: column; gap: 6px; }
+.exp-panel { display: flex; flex-direction: column; gap: var(--s-3); }
+
 /* — Heritage select (custom dropdown) — */
 .hsel {
   position: relative;
