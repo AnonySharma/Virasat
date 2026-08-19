@@ -514,6 +514,44 @@
   opacity: 0.25;
   transition: opacity var(--t-med);
 }
+/* Cluster peek — the desktop-hover / keyboard-focus preview card that lists a
+   few of the folded names before you commit to expanding. An HTML overlay in
+   the stage (not SVG), styled to match the node menu's surface. Non-interactive
+   so it never intercepts the hover that summoned it. */
+.tree-cluster-peek {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  background: var(--bg-elev);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  padding: 8px 10px;
+  max-width: 220px;
+  transform: translateX(-50%);
+  animation: menu-pop 160ms cubic-bezier(.2,.9,.2,1.05);
+}
+.tree-cluster-peek__name {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tree-cluster-peek__more {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+.tree-cluster-peek__cue {
+  font-size: 11px;
+  color: var(--gold-deep);
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
 
 /* Wedding-rings emblem (assets/wedding-rings.svg).
    Crisp white outline against the photo rings — chained zero-blur
