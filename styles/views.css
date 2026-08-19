@@ -2428,7 +2428,7 @@
   font-size: 18px; font-weight: 500; color: var(--text);
   text-transform: capitalize;
 }
-/* "This month" resets the calendar to the current month. A bordered pill (not
+/* "Today" resets the calendar to the current month. A bordered pill (not
    bare text) so it reads as the button it is; the rotate-left icon reinforces
    "go back to now". */
 .cal-nav__today {
